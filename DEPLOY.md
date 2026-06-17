@@ -42,7 +42,13 @@ dev VM ──git push──▶ GitHub ──Actions build──▶ GHCR (private
    (find it with `docker network ls`, e.g. `npm_default`). `COOKIE_SECURE=1` stays on
    behind HTTPS.
 
-3. **Start it:**
+3. **Create the DB volume** (external, so it's never removed by compose):
+
+   ```bash
+   docker volume create phev-data
+   ```
+
+4. **Start it:**
 
    ```bash
    docker compose pull && docker compose up -d
