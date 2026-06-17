@@ -484,7 +484,11 @@ function renderChart(res) {
   // The sweetspot: the break-even price (in the x-axis unit) at the current y — a point ON the line.
   const beRule = isFuel ? res.break_even_fuel_price : res.break_even_kwh_price;
   const hasSweet = beRule != null && beRule > 0;
-  const xMax = Math.max(cfg.xVal, hasSweet ? beRule : 0, 0.01) * 1.8;
+  // Anchor the range on the sweetspot (stable while the global fuel price is nudged),
+  // and only widen it if the current price runs past that frame.
+  const xMax = hasSweet
+    ? Math.max(beRule * 2.2, cfg.xVal * 1.2, 0.02)
+    : Math.max(cfg.xVal, 0.01) * 1.8;
   const yLine = cfg.slope * xMax;                       // break-even line at right edge
   const yMax = (Math.max(yLine, cfg.yVal) || 1) * 1.2;
 
