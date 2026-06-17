@@ -81,16 +81,23 @@
       <section class="card">
         <div class="card__head"><h2 data-i18n="current_selection">Current selection</h2></div>
 
-        <label class="field">
-          <span data-i18n="charging_location">Charging location</span>
-          <select id="location-select"></select>
-        </label>
-        <label class="field">
-          <span data-i18n="scenario">Scenario</span>
-          <select id="scenario-select"></select>
-        </label>
-
         <div class="active-inputs" id="active-inputs">
+          <label class="field">
+            <span data-i18n="charging_location">Charging location</span>
+            <select id="location-select"></select>
+          </label>
+          <div class="active-inputs__group">
+            <h3><span data-i18n="location_price">Location price</span> <button class="link-btn editor-only" id="save-location" data-i18n="save">Save</button></h3>
+            <label class="field field--inline">
+              <span><span data-i18n="electricity_price">Electricity price</span> <em>(CHF/kWh)</em></span>
+              <input type="number" inputmode="decimal" step="0.01" min="0" id="in-kwh-price" />
+            </label>
+          </div>
+
+          <label class="field">
+            <span data-i18n="scenario">Scenario</span>
+            <select id="scenario-select"></select>
+          </label>
           <div class="active-inputs__group">
             <h3><span data-i18n="scenario_values">Scenario values</span> <button class="link-btn editor-only" id="save-scenario" data-i18n="save">Save</button></h3>
             <label class="field field--inline">
@@ -102,19 +109,12 @@
               <input type="number" inputmode="decimal" step="0.1" min="0" id="in-power-consumption" />
             </label>
           </div>
-          <div class="active-inputs__group">
-            <h3><span data-i18n="location_price">Location price</span> <button class="link-btn editor-only" id="save-location" data-i18n="save">Save</button></h3>
-            <label class="field field--inline">
-              <span><span data-i18n="electricity_price">Electricity price</span> <em>(CHF/kWh)</em></span>
-              <input type="number" inputmode="decimal" step="0.01" min="0" id="in-kwh-price" />
-            </label>
-          </div>
         </div>
       </section>
     </div>
 
-    <!-- Manage lists -->
-    <div class="grid grid--lists">
+    <!-- Manage lists (owner only — read-only visitors use the dropdowns above) -->
+    <div class="grid grid--lists editor-only">
       <section class="card">
         <div class="card__head">
           <h2 data-i18n="scenarios">Scenarios</h2>

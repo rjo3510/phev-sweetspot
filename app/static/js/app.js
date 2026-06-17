@@ -295,7 +295,7 @@ async function reload() {
     api.get("/api/settings"),
   ]);
   fuelPrice = settings.fuel_price;
-  $("in-fuel-price").value = fuelPrice;
+  $("in-fuel-price").value = Number(fuelPrice).toFixed(2);
   if (!scenarios.some((s) => s.id === activeScenarioId)) activeScenarioId = scenarios[0]?.id ?? null;
   if (!locations.some((l) => l.id === activeLocationId)) activeLocationId = locations[0]?.id ?? null;
   renderSelects();
