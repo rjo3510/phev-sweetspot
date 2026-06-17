@@ -188,25 +188,10 @@ body:not(.is-editor) .editor-only { display: none !important; }
    from shrinking, so the layout breaks when the window is narrowed and re-widened.
    min-width:0 lets columns (and the chart) resize cleanly in both directions. */
 .grid > * { min-width: 0; }
-/* Lower row: Scenarios (3 columns) gets more width than Charging locations (1). */
-.grid:nth-of-type(3) { grid-template-columns: 1.6fr 1fr; }
-@media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
-@media (max-width: 560px) {
-  .app { padding: 16px max(13px, env(safe-area-inset-right)) 48px max(13px, env(safe-area-inset-left)); }
-  .hero h1 { font-size: 26px; }
-  .chart-wrap { height: 300px; }
-  .card { padding: 18px 15px; }
-  .fuelbar { gap: 12px; padding: 16px 15px; }
-  .fuelbar__input input { font-size: 20px; }
-  .verdict-card { padding: 20px 16px; }
-  .verdict__stats { width: 100%; justify-content: space-between; gap: 10px; }
-  .stat--price { min-width: 0; }
-  /* Keep the edit tables inside the card (tighter cells, name input may shrink). */
-  .data-table th, .data-table td { padding: 6px 6px; }
-  .data-table input.name { min-width: 0; }
-  /* iOS Safari zooms in when a focused input's font is < 16px — keep them at 16px. */
-  select, input[type="number"], input[type="text"], .data-table input { font-size: 16px; }
-}
+/* Lower row: Scenarios gets more width than Charging locations. */
+.grid--lists { grid-template-columns: 1.6fr 1fr; }
+/* Responsive overrides live at the END of this file (see bottom) so they reliably
+   win over the base component rules below, which would otherwise come later in source. */
 
 .card {
   background: linear-gradient(180deg, var(--card), var(--bg-soft));
@@ -312,7 +297,9 @@ select:focus, input:focus {
 }
 .data-table td { padding: 6px 10px; border-bottom: 1px solid rgba(40, 51, 88, 0.5); }
 .data-table tr.is-active { background: rgba(124, 140, 255, 0.08); }
-.data-table input { width: 100%; padding: 7px 9px; font-size: 14px; }
+/* min-width:0 overrides an <input>'s intrinsic (size-based) min width so the
+   numeric columns shrink to the cell instead of widening the whole table. */
+.data-table input { width: 100%; min-width: 0; padding: 7px 9px; font-size: 14px; }
 .data-table input.name { min-width: 130px; }
 .data-table td.actions { white-space: nowrap; text-align: right; }
 
@@ -326,3 +313,27 @@ select:focus, input:focus {
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .toast.error { border-color: var(--danger); }
+
+/* ─── Responsive (kept last so they override the base rules above) ─────────── */
+
+/* Both grids collapse to a single column on tablet/phone widths. */
+@media (max-width: 860px) { .grid, .grid--lists { grid-template-columns: 1fr; } }
+
+@media (max-width: 560px) {
+  .app { padding: 16px max(13px, env(safe-area-inset-right)) 48px max(13px, env(safe-area-inset-left)); }
+  .hero h1 { font-size: 26px; }
+  .chart-wrap { height: 300px; }
+  .card { padding: 18px 15px; }
+  .fuelbar { gap: 12px; padding: 16px 15px; }
+  .fuelbar__input input { font-size: 20px; }
+  .verdict-card { padding: 20px 16px; }
+  .verdict__stats { width: 100%; justify-content: space-between; gap: 10px; }
+  .stat--price { min-width: 0; }
+  /* Keep the edit tables inside the card (tighter cells, name input may shrink). */
+  .data-table th, .data-table td { padding: 6px 4px; }
+  .data-table th { letter-spacing: 0; }
+  .data-table input { padding: 6px 5px; }
+  .data-table input.name { min-width: 0; }
+  /* iOS Safari zooms in when a focused input's font is < 16px — keep them at 16px. */
+  select, input[type="number"], input[type="text"], .data-table input { font-size: 16px; }
+}

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>PHEV Sweetspot Calculator</title>
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
-  <link rel="stylesheet" href="/static/css/styles.css" />
+  <link rel="stylesheet" href="/static/css/styles.css?v={{ v }}" />
 </head>
 <body>
   <div class="app">
@@ -114,7 +114,7 @@
     </div>
 
     <!-- Manage lists -->
-    <div class="grid">
+    <div class="grid grid--lists">
       <section class="card">
         <div class="card__head">
           <h2 data-i18n="scenarios">Scenarios</h2>
@@ -153,6 +153,6 @@
 
   <script src="/static/vendor/chart.umd.min.js"></script>
   <script src="/static/vendor/chartjs-plugin-annotation.min.js"></script>
-  <script src="/static/js/app.js"></script>
+  <script src="/static/js/app.js?v={{ v }}"></script>
 </body>
 </html>

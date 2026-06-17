@@ -1,6 +1,7 @@
 """FastAPI application: serves the UI and the JSON API."""
 from __future__ import annotations
 
+import hashlib
 import os
 import time
 
@@ -22,6 +23,22 @@ COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "").lower() in ("1", "true", "ye
 app = FastAPI(title="PHEV Sweetspot Calculator")
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+
+
+def _static_version() -> str:
+    """Short hash of the editable assets, appended as ?v= to bust browser caches
+    after a deploy (StaticFiles sends no Cache-Control, so Safari caches CSS/JS)."""
+    h = hashlib.md5()
+    for rel in ("css/styles.css", "js/app.js"):
+        try:
+            with open(os.path.join(BASE_DIR, "static", rel), "rb") as f:
+                h.update(f.read())
+        except OSError:
+            pass
+    return h.hexdigest()[:8]
+
+
+STATIC_VERSION = _static_version()
 
 
 # --- Auth: read-only for everyone, writes require the owner password ----------
@@ -81,7 +98,7 @@ def on_startup() -> None:
 # --- Page --------------------------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html")
+    return templates.TemplateResponse(request=request, name="index.html", context={"v": STATIC_VERSION})
 
 
 @app.get("/favicon.ico", include_in_schema=False)
