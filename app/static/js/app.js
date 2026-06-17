@@ -459,10 +459,9 @@ function renderVerdict(res) {
     <div class="verdict__row">
       <div class="verdict__icon">${icon}</div>
       <div class="verdict__main">
-        <p class="verdict__title">${title}</p>
-        <p class="verdict__sub">${sub}</p>
+        <p class="verdict__title">${title}<span class="verdict__lead">${sub}</span></p>
         ${rule ? `<p class="verdict__rule">⚡ ${rule}</p>` : ""}
-        <p class="verdict__sub">${detail}</p>
+        <p class="verdict__detail">${detail}</p>
       </div>
       <div class="verdict__stats">
         ${statHtml(statA)}
