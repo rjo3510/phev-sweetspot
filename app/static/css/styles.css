@@ -149,7 +149,8 @@ body {
 /* Layout */
 .grid {
   display: grid;
-  grid-template-columns: 1.35fr 1fr;
+  /* Chart takes the remaining space; the "current selection" column stays narrow. */
+  grid-template-columns: minmax(0, 1fr) 330px;
   gap: 22px;
   margin-bottom: 22px;
 }
