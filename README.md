@@ -8,19 +8,21 @@ fuel or on electric power** — visualised as the crossing point ("sweetspot") o
 
 ## What it does
 
-- Compares fuel vs. electricity as an **equivalent price in one familiar unit** (CHF/L or
+- Compares fuel vs. electricity as an **equivalent price in one familiar unit** (CHF/l or
   CHF/kWh): the verdict shows your actual price next to the other option translated into the
   same unit, plus the real cost per 100 km.
-- The **chart** is a 2D break-even map: fuel price on one axis (CHF/L), electricity price on
+- The **chart** is a 2D break-even map: fuel price on one axis (CHF/l), electricity price on
   the other (CHF/kWh). The diagonal **break-even line** is where both cost the same; below it
-  charging wins, above it fuel wins. A **"you are here" dot** marks your current prices, so you
-  see at a glance which side you're on.
+  charging wins, above it fuel wins. A **current-position dot** marks your prices and a
+  **sweetspot marker** sits on the line at the tipping price, so you see at a glance which
+  side you're on and how far away the sweetspot is.
 - A chart **toggle** swaps which price is on the x-axis (fuel ↔ electricity).
 - **Current fuel price** — a single global value (with quick −/+ buttons) shown at the top.
   Fuel price changes often and is the same at the pump for every scenario, so you set it
   once and it applies everywhere.
 - **Scenarios** (Winter, Summer, With trailer, …) — fully editable named presets, each
-  holding a consumption profile (L/100km and kWh/100km).
+  holding a consumption profile (l/100km and kWh/100km). Names are bilingual
+  (German + English) and shown in the active UI language.
 - **Charging locations** — a list of places, each with its own CHF/kWh price (changes rarely).
   Seeded with Home (0.31), Weekend (0.40) and Public fast charger (0.90).
 - **English / German** — switch the whole UI language with the EN/DE toggle (top right).
@@ -33,15 +35,15 @@ fuel or on electric power** — visualised as the crossing point ("sweetspot") o
 ## The math
 
 ```
-fuel cost / 100 km     = fuel_consumption (L/100km)  × fuel_price (CHF/L)
+fuel cost / 100 km     = fuel_consumption (l/100km)  × fuel_price (CHF/l)
 electric cost / 100 km = power_consumption (kWh/100km) × kwh_price (CHF/kWh)
 break-even fuel price  = (power_consumption × kwh_price) / fuel_consumption
 break-even kWh price   = (fuel_consumption × fuel_price) / power_consumption
 ```
 
 Example: `6.5 × 1.80 = CHF 11.70` (fuel) vs. `21 × 0.31 = CHF 6.51` (electric) →
-electric wins; break-even fuel price ≈ `CHF 1.00 / L`. The mirror question — *at fuel
-CHF 1.80/L, how expensive can charging get before fuel wins?* — gives the **break-even
+electric wins; break-even fuel price ≈ `CHF 1.00 / l`. The mirror question — *at fuel
+CHF 1.80/l, how expensive can charging get before fuel wins?* — gives the **break-even
 kWh price** ≈ `CHF 0.56 / kWh`.
 
 ## Setup
