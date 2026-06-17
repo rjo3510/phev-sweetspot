@@ -158,7 +158,9 @@ body:not(.is-editor) .editor-only { display: none !important; }
   color: var(--text); font-size: 14.5px; line-height: 1.35;
 }
 .verdict__rule b { color: var(--sweet); white-space: nowrap; }
-.verdict__stats { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+/* baseline so the two price numbers (and "vs") line up even when one column has
+   the extra "cheaper" tag below it. */
+.verdict__stats { display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; }
 .stat { text-align: right; }
 .stat--price { text-align: center; min-width: 120px; }
 .stat__num { font-size: 22px; font-weight: 700; white-space: nowrap; }
