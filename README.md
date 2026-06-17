@@ -50,7 +50,7 @@ kWh price** ≈ `CHF 0.56 / kWh`.
 
 ```bash
 python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
+.venv/bin/pip install -r requirements-dev.txt   # runtime + test deps (app only: requirements.txt)
 ```
 
 ## Run

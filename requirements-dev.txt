@@ -1,0 +1,5 @@
+# Development/test dependencies (NOT shipped in the image). Install for local work:
+#   .venv/bin/python -m pip install -r requirements-dev.txt
+-r requirements.txt
+pytest>=8.0
+httpx>=0.27

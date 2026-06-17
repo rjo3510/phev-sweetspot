@@ -12,7 +12,18 @@ env:
   IMAGE: ghcr.io/rjo3510/phev-sweetspot
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: pytest -q
+
   build:
+    needs: test               # don't build/push if the tests fail
     runs-on: ubuntu-latest
     permissions:
       contents: read
