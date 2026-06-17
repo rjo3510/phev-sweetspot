@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PHEV Sweetspot Calculator</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+  <link rel="stylesheet" href="/static/css/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="toggle" id="axis-toggle" role="tablist" aria-label="Chart x-axis">
+        <button class="toggle__btn is-on" data-axis="fuel" data-i18n="vary_fuel" role="tab">Fuel price on x</button>
+        <button class="toggle__btn" data-axis="kwh" data-i18n="vary_kwh" role="tab">Electricity price on x</button>
+      </div>
+      <div class="toggle lang-toggle" id="lang-toggle" role="tablist" aria-label="Language">
+        <button class="toggle__btn is-on" data-lang="en" role="tab">EN</button>
+        <button class="toggle__btn" data-lang="de" role="tab">DE</button>
+      </div>
+    </div>
+
+    <header class="hero">
+      <div class="hero__badge">⚡ + ⛽</div>
+      <h1>PHEV Sweetspot Calculator</h1>
+      <p class="hero__sub" data-i18n="subtitle">Fuel or electric? Find the price where it flips.</p>
+    </header>
+
+    <!-- Current fuel price (changes often → edited in one place, applies everywhere) -->
+    <section class="fuelbar">
+      <div class="fuelbar__label">
+        <span class="fuelbar__icon">⛽</span>
+        <div>
+          <strong data-i18n="fuel_price_title">Current fuel price</strong>
+          <small data-i18n="fuel_price_note">Changes often — set it once, it applies to every scenario.</small>
+        </div>
+      </div>
+      <div class="fuelbar__input">
+        <button class="step" id="fuel-down" title="−0.05">−</button>
+        <input type="number" inputmode="decimal" step="0.01" min="0" id="in-fuel-price" />
+        <span class="unit">CHF/L</span>
+        <button class="step" id="fuel-up" title="+0.05">+</button>
+      </div>
+    </section>
+
+    <!-- Verdict -->
+    <section class="verdict-card" id="verdict">
+      <div class="verdict__loading" data-i18n="verdict_loading">Calculating…</div>
+    </section>
+
+    <div class="grid">
+      <!-- Left column: chart -->
+      <section class="card chart-card">
+        <div class="card__head">
+          <h2 id="chart-title">Break-even: fuel price (x) vs. electricity price (y)</h2>
+        </div>
+        <span class="hint" data-i18n-html="sweetspot_hint">The <b>sweetspot</b> is where the two lines cross.</span>
+        <div class="chart-wrap">
+          <canvas id="chart"></canvas>
+        </div>
+        <ul class="legend" id="legend"></ul>
+      </section>
+
+      <!-- Right column: active inputs -->
+      <section class="card">
+        <div class="card__head"><h2 data-i18n="current_selection">Current selection</h2></div>
+
+        <label class="field">
+          <span data-i18n="scenario">Scenario</span>
+          <select id="scenario-select"></select>
+        </label>
+        <label class="field">
+          <span data-i18n="charging_location">Charging location</span>
+          <select id="location-select"></select>
+        </label>
+
+        <div class="active-inputs" id="active-inputs">
+          <div class="active-inputs__group">
+            <h3><span data-i18n="scenario_values">Scenario values</span> <button class="link-btn" id="save-scenario" data-i18n="save">Save</button></h3>
+            <label class="field field--inline">
+              <span><span data-i18n="fuel_consumption">Fuel consumption</span> <em>(L/100km)</em></span>
+              <input type="number" inputmode="decimal" step="0.1" min="0.1" id="in-fuel-consumption" />
+            </label>
+            <label class="field field--inline">
+              <span><span data-i18n="power_consumption">Power consumption</span> <em>(kWh/100km)</em></span>
+              <input type="number" inputmode="decimal" step="0.1" min="0" id="in-power-consumption" />
+            </label>
+          </div>
+          <div class="active-inputs__group">
+            <h3><span data-i18n="location_price">Location price</span> <button class="link-btn" id="save-location" data-i18n="save">Save</button></h3>
+            <label class="field field--inline">
+              <span><span data-i18n="electricity_price">Electricity price</span> <em>(CHF/kWh)</em></span>
+              <input type="number" inputmode="decimal" step="0.01" min="0" id="in-kwh-price" />
+            </label>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Manage lists -->
+    <div class="grid">
+      <section class="card">
+        <div class="card__head">
+          <h2 data-i18n="scenarios">Scenarios</h2>
+          <button class="btn btn--small" id="add-scenario" data-i18n="add">+ Add</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="scenario-table">
+            <thead>
+              <tr><th data-i18n="col_name">Name</th><th>L/100km</th><th>kWh/100km</th><th></th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card__head">
+          <h2 data-i18n="charging_locations">Charging locations</h2>
+          <button class="btn btn--small" id="add-location" data-i18n="add">+ Add</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="location-table">
+            <thead>
+              <tr><th data-i18n="col_name">Name</th><th>CHF/kWh</th><th></th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <footer class="foot" data-i18n="footer">
+      Break-even fuel price = (kWh/100km × CHF/kWh) ÷ L/100km &nbsp;·&nbsp; all values editable &amp; stored.
+    </footer>
+  </div>
+
+  <script src="/static/vendor/chart.umd.min.js"></script>
+  <script src="/static/vendor/chartjs-plugin-annotation.min.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="300" viewBox="0 0 640 300" font-family="Inter, sans-serif">
+  <rect width="640" height="300" rx="16" fill="#0b1020"/>
+  <!-- axes -->
+  <line x1="70" y1="40" x2="70" y2="250" stroke="#283358" stroke-width="2"/>
+  <line x1="70" y1="250" x2="600" y2="250" stroke="#283358" stroke-width="2"/>
+  <text x="40" y="150" fill="#9aa7c7" font-size="12" transform="rotate(-90 40 150)">CHF / 100 km</text>
+  <text x="300" y="280" fill="#9aa7c7" font-size="12">Fuel price (CHF / liter)</text>
+  <!-- electric: flat line -->
+  <line x1="70" y1="170" x2="600" y2="170" stroke="#38e1b0" stroke-width="3" stroke-dasharray="7 5"/>
+  <text x="500" y="160" fill="#38e1b0" font-size="13">Electric (flat)</text>
+  <!-- fuel: rising line -->
+  <line x1="70" y1="250" x2="560" y2="60" stroke="#ff8a5b" stroke-width="3"/>
+  <text x="430" y="95" fill="#ff8a5b" font-size="13">Fuel (rises)</text>
+  <!-- sweetspot -->
+  <circle cx="278" cy="170" r="8" fill="#ffd166" stroke="#fff" stroke-width="2"/>
+  <text x="248" y="205" fill="#ffd166" font-size="13" font-weight="600">Sweetspot</text>
+  <!-- today marker -->
+  <line x1="430" y1="40" x2="430" y2="250" stroke="#7c8cff" stroke-width="2" stroke-dasharray="5 4"/>
+  <text x="385" y="35" fill="#7c8cff" font-size="12">Today's price</text>
+  <text x="120" y="35" fill="#eaf0ff" font-size="15" font-weight="700">Fuel vs. Electric — find where it flips</text>
+</svg>

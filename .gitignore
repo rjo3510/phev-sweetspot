@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+*.db
+.pytest_cache/
+.DS_Store
+
+# Self-hosted offline assets — keep these in the repo (downloaded once, no CDN).
+!app/static/vendor/
+!app/static/fonts/
