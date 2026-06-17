@@ -28,15 +28,17 @@ SESSION_TTL = 60 * 60 * 12  # 12 hours
 DEFAULT_DEV_PASSWORD = "sweetspot"
 
 
+# Fields are joined with ":" (not "$") so the value is safe in docker-compose .env files,
+# where "$" triggers variable interpolation and would corrupt the hash.
 def hash_password(password: str) -> str:
     salt = secrets.token_bytes(16)
     dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, PBKDF2_ROUNDS)
-    return f"pbkdf2_sha256${PBKDF2_ROUNDS}${salt.hex()}${dk.hex()}"
+    return f"pbkdf2_sha256:{PBKDF2_ROUNDS}:{salt.hex()}:{dk.hex()}"
 
 
 def verify_password(password: str, stored: str) -> bool:
     try:
-        algo, rounds, salt_hex, hash_hex = stored.split("$")
+        algo, rounds, salt_hex, hash_hex = stored.split(":")
         dk = hashlib.pbkdf2_hmac("sha256", password.encode(), bytes.fromhex(salt_hex), int(rounds))
         return hmac.compare_digest(dk.hex(), hash_hex)
     except Exception:
@@ -84,6 +86,6 @@ if __name__ == "__main__":
     pw = getpass.getpass("New owner password: ")
     if pw != getpass.getpass("Repeat password: "):
         raise SystemExit("Passwords do not match.")
-    print("\nSet this in your environment:\n")
-    print(f'OWNER_PASSWORD_HASH="{hash_password(pw)}"')
-    print(f'SWEETSPOT_SECRET="{secrets.token_hex(32)}"')
+    print("\nPaste these into deploy/.env (no quotes needed):\n")
+    print(f"OWNER_PASSWORD_HASH={hash_password(pw)}")
+    print(f"SWEETSPOT_SECRET={secrets.token_hex(32)}")

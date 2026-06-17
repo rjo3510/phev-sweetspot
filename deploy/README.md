@@ -50,13 +50,15 @@ Check it:  `docker compose logs -f`  (you should NOT see the default-password wa
 2. **NPM → Proxy Hosts → Add Proxy Host:**
    - Domain Names: `phev.xolution.ch`
    - Scheme: `http`
-   - Forward Hostname: `phev-sweetspot`   (the container name)
-   - Forward Port: `8000`
-   - Block Common Exploits: on · Websockets: optional
+   - Block Common Exploits: on · Websockets: off · Cache Assets: off
+   - Forward target — pick **one**:
+     - **By container name** (shared network): Hostname `phev-sweetspot`, Port `8000`.
+     - **By published host port**: Hostname = the Docker host IP, Port `8082` (`APP_PORT`).
    - **SSL tab:** request a Let's Encrypt cert, Force SSL + HTTP/2.
 
-Because the cert/HTTPS terminates at NPM and `.env` has `COOKIE_SECURE=1`, the login
-cookie is served `Secure`. (NPM and this container must share the network from step 2.)
+The app is published on the host as **`http://<host>:8082`** (set `APP_PORT` in `.env`) and is
+also reachable by name on the proxy network. Because HTTPS terminates at NPM and `.env` has
+`COOKIE_SECURE=1`, the login cookie is served `Secure` — always use `https://phev.xolution.ch`.
 
 ## Updating
 
@@ -77,5 +79,6 @@ docker run --rm -v phev-data:/data -v "$PWD":/backup alpine \
 
 - **One worker on purpose** (login rate-limit state is in-process, single SQLite writer).
 - Want NPM's own per-IP rate limiting / Cloudflare in front? Both stack cleanly on top.
-- Alternative to the shared network: publish a port instead — replace `expose` with
-  `ports: ["127.0.0.1:8001:8000"]` and point NPM at `host-ip:8001`.
+- **Change the host port:** set `APP_PORT` in `.env` (default `8082`).
+- To restrict the published port to localhost only, use `APP_PORT=127.0.0.1:8082` style by
+  editing the `ports:` mapping to `"127.0.0.1:8082:8000"`.

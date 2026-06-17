@@ -12,10 +12,10 @@ services:
     env_file: .env
     volumes:
       - phev-data:/data          # SQLite DB persists here across restarts/updates
-    expose:
-      - "8000"                   # reachable on the proxy network, NOT published to the host
+    ports:
+      - "${APP_PORT:-8082}:8000" # host:container — reach it at http://<host>:8082
     networks:
-      - proxy
+      - proxy                    # also reachable by name on the proxy network (port 8000)
 
 volumes:
   phev-data:
