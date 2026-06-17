@@ -303,7 +303,9 @@ input:disabled, select:disabled { -webkit-text-fill-color: var(--text); opacity:
   border-bottom: 1px solid var(--line);
 }
 .data-table td { padding: 6px 10px; border-bottom: 1px solid rgba(40, 51, 88, 0.5); }
-.data-table tr.is-active { background: rgba(124, 140, 255, 0.08); }
+/* Mark the active scenario/location by accenting its fields, not a boxy row tint
+   (the tinted rectangle read as a stray frame around the row). */
+.data-table tr.is-active input { border-color: var(--accent); }
 /* min-width:0 overrides an <input>'s intrinsic (size-based) min width so the
    numeric columns shrink to the cell instead of widening the whole table. */
 .data-table input { width: 100%; min-width: 0; padding: 7px 9px; font-size: 14px; }
