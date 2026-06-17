@@ -152,10 +152,6 @@ body:not(.is-editor) .editor-only { display: none !important; }
 .verdict__title .accent-elec { color: var(--elec); }
 .verdict__title .accent-fuel { color: var(--fuel); }
 .verdict__sub { color: var(--muted); margin: 4px 0 0; }
-/* subtitle inline after the title, on the same line */
-.verdict__lead { font-size: 15px; font-weight: 500; color: var(--muted); margin-left: 10px; }
-/* the "Gap … real cost …" line — intentionally small/secondary */
-.verdict__detail { color: var(--muted); margin: 8px 0 0; font-size: 12px; }
 .verdict__rule {
   margin: 10px 0 2px; padding: 9px 13px; border-radius: 11px;
   background: rgba(124, 140, 255, 0.12); border: 1px solid rgba(124, 140, 255, 0.32);

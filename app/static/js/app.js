@@ -30,14 +30,19 @@ const I18N = {
     subtitle: "Fuel or electric? Find the price where it flips.",
     fuel_price_title: "Current fuel price",
     fuel_price_note: "Changes often — set it once, it applies to every scenario.",
-    vary_fuel: "As a fuel price", vary_kwh: "As an electricity price",
-    sweetspot_hint: "Below the line charging wins, above it fuel wins. The dot is where you are.",
+    vary_fuel: "Equivalent fuel price", vary_kwh: "Equivalent electricity price",
+    hint_below_elec: "Below the line electricity is cheaper, above it fuel. The dot shows the current position.",
+    hint_below_fuel: "Below the line fuel is cheaper, above it electricity. The dot shows the current position.",
     chart_title_fuel: "When does charging pay off?",
     chart_title_kwh: "When does charging pay off?",
     region_elec: "Electric cheaper", region_fuel: "Fuel cheaper",
     break_even_line: "Break-even line", you_are_here: "You are here",
-    rule_fuel: "At {kwh} electricity, driving electric is cheaper while fuel is <b>≥ {be}</b>.",
-    rule_kwh: "At {fuel} fuel, driving electric is cheaper while electricity is <b>≤ {be}</b>.",
+    costline_elec: "At {cur}, electricity costs {ce} per 100 km.",
+    costline_fuel: "At {cur}, fuel costs {cf} per 100 km.",
+    box_elec_fuel: "From {be}, electricity is cheaper — at {cur} the saving is <b>{save}</b> per 100 km.",
+    box_elec_kwh: "Up to {be}, electricity is cheaper — at {cur} the saving is <b>{save}</b> per 100 km.",
+    box_fuel_fuel: "Only from {be} would electricity be cheaper — currently fuel's cost advantage is <b>{save}</b> per 100 km.",
+    box_fuel_kwh: "Only below {be} would electricity be cheaper — currently fuel's cost advantage is <b>{save}</b> per 100 km.",
     current_selection: "Current selection",
     scenario: "Scenario", charging_location: "Charging location",
     scenario_values: "Scenario values", location_price: "Location price", save: "Save",
@@ -45,20 +50,18 @@ const I18N = {
     electricity_price: "Electricity price",
     scenarios: "Scenarios", charging_locations: "Charging locations",
     add: "+ Add", col_name: "Name", delete: "Delete",
-    footer: "Break-even fuel price = (kWh/100km × CHF/kWh) ÷ L/100km",
+    footer: "Break-even fuel price = (kWh/100km × CHF/kWh) ÷ l/100km",
     verdict_loading: "Calculating…",
     verdict_start: "Add a scenario and a charging location to start.",
     tie_title: "It's a tie", tie_sub: "Fuel and electric cost the same right now.",
-    drive_electric: 'Drive <span class="accent-elec">electric</span>',
-    charging_cheaper: "Charging is the cheaper choice.",
-    drive_fuel: 'Drive on <span class="accent-fuel">fuel</span>',
-    fuel_cheaper: "Fuel is the cheaper choice.",
-    pump_price: "Pump price", your_elec_price: "Your electricity price",
+    drive_electric: 'Driving <span class="accent-elec">electric</span> is cheaper',
+    drive_fuel: 'Driving on <span class="accent-fuel">fuel</span> is cheaper',
+    pump_price: "Pump price", your_elec_price: "Current electricity price",
     charging_as_fuel: "Charging, as a fuel price", fuel_as_elec: "Fuel, as an electricity price",
     cheaper_tag: "cheaper",
     gap_detail: "Gap <b>{gap}</b> · real cost {cf} (fuel) vs {ce} (electric) per 100 km",
     real_cost: "Real cost {cf} (fuel) vs {ce} (electric) per 100 km",
-    axis_per_liter: "Fuel price (CHF/L)", axis_per_kwh: "Electricity price (CHF/kWh)",
+    axis_per_liter: "Fuel price (CHF/l)", axis_per_kwh: "Electricity price (CHF/kWh)",
     equiv_price: "Equivalent price ({unit})",
     driving_on_fuel: "Driving on fuel (= pump price)",
     driving_on_elec: "Driving on electricity (= your kWh price)",
@@ -70,7 +73,7 @@ const I18N = {
     toast_scenario_saved: "Scenario saved", toast_location_saved: "Location saved",
     toast_scenario_added: "Scenario added", toast_location_added: "Location added",
     toast_scenario_deleted: "Scenario deleted", toast_location_deleted: "Location deleted",
-    toast_fuel_set: "Fuel price set to {p}/L", toast_invalid_fuel: "Enter a valid fuel price",
+    toast_fuel_set: "Fuel price set to {p}/l", toast_invalid_fuel: "Enter a valid fuel price",
     confirm_delete_scenario: "Delete this scenario?",
     confirm_delete_location: "Delete this charging location?",
     new_scenario: "New scenario", new_location: "New location",
@@ -85,14 +88,19 @@ const I18N = {
     subtitle: "Benzin oder Strom? Finde den Preis, bei dem es kippt.",
     fuel_price_title: "Aktueller Benzinpreis",
     fuel_price_note: "Ändert sich oft — einmal setzen, gilt für alle Szenarien.",
-    vary_fuel: "Als Benzinpreis", vary_kwh: "Als Strompreis",
-    sweetspot_hint: "Unter der Linie lohnt sich Laden, darüber Benzin. Der Punkt bist du.",
+    vary_fuel: "Entsprechender Benzinpreis", vary_kwh: "Entsprechender Strompreis",
+    hint_below_elec: "Unterhalb der Linie ist Strom günstiger, oberhalb Benzin. Der Punkt zeigt die aktuelle Lage.",
+    hint_below_fuel: "Unterhalb der Linie ist Benzin günstiger, oberhalb Strom. Der Punkt zeigt die aktuelle Lage.",
     chart_title_fuel: "Wann lohnt sich Laden?",
     chart_title_kwh: "Wann lohnt sich Laden?",
     region_elec: "Strom günstiger", region_fuel: "Benzin günstiger",
     break_even_line: "Break-even-Linie", you_are_here: "Du bist hier",
-    rule_fuel: "Bei {kwh} Strom ist elektrisch fahren günstiger, solange Benzin <b>≥ {be}</b> kostet.",
-    rule_kwh: "Bei {fuel} Benzin ist elektrisch fahren günstiger, solange Strom <b>≤ {be}</b> kostet.",
+    costline_elec: "Bei {cur} kostet Strom {ce} pro 100 km.",
+    costline_fuel: "Bei {cur} kostet Benzin {cf} pro 100 km.",
+    box_elec_fuel: "Ab {be} ist Strom günstiger — bei {cur} beträgt die Ersparnis <b>{save}</b> pro 100 km.",
+    box_elec_kwh: "Bis {be} ist Strom günstiger — bei {cur} beträgt die Ersparnis <b>{save}</b> pro 100 km.",
+    box_fuel_fuel: "Erst ab {be} wäre Strom günstiger — aktuell beträgt der Kostenvorteil von Benzin <b>{save}</b> pro 100 km.",
+    box_fuel_kwh: "Erst unter {be} wäre Strom günstiger — aktuell beträgt der Kostenvorteil von Benzin <b>{save}</b> pro 100 km.",
     current_selection: "Aktuelle Auswahl",
     scenario: "Szenario", charging_location: "Standort",
     scenario_values: "Szenario-Werte", location_price: "Ladepreis", save: "Speichern",
@@ -100,20 +108,18 @@ const I18N = {
     electricity_price: "Strompreis",
     scenarios: "Szenarien", charging_locations: "Standorte",
     add: "+ Hinzufügen", col_name: "Name", delete: "Löschen",
-    footer: "Break-even-Benzinpreis = (kWh/100km × CHF/kWh) ÷ L/100km",
+    footer: "Break-even-Benzinpreis = (kWh/100km × CHF/kWh) ÷ l/100km",
     verdict_loading: "Berechne…",
     verdict_start: "Füge ein Szenario und einen Standort hinzu, um zu starten.",
     tie_title: "Unentschieden", tie_sub: "Benzin und Strom kosten gerade gleich viel.",
-    drive_electric: 'Fahre <span class="accent-elec">elektrisch</span>',
-    charging_cheaper: "Laden ist die günstigere Wahl.",
-    drive_fuel: 'Fahre mit <span class="accent-fuel">Benzin</span>',
-    fuel_cheaper: "Benzin ist die günstigere Wahl.",
-    pump_price: "Tankstellenpreis", your_elec_price: "Dein Strompreis",
+    drive_electric: '<span class="accent-elec">Elektrisch</span> fahren ist günstiger',
+    drive_fuel: 'Mit <span class="accent-fuel">Benzin</span> fahren ist günstiger',
+    pump_price: "Tankstellenpreis", your_elec_price: "Aktueller Strompreis",
     charging_as_fuel: "Laden, als Benzinpreis", fuel_as_elec: "Benzin, als Strompreis",
     cheaper_tag: "günstiger",
     gap_detail: "Differenz <b>{gap}</b> · reale Kosten {cf} (Benzin) vs {ce} (Strom) pro 100 km",
     real_cost: "Reale Kosten {cf} (Benzin) vs {ce} (Strom) pro 100 km",
-    axis_per_liter: "Benzinpreis (CHF/L)", axis_per_kwh: "Strompreis (CHF/kWh)",
+    axis_per_liter: "Benzinpreis (CHF/l)", axis_per_kwh: "Strompreis (CHF/kWh)",
     equiv_price: "Äquivalenzpreis ({unit})",
     driving_on_fuel: "Fahren mit Benzin (= Tankstellenpreis)",
     driving_on_elec: "Fahren mit Strom (= dein kWh-Preis)",
@@ -125,7 +131,7 @@ const I18N = {
     toast_scenario_saved: "Szenario gespeichert", toast_location_saved: "Standort gespeichert",
     toast_scenario_added: "Szenario hinzugefügt", toast_location_added: "Standort hinzugefügt",
     toast_scenario_deleted: "Szenario gelöscht", toast_location_deleted: "Standort gelöscht",
-    toast_fuel_set: "Benzinpreis auf {p}/L gesetzt",
+    toast_fuel_set: "Benzinpreis auf {p}/l gesetzt",
     toast_invalid_fuel: "Gib einen gültigen Benzinpreis ein",
     confirm_delete_scenario: "Dieses Szenario löschen?",
     confirm_delete_location: "Diesen Standort löschen?",
@@ -285,6 +291,9 @@ function applyAxisToggleUI() {
   });
   $("chart-title").textContent =
     axisMode === "fuel" ? t("chart_title_fuel") : t("chart_title_kwh");
+  // Below/above wording depends on which price is on the x-axis.
+  $("chart-hint").innerHTML =
+    axisMode === "fuel" ? t("hint_below_elec") : t("hint_below_fuel");
 }
 
 async function reload() {
@@ -404,46 +413,42 @@ function renderVerdict(res) {
   card.classList.remove("is-electric", "is-fuel");
   const isFuel = axisMode === "fuel";
 
-  let icon, title, sub;
-  if (res.cheaper === "equal") {
-    icon = "⚖️";
-    title = t("tie_title");
-    sub = t("tie_sub");
-  } else if (res.cheaper === "electric") {
-    card.classList.add("is-electric");
-    icon = "⚡";
-    title = t("drive_electric");
-    sub = t("charging_cheaper");
-  } else {
-    card.classList.add("is-fuel");
-    icon = "⛽";
-    title = t("drive_fuel");
-    sub = t("fuel_cheaper");
-  }
+  const isTie = res.cheaper === "equal";
+  const isElec = res.cheaper === "electric";
+  let icon, title;
+  if (isTie) { icon = "⚖️"; title = t("tie_title"); }
+  else if (isElec) { card.classList.add("is-electric"); icon = "⚡"; title = t("drive_electric"); }
+  else { card.classList.add("is-fuel"); icon = "⛽"; title = t("drive_fuel"); }
 
   // Two comparable prices in the SAME unit, following the chart toggle.
-  const unit = isFuel ? "/L" : "/kWh";
+  const unit = isFuel ? "/l" : "/kWh";
+  const fuelCur = `${CHF(res.fuel_price)}/l`;
+  const kwhCur = `${CHF(res.location.price_chf_per_kwh)}/kWh`;
   const statA = isFuel
     ? { energy: "fuel", label: t("pump_price"), val: res.fuel_price }
     : { energy: "elec", label: t("your_elec_price"), val: res.location.price_chf_per_kwh };
   const statB = isFuel
-    ? { energy: "elec", label: t("charging_as_fuel"), val: res.break_even_fuel_price }
-    : { energy: "fuel", label: t("fuel_as_elec"), val: res.break_even_kwh_price };
-  const cheaperEnergy = res.cheaper === "equal" ? null
-    : (res.cheaper === "electric" ? "elec" : "fuel");
+    ? { energy: "elec", label: t("vary_fuel"), val: res.break_even_fuel_price }
+    : { energy: "fuel", label: t("vary_kwh"), val: res.break_even_kwh_price };
+  const cheaperEnergy = isTie ? null : (isElec ? "elec" : "fuel");
 
-  const gap = (statA.val != null && statB.val != null) ? Math.abs(statA.val - statB.val) : null;
-  const detail = gap != null
-    ? t("gap_detail", { gap: `${CHF(gap)}${unit}`, cf: CHF(res.cost_fuel), ce: CHF(res.cost_elec) })
-    : t("real_cost", { cf: CHF(res.cost_fuel), ce: CHF(res.cost_elec) });
-
-  // Plain-language break-even threshold, following the toggle.
+  // Cost line (cheaper option) + break-even box (threshold + savings), in the toggle's unit.
   const beRule = isFuel ? res.break_even_fuel_price : res.break_even_kwh_price;
-  let rule = "";
-  if (beRule != null) {
-    rule = isFuel
-      ? t("rule_fuel", { kwh: `${CHF(res.location.price_chf_per_kwh)}/kWh`, be: `${CHF(beRule)}/L` })
-      : t("rule_kwh", { fuel: `${CHF(res.fuel_price)}/L`, be: `${CHF(beRule)}/kWh` });
+  const save = CHF(Math.abs(res.cost_fuel - res.cost_elec));
+  let costLine, box = "";
+  if (isTie) {
+    costLine = t("tie_sub");
+  } else {
+    costLine = isElec
+      ? t("costline_elec", { cur: kwhCur, ce: CHF(res.cost_elec) })
+      : t("costline_fuel", { cur: fuelCur, cf: CHF(res.cost_fuel) });
+    if (beRule != null) {
+      const be = `${CHF(beRule)}${unit}`;
+      if (isElec) box = isFuel ? t("box_elec_fuel", { be, cur: fuelCur, save })
+                               : t("box_elec_kwh", { be, cur: kwhCur, save });
+      else box = isFuel ? t("box_fuel_fuel", { be, save })
+                        : t("box_fuel_kwh", { be, save });
+    }
   }
 
   const statHtml = (s) => {
@@ -459,9 +464,9 @@ function renderVerdict(res) {
     <div class="verdict__row">
       <div class="verdict__icon">${icon}</div>
       <div class="verdict__main">
-        <p class="verdict__title">${title}<span class="verdict__lead">${sub}</span></p>
-        ${rule ? `<p class="verdict__rule">⚡ ${rule}</p>` : ""}
-        <p class="verdict__detail">${detail}</p>
+        <p class="verdict__title">${title}</p>
+        ${costLine ? `<p class="verdict__sub">${costLine}</p>` : ""}
+        ${box ? `<p class="verdict__rule">⚡ ${box}</p>` : ""}
       </div>
       <div class="verdict__stats">
         ${statHtml(statA)}
@@ -484,12 +489,12 @@ function renderChart(res) {
   const pc = res.scenario.power_consumption;
 
   const cfg = isFuel ? {
-    xUnit: "CHF/L", yUnit: "CHF/kWh", xTitle: t("axis_per_liter"), yTitle: t("axis_per_kwh"),
+    xUnit: "CHF/l", yUnit: "CHF/kWh", xTitle: t("axis_per_liter"), yTitle: t("axis_per_kwh"),
     xVal: res.fuel_price, yVal: res.location.price_chf_per_kwh,
     slope: pc > 0 ? fc / pc : 0,   // break-even y for a given x
     belowIsElectric: true,         // below the line (low kWh price) → charging wins
   } : {
-    xUnit: "CHF/kWh", yUnit: "CHF/L", xTitle: t("axis_per_kwh"), yTitle: t("axis_per_liter"),
+    xUnit: "CHF/kWh", yUnit: "CHF/l", xTitle: t("axis_per_kwh"), yTitle: t("axis_per_liter"),
     xVal: res.location.price_chf_per_kwh, yVal: res.fuel_price,
     slope: fc > 0 ? pc / fc : 0,
     belowIsElectric: false,        // below the line (low fuel price) → fuel wins

@@ -54,7 +54,7 @@
       <div class="fuelbar__input">
         <button class="step" id="fuel-down" title="−0.05">−</button>
         <input type="number" inputmode="decimal" step="0.01" min="0" id="in-fuel-price" />
-        <span class="unit">CHF/L</span>
+        <span class="unit">CHF/l</span>
         <button class="step" id="fuel-up" title="+0.05">+</button>
       </div>
     </section>
@@ -70,7 +70,7 @@
         <div class="card__head">
           <h2 id="chart-title">Break-even: fuel price (x) vs. electricity price (y)</h2>
         </div>
-        <span class="hint" data-i18n-html="sweetspot_hint">The <b>sweetspot</b> is where the two lines cross.</span>
+        <span class="hint" id="chart-hint"></span>
         <div class="chart-wrap">
           <canvas id="chart"></canvas>
         </div>
@@ -99,7 +99,7 @@
               <select id="scenario-select"></select>
             </label>
             <label class="field field--inline">
-              <span><span data-i18n="fuel_consumption">Fuel consumption</span> <em>(L/100km)</em></span>
+              <span><span data-i18n="fuel_consumption">Fuel consumption</span> <em>(l/100km)</em></span>
               <input type="number" inputmode="decimal" step="0.1" min="0.1" id="in-fuel-consumption" />
             </label>
             <label class="field field--inline">
@@ -121,7 +121,7 @@
         <div class="table-wrap">
           <table class="data-table" id="scenario-table">
             <thead>
-              <tr><th data-i18n="col_name">Name</th><th>L/100km</th><th>kWh/100km</th><th></th></tr>
+              <tr><th data-i18n="col_name">Name</th><th>l/100km</th><th>kWh/100km</th><th></th></tr>
             </thead>
             <tbody></tbody>
           </table>
