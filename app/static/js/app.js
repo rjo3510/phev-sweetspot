@@ -484,10 +484,10 @@ function renderChart(res) {
   // The sweetspot: the break-even price (in the x-axis unit) at the current y — a point ON the line.
   const beRule = isFuel ? res.break_even_fuel_price : res.break_even_kwh_price;
   const hasSweet = beRule != null && beRule > 0;
-  // Anchor the range on the sweetspot (stable while the global fuel price is nudged),
-  // and only widen it if the current price runs past that frame.
+  // Anchor the range on the sweetspot so it stays put across the realistic price
+  // range (~2.5× the sweetspot); only widen further if the current price exceeds that.
   const xMax = hasSweet
-    ? Math.max(beRule * 2.2, cfg.xVal * 1.2, 0.02)
+    ? Math.max(beRule * 2.8, cfg.xVal * 1.1, 0.02)
     : Math.max(cfg.xVal, 0.01) * 1.8;
   const yLine = cfg.slope * xMax;                       // break-even line at right edge
   const yMax = (Math.max(yLine, cfg.yVal) || 1) * 1.2;
@@ -528,6 +528,8 @@ function renderChart(res) {
     hereLabel: { type: "label", xValue: cfg.xVal, yValue: cfg.yVal,
       content: `${cfg.xVal.toFixed(2)} ${cfg.xUnit} · ${cfg.yVal.toFixed(2)} ${cfg.yUnit}`,
       color: "#eaf0ff", font: { size: 11, weight: "600" }, yAdjust: -18,
+      // pull the label left when the point is near the right edge so it doesn't clip
+      xAdjust: cfg.xVal > xMax * 0.72 ? -70 : 0,
       backgroundColor: "rgba(0,0,0,0)" },
     elecRegion: { type: "label",
       xValue: xMax * (cfg.belowIsElectric ? 0.72 : 0.26),
