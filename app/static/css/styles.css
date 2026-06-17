@@ -258,6 +258,13 @@ select:focus, input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(124, 140, 255, 0.18);
 }
+/* Strip native control chrome so Safari/iOS render the same flat box as Chrome
+   (otherwise inputs get a native inner shadow / odd border). Selects keep their
+   native arrow on purpose, so they are left untouched. */
+input[type="number"], input[type="text"] { -webkit-appearance: none; appearance: none; }
+input[type="number"] { -moz-appearance: textfield; }
+/* Read-only (disabled) fields: keep full-contrast text instead of Safari's grey. */
+input:disabled, select:disabled { -webkit-text-fill-color: var(--text); opacity: 1; cursor: default; }
 
 .active-inputs__group { margin-top: 8px; }
 .active-inputs__group h3 {
