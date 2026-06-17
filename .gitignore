@@ -5,7 +5,7 @@ __pycache__/
 .pytest_cache/
 .DS_Store
 *.tar.gz
-deploy/.env
+.env
 
 # Self-hosted offline assets — keep these in the repo (downloaded once, no CDN).
 !app/static/vendor/

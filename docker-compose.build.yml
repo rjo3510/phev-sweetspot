@@ -4,5 +4,5 @@
 services:
   phev:
     build:
-      context: ..
+      context: .
       dockerfile: Dockerfile

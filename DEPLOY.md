@@ -10,7 +10,7 @@ container over a shared Docker network.
 ```
 dev VM ──git push──▶ GitHub ──Actions build──▶ GHCR (private image)
                                                    │
-                          deploy/ship.sh (from a   │  docker compose pull
+                          ./ship.sh (from a        │  docker compose pull
                           machine that can SSH) ───▶ server ──────────────▶ restart
 ```
 
@@ -26,9 +26,9 @@ dev VM ──git push──▶ GitHub ──Actions build──▶ GHCR (private
 2. **Place the deploy files and fill in `.env`:**
 
    ```bash
-   mkdir -p ~/phev-sweetspot/deploy
-   # copy deploy/docker-compose.yml and deploy/.env.example into ~/phev-sweetspot/deploy
-   cd ~/phev-sweetspot/deploy
+   mkdir -p ~/phev-sweetspot
+   # copy docker-compose.yml and .env.example into ~/phev-sweetspot
+   cd ~/phev-sweetspot
    cp .env.example .env
    ```
 
@@ -55,14 +55,14 @@ dev VM ──git push──▶ GitHub ──Actions build──▶ GHCR (private
 2. **Deploy** from any machine that can SSH to the server (the dev VM cannot reach it):
 
    ```bash
-   PHEV_SERVER=user@phev-host deploy/ship.sh
+   PHEV_SERVER=user@phev-host ./ship.sh
    ```
 
    That runs `docker compose pull && docker compose up -d` on the server and prunes the old
    image. Or do it by hand on the server:
 
    ```bash
-   cd ~/phev-sweetspot/deploy && docker compose pull && docker compose up -d
+   cd ~/phev-sweetspot && docker compose pull && docker compose up -d
    ```
 
 The DB survives in the `phev-data` volume across every update.
@@ -103,5 +103,5 @@ docker run --rm -v phev-data:/data -v "$PWD":/backup alpine \
 - **Change the host port:** set `APP_PORT` in `.env` (default `8082`).
 - To restrict the published port to localhost only, edit the `ports:` mapping to
   `"127.0.0.1:8082:8000"`.
-- **Offline / air-gapped server?** If the server can't reach GHCR, `deploy/bundle.sh` still
+- **Offline / air-gapped server?** If the server can't reach GHCR, `./bundle.sh` still
   produces a source tarball you can carry over and build on the host (`docker compose build`).

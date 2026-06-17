@@ -7,5 +7,11 @@ __pycache__/
 .DS_Store
 tests/
 docs/
-deploy/
 *.tar.gz
+.env
+.env.example
+docker-compose.yml
+docker-compose.build.yml
+ship.sh
+bundle.sh
+DEPLOY.md

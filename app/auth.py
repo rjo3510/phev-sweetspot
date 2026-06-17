@@ -86,6 +86,6 @@ if __name__ == "__main__":
     pw = getpass.getpass("New owner password: ")
     if pw != getpass.getpass("Repeat password: "):
         raise SystemExit("Passwords do not match.")
-    print("\nPaste these into deploy/.env (no quotes needed):\n")
+    print("\nPaste these into .env (no quotes needed):\n")
     print(f"OWNER_PASSWORD_HASH={hash_password(pw)}")
     print(f"SWEETSPOT_SECRET={secrets.token_hex(32)}")

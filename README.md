@@ -106,8 +106,12 @@ app/
   static/vendor/ self-hosted Chart.js + annotation plugin (offline)
   static/fonts/  self-hosted Inter font (offline)
 tests/test_calc.py
-Dockerfile       container image
-deploy/          Docker Compose + Nginx Proxy Manager deployment (see deploy/README.md)
+Dockerfile               container image
+docker-compose.yml       runs the GHCR image (production)
+docker-compose.build.yml  offline override: build on the host instead of pulling
+ship.sh                  trigger a deploy on the server over SSH
+bundle.sh                offline fallback: source tarball
+DEPLOY.md                deployment guide (NPM, HTTPS, GHCR, rollback)
 .github/workflows/deploy.yml   CI: build image on push to main, push to GHCR
 ```
 
@@ -131,19 +135,19 @@ owner session — see [Access control](#access-control-read-only-for-everyone-ow
 ## Deployment
 
 CI builds the image and the server pulls it — no manual tarball, no build on the host.
-Full guide (Nginx Proxy Manager, HTTPS, GHCR login, rollback): **[`deploy/README.md`](deploy/README.md)**.
+Full guide (Nginx Proxy Manager, HTTPS, GHCR login, rollback): **[`DEPLOY.md`](DEPLOY.md)**.
 
 ```
 git push  ──▶  GitHub Actions builds & pushes  ──▶  ghcr.io/rjo3510/phev-sweetspot
                                                           │
-                                deploy/ship.sh  ──ssh──▶  server: docker compose pull && up -d
+                                    ./ship.sh  ──ssh──▶  server: docker compose pull && up -d
 ```
 
 ```bash
-git push                                  # GitHub Actions builds & pushes the image to GHCR
-PHEV_SERVER=user@phev-host deploy/ship.sh # pull the new image on the server and restart
+git push                             # GitHub Actions builds & pushes the image to GHCR
+PHEV_SERVER=user@phev-host ./ship.sh # pull the new image on the server and restart
 ```
 
-`deploy/ship.sh` runs from any machine that can SSH to the server (the dev VM can't reach it).
+`./ship.sh` runs from any machine that can SSH to the server (the dev VM can't reach it).
 The app listens on container port `8000`, is published on the host as `http://<host>:8082`
 (`APP_PORT`), and is also reachable by container name (`phev-sweetspot`) on the proxy network.
