@@ -188,8 +188,9 @@ body:not(.is-editor) .editor-only { display: none !important; }
    from shrinking, so the layout breaks when the window is narrowed and re-widened.
    min-width:0 lets columns (and the chart) resize cleanly in both directions. */
 .grid > * { min-width: 0; }
-/* Lower row: Scenarios gets more width than Charging locations. */
-.grid--lists { grid-template-columns: 1.6fr 1fr; }
+/* .grid--lists shares the base template (minmax(0,1fr) 330px) so the lower row's
+   columns line up with the upper row: Scenarios under the chart, Charging
+   locations under Current selection. */
 /* Responsive overrides live at the END of this file (see bottom) so they reliably
    win over the base component rules below, which would otherwise come later in source. */
 
@@ -303,9 +304,8 @@ input:disabled, select:disabled { -webkit-text-fill-color: var(--text); opacity:
   border-bottom: 1px solid var(--line);
 }
 .data-table td { padding: 6px 10px; border-bottom: 1px solid rgba(40, 51, 88, 0.5); }
-/* Mark the active scenario/location by accenting its fields, not a boxy row tint
-   (the tinted rectangle read as a stray frame around the row). */
-.data-table tr.is-active input { border-color: var(--accent); }
+/* No active-row marker in the management tables: it's read-only here and the
+   current selection is already shown by the dropdowns in "Current selection". */
 /* min-width:0 overrides an <input>'s intrinsic (size-based) min width so the
    numeric columns shrink to the cell instead of widening the whole table. */
 .data-table input { width: 100%; min-width: 0; padding: 7px 9px; font-size: 14px; }
