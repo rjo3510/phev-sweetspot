@@ -267,12 +267,9 @@ input[type="number"] { -moz-appearance: textfield; }
 /* Read-only (disabled) fields: keep full-contrast text instead of Safari's grey. */
 input:disabled, select:disabled { -webkit-text-fill-color: var(--text); opacity: 1; cursor: default; }
 
-.active-inputs__group { margin-top: 8px; }
-.active-inputs__group h3 {
-  font-size: 13px; text-transform: uppercase; letter-spacing: .6px;
-  color: var(--muted); margin: 18px 0 10px;
-  display: flex; align-items: center; justify-content: space-between;
-}
+/* Current selection: each selector + its values is a block; clear gap between blocks. */
+.sel-block + .sel-block { margin-top: 24px; }
+.sel-block__save { text-align: right; margin-top: 2px; }
 
 /* Buttons */
 .btn {

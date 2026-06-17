@@ -82,24 +82,25 @@
         <div class="card__head"><h2 data-i18n="current_selection">Current selection</h2></div>
 
         <div class="active-inputs" id="active-inputs">
-          <label class="field">
-            <span data-i18n="charging_location">Charging location</span>
-            <select id="location-select"></select>
-          </label>
-          <div class="active-inputs__group">
-            <h3><span data-i18n="location_price">Location price</span> <button class="link-btn editor-only" id="save-location" data-i18n="save">Save</button></h3>
+          <div class="sel-block">
+            <label class="field">
+              <span data-i18n="charging_location">Charging location</span>
+              <select id="location-select"></select>
+            </label>
             <label class="field field--inline">
               <span><span data-i18n="electricity_price">Electricity price</span> <em>(CHF/kWh)</em></span>
               <input type="number" inputmode="decimal" step="0.01" min="0" id="in-kwh-price" />
             </label>
+            <div class="sel-block__save editor-only">
+              <button class="link-btn" id="save-location" data-i18n="save">Save</button>
+            </div>
           </div>
 
-          <label class="field">
-            <span data-i18n="scenario">Scenario</span>
-            <select id="scenario-select"></select>
-          </label>
-          <div class="active-inputs__group">
-            <h3><span data-i18n="scenario_values">Scenario values</span> <button class="link-btn editor-only" id="save-scenario" data-i18n="save">Save</button></h3>
+          <div class="sel-block">
+            <label class="field">
+              <span data-i18n="scenario">Scenario</span>
+              <select id="scenario-select"></select>
+            </label>
             <label class="field field--inline">
               <span><span data-i18n="fuel_consumption">Fuel consumption</span> <em>(L/100km)</em></span>
               <input type="number" inputmode="decimal" step="0.1" min="0.1" id="in-fuel-consumption" />
@@ -108,6 +109,9 @@
               <span><span data-i18n="power_consumption">Power consumption</span> <em>(kWh/100km)</em></span>
               <input type="number" inputmode="decimal" step="0.1" min="0" id="in-power-consumption" />
             </label>
+            <div class="sel-block__save editor-only">
+              <button class="link-btn" id="save-scenario" data-i18n="save">Save</button>
+            </div>
           </div>
         </div>
       </section>
