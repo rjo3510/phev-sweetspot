@@ -632,7 +632,7 @@ function renderScenarioTable() {
     const tr = document.createElement("tr");
     if (s.id === activeScenarioId) tr.classList.add("is-active");
     tr.innerHTML = `
-      <td><input class="name" value="${esc(s.name)}" data-f="name" ${ro}></td>
+      <td><input type="text" class="name" value="${esc(s.name)}" data-f="name" ${ro}></td>
       <td><input type="number" inputmode="decimal" step="0.1" min="0.1" value="${s.fuel_consumption}" data-f="fuel_consumption" ${ro}></td>
       <td><input type="number" inputmode="decimal" step="0.1" min="0" value="${s.power_consumption}" data-f="power_consumption" ${ro}></td>
       <td class="actions">${isEditor ? `
@@ -654,7 +654,7 @@ function renderLocationTable() {
     const tr = document.createElement("tr");
     if (l.id === activeLocationId) tr.classList.add("is-active");
     tr.innerHTML = `
-      <td><input class="name" value="${esc(l.name)}" data-f="name" ${ro}></td>
+      <td><input type="text" class="name" value="${esc(l.name)}" data-f="name" ${ro}></td>
       <td><input type="number" inputmode="decimal" step="0.01" min="0" value="${l.price_chf_per_kwh}" data-f="price_chf_per_kwh" ${ro}></td>
       <td class="actions">${isEditor ? `
         <button class="link-btn" data-act="save">${t("save")}</button>
