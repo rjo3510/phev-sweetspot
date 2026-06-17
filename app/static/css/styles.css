@@ -46,7 +46,35 @@ body {
   display: flex; justify-content: space-between; align-items: center;
   gap: 12px; flex-wrap: wrap; margin-bottom: 8px;
 }
+.topbar__right { display: flex; align-items: center; gap: 10px; }
 .lang-toggle .toggle__btn { padding: 5px 12px; font-size: 12px; letter-spacing: .5px; }
+
+/* Owner login / read-only mode */
+.auth-btn {
+  background: var(--bg-soft); border: 1px solid var(--line); color: var(--muted);
+  font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  padding: 6px 12px; border-radius: 12px; transition: border-color .15s, color .15s;
+}
+.auth-btn:hover { color: var(--text); border-color: var(--accent); }
+body.is-editor .auth-btn { color: var(--elec); border-color: rgba(56, 225, 176, 0.45); }
+/* Hide all editor-only controls until the owner is logged in. */
+body:not(.is-editor) .editor-only { display: none !important; }
+
+/* Modal */
+.modal { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; }
+.modal[hidden] { display: none; }
+.modal__backdrop { position: absolute; inset: 0; background: rgba(5, 8, 18, 0.66); backdrop-filter: blur(2px); }
+.modal__box {
+  position: relative; width: min(360px, 92vw);
+  background: linear-gradient(180deg, var(--card), var(--bg-soft));
+  border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 22px; box-shadow: var(--shadow);
+}
+.modal__box h3 { margin: 0 0 14px; font-size: 17px; }
+.modal__box input[type="password"] { width: 100%; }
+.modal__actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+.btn--ghost { background: none; border: 1px solid var(--line); color: var(--muted); }
+.btn--ghost:hover { color: var(--text); filter: none; }
 
 /* Hero */
 .hero { text-align: center; margin-bottom: 22px; }
@@ -158,7 +186,8 @@ body {
    from shrinking, so the layout breaks when the window is narrowed and re-widened.
    min-width:0 lets columns (and the chart) resize cleanly in both directions. */
 .grid > * { min-width: 0; }
-.grid:nth-of-type(3) { grid-template-columns: 1fr 1fr; }
+/* Lower row: Scenarios (3 columns) gets more width than Charging locations (1). */
+.grid:nth-of-type(3) { grid-template-columns: 1.6fr 1fr; }
 @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
 @media (max-width: 560px) {
   .app { padding: 16px 13px 48px; }

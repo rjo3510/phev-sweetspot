@@ -6,9 +6,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 # --- Scenarios ---------------------------------------------------------------
 class ScenarioBase(BaseModel):
-    name: str = Field(..., min_length=1)
-    fuel_consumption: float = Field(..., gt=0, description="liters / 100 km")
-    power_consumption: float = Field(..., ge=0, description="kWh / 100 km")
+    name: str = Field(..., min_length=1, max_length=100)
+    fuel_consumption: float = Field(..., gt=0, le=1000, description="liters / 100 km")
+    power_consumption: float = Field(..., ge=0, le=1000, description="kWh / 100 km")
 
 
 class ScenarioCreate(ScenarioBase):
@@ -22,8 +22,8 @@ class ScenarioRead(ScenarioBase):
 
 # --- Charging locations ------------------------------------------------------
 class ChargingLocationBase(BaseModel):
-    name: str = Field(..., min_length=1)
-    price_chf_per_kwh: float = Field(..., ge=0, description="CHF / kWh")
+    name: str = Field(..., min_length=1, max_length=100)
+    price_chf_per_kwh: float = Field(..., ge=0, le=1000, description="CHF / kWh")
 
 
 class ChargingLocationCreate(ChargingLocationBase):
@@ -37,11 +37,20 @@ class ChargingLocationRead(ChargingLocationBase):
 
 # --- Settings ----------------------------------------------------------------
 class SettingsBase(BaseModel):
-    fuel_price: float = Field(..., ge=0, description="current fuel price, CHF / liter")
+    fuel_price: float = Field(..., ge=0, le=1000, description="current fuel price, CHF / liter")
 
 
 class SettingsRead(SettingsBase):
     model_config = ConfigDict(from_attributes=True)
+
+
+# --- Auth --------------------------------------------------------------------
+class Login(BaseModel):
+    password: str = Field(..., min_length=1, max_length=256)
+
+
+class AuthState(BaseModel):
+    editor: bool
 
 
 # --- Calculation -------------------------------------------------------------

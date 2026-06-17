@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import os
+import time
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Cookie, Depends, FastAPI, HTTPException, Response
 from fastapi.requests import Request
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -11,14 +12,37 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from . import calc, crud, models, schemas
+from . import auth, calc, crud, models, schemas
 from .database import Base, SessionLocal, engine, get_db
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+COOKIE_NAME = "edit_session"
+COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "").lower() in ("1", "true", "yes")
 
 app = FastAPI(title="PHEV Sweetspot Calculator")
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+
+
+# --- Auth: read-only for everyone, writes require the owner password ----------
+def require_editor(edit_session: str | None = Cookie(default=None)) -> bool:
+    """Dependency guarding write endpoints. 401 unless a valid edit session exists."""
+    if not auth.verify_token(edit_session):
+        raise HTTPException(status_code=401, detail="Editing requires login")
+    return True
+
+
+# Simple in-memory per-IP rate limit for login attempts (brute-force protection).
+_login_attempts: dict[str, list[float]] = {}
+_LOGIN_WINDOW = 300.0   # seconds
+_LOGIN_MAX = 8          # attempts per window per IP
+
+
+def _login_rate_ok(ip: str) -> bool:
+    now = time.time()
+    recent = [t for t in _login_attempts.get(ip, []) if now - t < _LOGIN_WINDOW]
+    _login_attempts[ip] = recent
+    return len(recent) < _LOGIN_MAX
 
 
 def _migrate_legacy_fuel_price() -> None:
@@ -47,6 +71,11 @@ def on_startup() -> None:
         crud.seed_if_empty(db)
     finally:
         db.close()
+    if auth.USING_DEFAULT_PASSWORD:
+        auth.logger.warning(
+            "OWNER_PASSWORD_HASH is not set — using the default dev password '%s'. "
+            "Set OWNER_PASSWORD_HASH before exposing this app publicly "
+            "(run: python -m app.auth).", auth.DEFAULT_DEV_PASSWORD)
 
 
 # --- Page --------------------------------------------------------------------
@@ -61,18 +90,45 @@ def favicon():
                         media_type="image/svg+xml")
 
 
+# --- Auth --------------------------------------------------------------------
+@app.get("/api/me", response_model=schemas.AuthState)
+def me(edit_session: str | None = Cookie(default=None)):
+    return schemas.AuthState(editor=auth.verify_token(edit_session))
+
+
+@app.post("/api/login", response_model=schemas.AuthState)
+def login(data: schemas.Login, request: Request, response: Response):
+    ip = request.client.host if request.client else "?"
+    if not _login_rate_ok(ip):
+        raise HTTPException(status_code=429, detail="Too many attempts — try again later")
+    _login_attempts.setdefault(ip, []).append(time.time())
+    if not auth.check_password(data.password):
+        raise HTTPException(status_code=401, detail="Wrong password")
+    response.set_cookie(COOKIE_NAME, auth.make_token(), max_age=auth.SESSION_TTL,
+                        httponly=True, samesite="lax", secure=COOKIE_SECURE)
+    return schemas.AuthState(editor=True)
+
+
+@app.post("/api/logout", response_model=schemas.AuthState)
+def logout(response: Response):
+    response.delete_cookie(COOKIE_NAME, samesite="lax", secure=COOKIE_SECURE)
+    return schemas.AuthState(editor=False)
+
+
 # --- Scenarios ---------------------------------------------------------------
 @app.get("/api/scenarios", response_model=list[schemas.ScenarioRead])
 def get_scenarios(db: Session = Depends(get_db)):
     return crud.list_scenarios(db)
 
 
-@app.post("/api/scenarios", response_model=schemas.ScenarioRead, status_code=201)
+@app.post("/api/scenarios", response_model=schemas.ScenarioRead, status_code=201,
+          dependencies=[Depends(require_editor)])
 def post_scenario(data: schemas.ScenarioCreate, db: Session = Depends(get_db)):
     return crud.create_scenario(db, data)
 
 
-@app.put("/api/scenarios/{scenario_id}", response_model=schemas.ScenarioRead)
+@app.put("/api/scenarios/{scenario_id}", response_model=schemas.ScenarioRead,
+         dependencies=[Depends(require_editor)])
 def put_scenario(scenario_id: int, data: schemas.ScenarioCreate,
                  db: Session = Depends(get_db)):
     obj = crud.get_scenario(db, scenario_id)
@@ -81,7 +137,8 @@ def put_scenario(scenario_id: int, data: schemas.ScenarioCreate,
     return crud.update_scenario(db, obj, data)
 
 
-@app.delete("/api/scenarios/{scenario_id}", status_code=204)
+@app.delete("/api/scenarios/{scenario_id}", status_code=204,
+            dependencies=[Depends(require_editor)])
 def remove_scenario(scenario_id: int, db: Session = Depends(get_db)):
     obj = crud.get_scenario(db, scenario_id)
     if obj is None:
@@ -95,12 +152,14 @@ def get_locations(db: Session = Depends(get_db)):
     return crud.list_locations(db)
 
 
-@app.post("/api/locations", response_model=schemas.ChargingLocationRead, status_code=201)
+@app.post("/api/locations", response_model=schemas.ChargingLocationRead, status_code=201,
+          dependencies=[Depends(require_editor)])
 def post_location(data: schemas.ChargingLocationCreate, db: Session = Depends(get_db)):
     return crud.create_location(db, data)
 
 
-@app.put("/api/locations/{location_id}", response_model=schemas.ChargingLocationRead)
+@app.put("/api/locations/{location_id}", response_model=schemas.ChargingLocationRead,
+         dependencies=[Depends(require_editor)])
 def put_location(location_id: int, data: schemas.ChargingLocationCreate,
                  db: Session = Depends(get_db)):
     obj = crud.get_location(db, location_id)
@@ -109,7 +168,8 @@ def put_location(location_id: int, data: schemas.ChargingLocationCreate,
     return crud.update_location(db, obj, data)
 
 
-@app.delete("/api/locations/{location_id}", status_code=204)
+@app.delete("/api/locations/{location_id}", status_code=204,
+            dependencies=[Depends(require_editor)])
 def remove_location(location_id: int, db: Session = Depends(get_db)):
     obj = crud.get_location(db, location_id)
     if obj is None:
@@ -148,6 +208,7 @@ def get_settings(db: Session = Depends(get_db)):
     return crud.get_settings(db)
 
 
-@app.put("/api/settings", response_model=schemas.SettingsRead)
+@app.put("/api/settings", response_model=schemas.SettingsRead,
+         dependencies=[Depends(require_editor)])
 def put_settings(data: schemas.SettingsBase, db: Session = Depends(get_db)):
     return crud.update_settings(db, data)

@@ -72,6 +72,12 @@ const I18N = {
     confirm_delete_scenario: "Delete this scenario?",
     confirm_delete_location: "Delete this charging location?",
     new_scenario: "New scenario", new_location: "New location",
+    auth_edit: "Edit", auth_logout: "Log out",
+    login_title: "Log in to edit", login_submit: "Log in", cancel: "Cancel",
+    password_ph: "Password",
+    toast_login_ok: "Editing enabled", toast_login_wrong: "Wrong password",
+    toast_login_throttled: "Too many attempts — try again later",
+    toast_logout: "Logged out — read-only",
   },
   de: {
     subtitle: "Benzin oder Strom? Finde den Preis, bei dem es kippt.",
@@ -122,6 +128,12 @@ const I18N = {
     confirm_delete_scenario: "Dieses Szenario löschen?",
     confirm_delete_location: "Diesen Standort löschen?",
     new_scenario: "Neues Szenario", new_location: "Neuer Standort",
+    auth_edit: "Bearbeiten", auth_logout: "Abmelden",
+    login_title: "Anmelden zum Bearbeiten", login_submit: "Anmelden", cancel: "Abbrechen",
+    password_ph: "Passwort",
+    toast_login_ok: "Bearbeiten aktiviert", toast_login_wrong: "Falsches Passwort",
+    toast_login_throttled: "Zu viele Versuche — später nochmal",
+    toast_logout: "Abgemeldet — Nur-Lese-Modus",
   },
 };
 
@@ -144,6 +156,7 @@ let activeScenarioId = Number(localStorage.getItem("activeScenarioId")) || null;
 let activeLocationId = Number(localStorage.getItem("activeLocationId")) || null;
 let axisMode = localStorage.getItem("axisMode") === "kwh" ? "kwh" : "fuel";
 let lang = localStorage.getItem("lang") === "de" ? "de" : "en";
+let isEditor = false;   // owner logged in? writes are blocked for everyone else
 let fuelPrice = 1.80;   // global current fuel price (CHF/L), loaded from /api/settings
 let chart = null;
 let lastResult = null;  // keep the latest computed result so toggling re-renders instantly
@@ -189,6 +202,14 @@ async function init() {
   $("lang-toggle").querySelectorAll(".toggle__btn").forEach((btn) => {
     btn.addEventListener("click", () => setLang(btn.dataset.lang));
   });
+
+  // Auth: lock button + login modal.
+  $("auth-btn").addEventListener("click", () => (isEditor ? doLogout() : openLogin()));
+  $("login-cancel").addEventListener("click", closeLogin);
+  $("login-backdrop").addEventListener("click", closeLogin);
+  $("login-submit").addEventListener("click", doLogin);
+  $("login-password").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
+  await refreshAuth();
 }
 
 function setLang(l) {
@@ -197,10 +218,54 @@ function setLang(l) {
   applyLangToggleUI();
   applyStaticTranslations();
   applyAxisToggleUI();
+  applyEditMode();
   renderScenarioTable();
   renderLocationTable();
   if (lastResult) { renderVerdict(lastResult); renderChart(lastResult); }
   else recalc();
+}
+
+// --- Auth --------------------------------------------------------------------
+async function refreshAuth() {
+  try { isEditor = (await api.get("/api/me")).editor; } catch { isEditor = false; }
+  applyEditMode();
+  // Tables were first rendered before auth was known — refresh so edit controls match.
+  renderScenarioTable();
+  renderLocationTable();
+}
+function applyEditMode() {
+  document.body.classList.toggle("is-editor", isEditor);
+  $("auth-btn").textContent = (isEditor ? "🔓 " : "🔒 ") + t(isEditor ? "auth_logout" : "auth_edit");
+}
+function openLogin() {
+  $("login-password").value = "";
+  $("login-password").placeholder = t("password_ph");
+  $("login-modal").hidden = false;
+  $("login-password").focus();
+}
+function closeLogin() { $("login-modal").hidden = true; }
+async function doLogin() {
+  const password = $("login-password").value;
+  if (!password) return;
+  try {
+    await api.post("/api/login", { password });
+    isEditor = true;
+    closeLogin();
+    applyEditMode();
+    renderScenarioTable();
+    renderLocationTable();
+    toast(t("toast_login_ok"));
+  } catch (e) {
+    const msg = /429/.test(e.message) ? t("toast_login_throttled") : t("toast_login_wrong");
+    toast(msg, true);
+  }
+}
+async function doLogout() {
+  try { await api.post("/api/logout", {}); } catch (e) { /* ignore */ }
+  isEditor = false;
+  applyEditMode();
+  toast(t("toast_logout"));
+  await reload();   // discard any unsaved what-if edits, show saved values
 }
 function applyLangToggleUI() {
   $("lang-toggle").querySelectorAll(".toggle__btn").forEach((btn) => {
@@ -294,6 +359,8 @@ async function saveActiveScenario() {
 
 // Global fuel price: persist and refresh everything.
 async function saveFuelPrice() {
+  // Guests can adjust the price for a what-if, but it is never persisted.
+  if (!isEditor) { recalcFromInputs(); return; }
   const price = parseFloat($("in-fuel-price").value);
   if (isNaN(price) || price < 0) { toast(t("toast_invalid_fuel"), true); return; }
   if (price === fuelPrice) return;  // nothing changed
@@ -560,19 +627,21 @@ function renderLegend(pointColor) {
 function renderScenarioTable() {
   const tb = $("scenario-table").querySelector("tbody");
   tb.innerHTML = "";
+  const ro = isEditor ? "" : "disabled";
   scenarios.forEach((s) => {
     const tr = document.createElement("tr");
     if (s.id === activeScenarioId) tr.classList.add("is-active");
     tr.innerHTML = `
-      <td><input class="name" value="${esc(s.name)}" data-f="name"></td>
-      <td><input type="number" inputmode="decimal" step="0.1" min="0.1" value="${s.fuel_consumption}" data-f="fuel_consumption"></td>
-      <td><input type="number" inputmode="decimal" step="0.1" min="0" value="${s.power_consumption}" data-f="power_consumption"></td>
-      <td class="actions">
+      <td><input class="name" value="${esc(s.name)}" data-f="name" ${ro}></td>
+      <td><input type="number" inputmode="decimal" step="0.1" min="0.1" value="${s.fuel_consumption}" data-f="fuel_consumption" ${ro}></td>
+      <td><input type="number" inputmode="decimal" step="0.1" min="0" value="${s.power_consumption}" data-f="power_consumption" ${ro}></td>
+      <td class="actions">${isEditor ? `
         <button class="link-btn" data-act="save">${t("save")}</button>
-        <button class="icon-btn" data-act="del" title="${t("delete")}">🗑</button>
-      </td>`;
-    tr.querySelector('[data-act="save"]').addEventListener("click", () => saveScenarioRow(s.id, tr));
-    tr.querySelector('[data-act="del"]').addEventListener("click", () => deleteScenario(s.id));
+        <button class="icon-btn" data-act="del" title="${t("delete")}">🗑</button>` : ""}</td>`;
+    if (isEditor) {
+      tr.querySelector('[data-act="save"]').addEventListener("click", () => saveScenarioRow(s.id, tr));
+      tr.querySelector('[data-act="del"]').addEventListener("click", () => deleteScenario(s.id));
+    }
     tb.appendChild(tr);
   });
 }
@@ -580,18 +649,20 @@ function renderScenarioTable() {
 function renderLocationTable() {
   const tb = $("location-table").querySelector("tbody");
   tb.innerHTML = "";
+  const ro = isEditor ? "" : "disabled";
   locations.forEach((l) => {
     const tr = document.createElement("tr");
     if (l.id === activeLocationId) tr.classList.add("is-active");
     tr.innerHTML = `
-      <td><input class="name" value="${esc(l.name)}" data-f="name"></td>
-      <td><input type="number" inputmode="decimal" step="0.01" min="0" value="${l.price_chf_per_kwh}" data-f="price_chf_per_kwh"></td>
-      <td class="actions">
+      <td><input class="name" value="${esc(l.name)}" data-f="name" ${ro}></td>
+      <td><input type="number" inputmode="decimal" step="0.01" min="0" value="${l.price_chf_per_kwh}" data-f="price_chf_per_kwh" ${ro}></td>
+      <td class="actions">${isEditor ? `
         <button class="link-btn" data-act="save">${t("save")}</button>
-        <button class="icon-btn" data-act="del" title="${t("delete")}">🗑</button>
-      </td>`;
-    tr.querySelector('[data-act="save"]').addEventListener("click", () => saveLocationRow(l.id, tr));
-    tr.querySelector('[data-act="del"]').addEventListener("click", () => deleteLocation(l.id));
+        <button class="icon-btn" data-act="del" title="${t("delete")}">🗑</button>` : ""}</td>`;
+    if (isEditor) {
+      tr.querySelector('[data-act="save"]').addEventListener("click", () => saveLocationRow(l.id, tr));
+      tr.querySelector('[data-act="del"]').addEventListener("click", () => deleteLocation(l.id));
+    }
     tb.appendChild(tr);
   });
 }

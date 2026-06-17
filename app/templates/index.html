@@ -14,9 +14,25 @@
         <button class="toggle__btn is-on" data-axis="fuel" data-i18n="vary_fuel" role="tab">Fuel price on x</button>
         <button class="toggle__btn" data-axis="kwh" data-i18n="vary_kwh" role="tab">Electricity price on x</button>
       </div>
-      <div class="toggle lang-toggle" id="lang-toggle" role="tablist" aria-label="Language">
-        <button class="toggle__btn is-on" data-lang="en" role="tab">EN</button>
-        <button class="toggle__btn" data-lang="de" role="tab">DE</button>
+      <div class="topbar__right">
+        <button class="auth-btn" id="auth-btn" type="button">🔒 Edit</button>
+        <div class="toggle lang-toggle" id="lang-toggle" role="tablist" aria-label="Language">
+          <button class="toggle__btn is-on" data-lang="en" role="tab">EN</button>
+          <button class="toggle__btn" data-lang="de" role="tab">DE</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Login dialog (owner only) -->
+    <div class="modal" id="login-modal" hidden>
+      <div class="modal__backdrop" id="login-backdrop"></div>
+      <div class="modal__box" role="dialog" aria-modal="true" aria-labelledby="login-title">
+        <h3 id="login-title" data-i18n="login_title">Log in to edit</h3>
+        <input type="password" id="login-password" autocomplete="current-password" />
+        <div class="modal__actions">
+          <button class="btn btn--ghost" id="login-cancel" type="button" data-i18n="cancel">Cancel</button>
+          <button class="btn" id="login-submit" type="button" data-i18n="login_submit">Log in</button>
+        </div>
       </div>
     </div>
 
@@ -76,7 +92,7 @@
 
         <div class="active-inputs" id="active-inputs">
           <div class="active-inputs__group">
-            <h3><span data-i18n="scenario_values">Scenario values</span> <button class="link-btn" id="save-scenario" data-i18n="save">Save</button></h3>
+            <h3><span data-i18n="scenario_values">Scenario values</span> <button class="link-btn editor-only" id="save-scenario" data-i18n="save">Save</button></h3>
             <label class="field field--inline">
               <span><span data-i18n="fuel_consumption">Fuel consumption</span> <em>(L/100km)</em></span>
               <input type="number" inputmode="decimal" step="0.1" min="0.1" id="in-fuel-consumption" />
@@ -87,7 +103,7 @@
             </label>
           </div>
           <div class="active-inputs__group">
-            <h3><span data-i18n="location_price">Location price</span> <button class="link-btn" id="save-location" data-i18n="save">Save</button></h3>
+            <h3><span data-i18n="location_price">Location price</span> <button class="link-btn editor-only" id="save-location" data-i18n="save">Save</button></h3>
             <label class="field field--inline">
               <span><span data-i18n="electricity_price">Electricity price</span> <em>(CHF/kWh)</em></span>
               <input type="number" inputmode="decimal" step="0.01" min="0" id="in-kwh-price" />
@@ -102,7 +118,7 @@
       <section class="card">
         <div class="card__head">
           <h2 data-i18n="scenarios">Scenarios</h2>
-          <button class="btn btn--small" id="add-scenario" data-i18n="add">+ Add</button>
+          <button class="btn btn--small editor-only" id="add-scenario" data-i18n="add">+ Add</button>
         </div>
         <div class="table-wrap">
           <table class="data-table" id="scenario-table">
@@ -117,7 +133,7 @@
       <section class="card">
         <div class="card__head">
           <h2 data-i18n="charging_locations">Charging locations</h2>
-          <button class="btn btn--small" id="add-location" data-i18n="add">+ Add</button>
+          <button class="btn btn--small editor-only" id="add-location" data-i18n="add">+ Add</button>
         </div>
         <div class="table-wrap">
           <table class="data-table" id="location-table">

@@ -59,6 +59,30 @@ python3 -m venv .venv
 
 Then open http://localhost:8000
 
+## Access control (read-only for everyone, owner edits)
+
+Everyone can **view and play with** the values (live what-if), but only the **owner** can
+**persist** changes. All `GET` endpoints are public; every `POST/PUT/DELETE` requires an
+owner session. Guests see a read-only UI with a 🔒 *Edit* button; logging in unlocks editing.
+
+Set your own password (the hash is never stored in code):
+
+```bash
+python -m app.auth          # prompts for a password, prints the values below
+```
+
+Then provide these as environment variables (e.g. in Docker / the reverse proxy):
+
+| Variable | Purpose |
+| --- | --- |
+| `OWNER_PASSWORD_HASH` | PBKDF2 hash of your edit password (from `python -m app.auth`). |
+| `SWEETSPOT_SECRET` | Random secret for signing the session cookie (`python -m app.auth` prints one). |
+| `COOKIE_SECURE` | Set to `1` when served over HTTPS so the session cookie is `Secure`. |
+
+If `OWNER_PASSWORD_HASH` is unset, a **default dev password** (`sweetspot`) is used and a
+warning is logged — never expose the app publicly without setting it. Login attempts are
+rate-limited per IP (brute-force protection).
+
 ## Test
 
 ```bash
