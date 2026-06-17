@@ -33,12 +33,14 @@ body {
     radial-gradient(1000px 500px at -10% 10%, rgba(56, 225, 176, 0.12), transparent 55%),
     var(--bg);
   min-height: 100vh;
+  overflow-x: hidden;   /* belt-and-suspenders: never allow sideways page scroll */
 }
 
 .app {
   max-width: 1000px;
   margin: 0 auto;
-  padding: 32px 20px 60px;
+  /* max() keeps a sane gutter on phones while respecting the notch / rounded corners. */
+  padding: 32px max(20px, env(safe-area-inset-right)) 60px max(20px, env(safe-area-inset-left));
 }
 
 /* Top bar (global view + language toggles) */
@@ -190,13 +192,18 @@ body:not(.is-editor) .editor-only { display: none !important; }
 .grid:nth-of-type(3) { grid-template-columns: 1.6fr 1fr; }
 @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
 @media (max-width: 560px) {
-  .app { padding: 16px 13px 48px; }
+  .app { padding: 16px max(13px, env(safe-area-inset-right)) 48px max(13px, env(safe-area-inset-left)); }
   .hero h1 { font-size: 26px; }
   .chart-wrap { height: 300px; }
-  .fuelbar { gap: 12px; }
+  .card { padding: 18px 15px; }
+  .fuelbar { gap: 12px; padding: 16px 15px; }
   .fuelbar__input input { font-size: 20px; }
+  .verdict-card { padding: 20px 16px; }
   .verdict__stats { width: 100%; justify-content: space-between; gap: 10px; }
   .stat--price { min-width: 0; }
+  /* Keep the edit tables inside the card (tighter cells, name input may shrink). */
+  .data-table th, .data-table td { padding: 6px 6px; }
+  .data-table input.name { min-width: 0; }
   /* iOS Safari zooms in when a focused input's font is < 16px — keep them at 16px. */
   select, input[type="number"], input[type="text"], .data-table input { font-size: 16px; }
 }
@@ -246,9 +253,9 @@ body:not(.is-editor) .editor-only { display: none !important; }
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
 .field > span { font-size: 13px; color: var(--muted); }
 .field em { color: var(--muted); font-style: normal; opacity: .8; }
-.field--inline { flex-direction: row; align-items: center; justify-content: space-between; }
-.field--inline > span { flex: 1; }
-.field--inline input { width: 120px; }
+.field--inline { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+.field--inline > span { flex: 1; min-width: 0; }   /* let the label shrink/wrap instead of pushing the input out */
+.field--inline input { width: 120px; flex: none; }
 
 select, input[type="number"], input[type="text"] {
   background: var(--bg-soft);
@@ -259,6 +266,7 @@ select, input[type="number"], input[type="text"] {
   font-size: 15px;
   font-family: inherit;
   outline: none;
+  max-width: 100%;   /* never let a field grow wider than its container */
   transition: border-color .15s, box-shadow .15s;
 }
 select:focus, input:focus {
