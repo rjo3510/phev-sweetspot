@@ -501,7 +501,10 @@ function renderChart(res) {
     belowIsElectric: false,        // below the line (low fuel price) → fuel wins
   };
 
-  const xMax = Math.max(cfg.xVal, 0.01) * 1.8;
+  // The sweetspot: the break-even price (in the x-axis unit) at the current y — a point ON the line.
+  const beRule = isFuel ? res.break_even_fuel_price : res.break_even_kwh_price;
+  const hasSweet = beRule != null && beRule > 0;
+  const xMax = Math.max(cfg.xVal, hasSweet ? beRule : 0, 0.01) * 1.8;
   const yLine = cfg.slope * xMax;                       // break-even line at right edge
   const yMax = (Math.max(yLine, cfg.yVal) || 1) * 1.2;
 
@@ -554,6 +557,20 @@ function renderChart(res) {
       font: { size: 13, weight: "700" }, backgroundColor: "rgba(0,0,0,0)" },
   };
 
+  // Sweetspot marker: the point on the break-even line at the current y, with a dotted
+  // connector from the current position so it reads as "slide across to the tipping point".
+  if (hasSweet) {
+    annotations.sweetConn = { type: "line", yMin: cfg.yVal, yMax: cfg.yVal,
+      xMin: Math.min(cfg.xVal, beRule), xMax: Math.max(cfg.xVal, beRule),
+      borderColor: "rgba(255,209,102,0.7)", borderWidth: 1, borderDash: [3, 3] };
+    annotations.sweet = { type: "point", xValue: beRule, yValue: cfg.yVal,
+      backgroundColor: "#ffd166", borderColor: "#0b1020", borderWidth: 2, radius: 6 };
+    annotations.sweetLabel = { type: "label", xValue: beRule, yValue: cfg.yVal,
+      content: [t("word_sweetspot"), `${beRule.toFixed(2)} ${cfg.xUnit}`],
+      color: "#ffd166", font: { size: 11, weight: "700" }, yAdjust: 26,
+      backgroundColor: "rgba(0,0,0,0)" };
+  }
+
   const options = {
     responsive: true, maintainAspectRatio: false,
     interaction: { mode: "nearest", intersect: false, axis: "x" },
@@ -593,6 +610,7 @@ function renderChart(res) {
 function renderLegend(pointColor) {
   const items = [
     ["#ffd166", t("break_even_line")],
+    ["#ffd166", t("word_sweetspot")],
     ["#38e1b0", t("region_elec")],
     ["#ff8a5b", t("region_fuel")],
     [pointColor, t("you_are_here")],
