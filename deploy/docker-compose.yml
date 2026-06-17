@@ -1,0 +1,28 @@
+# Run from this directory on the Docker host:
+#   cp .env.example .env   # then fill in the values
+#   docker compose up -d --build
+services:
+  phev:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: phev-sweetspot:latest
+    container_name: phev-sweetspot
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - phev-data:/data          # SQLite DB persists here across restarts/updates
+    expose:
+      - "8000"                   # reachable on the proxy network, NOT published to the host
+    networks:
+      - proxy
+
+volumes:
+  phev-data:
+
+# Nginx Proxy Manager forwards to this container by name on the shared docker network.
+# Find NPM's network with:  docker network ls   (often "npm_default" or "npm-network").
+networks:
+  proxy:
+    external: true
+    name: ${PROXY_NETWORK:-npm_default}
