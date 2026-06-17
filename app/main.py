@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 import os
 import time
 
@@ -84,6 +85,7 @@ def _migrate_legacy_fuel_price() -> None:
 
 @app.on_event("startup")
 def on_startup() -> None:
+    logging.getLogger("uvicorn.error").info("PHEV Sweetspot Calculator — build %s", APP_VERSION)
     Base.metadata.create_all(bind=engine)
     _migrate_legacy_fuel_price()
     db = SessionLocal()

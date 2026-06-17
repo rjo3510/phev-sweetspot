@@ -21,6 +21,8 @@ async function safeJson(r) { try { return await r.json(); } catch { return null;
 
 const $ = (id) => document.getElementById(id);
 const CHF = (n) => "CHF " + Number(n).toFixed(2);
+const fmtCons = (n) => Number(n).toFixed(1);    // consumption: L/100km, kWh/100km → 1 decimal
+const fmtPrice = (n) => Number(n).toFixed(2);   // CHF/kWh → 2 decimals
 
 // --- i18n --------------------------------------------------------------------
 const I18N = {
@@ -325,10 +327,10 @@ function syncActiveInputs() {
   const s = activeScenario();
   const l = activeLocation();
   if (s) {
-    $("in-fuel-consumption").value = s.fuel_consumption;
-    $("in-power-consumption").value = s.power_consumption;
+    $("in-fuel-consumption").value = fmtCons(s.fuel_consumption);
+    $("in-power-consumption").value = fmtCons(s.power_consumption);
   }
-  if (l) $("in-kwh-price").value = l.price_chf_per_kwh;
+  if (l) $("in-kwh-price").value = fmtPrice(l.price_chf_per_kwh);
 }
 
 function inputValues() {
@@ -605,8 +607,8 @@ function renderScenarioTable() {
     if (s.id === activeScenarioId) tr.classList.add("is-active");
     tr.innerHTML = `
       <td><input type="text" class="name" value="${esc(s.name)}" data-f="name" ${ro}></td>
-      <td><input type="number" inputmode="decimal" step="0.1" min="0.1" value="${s.fuel_consumption}" data-f="fuel_consumption" ${ro}></td>
-      <td><input type="number" inputmode="decimal" step="0.1" min="0" value="${s.power_consumption}" data-f="power_consumption" ${ro}></td>
+      <td><input type="number" inputmode="decimal" step="0.1" min="0.1" value="${fmtCons(s.fuel_consumption)}" data-f="fuel_consumption" ${ro}></td>
+      <td><input type="number" inputmode="decimal" step="0.1" min="0" value="${fmtCons(s.power_consumption)}" data-f="power_consumption" ${ro}></td>
       <td class="actions">${isEditor ? `
         <button class="link-btn" data-act="save">${t("save")}</button>
         <button class="icon-btn" data-act="del" title="${t("delete")}">🗑</button>` : ""}</td>`;
@@ -627,7 +629,7 @@ function renderLocationTable() {
     if (l.id === activeLocationId) tr.classList.add("is-active");
     tr.innerHTML = `
       <td><input type="text" class="name" value="${esc(l.name)}" data-f="name" ${ro}></td>
-      <td><input type="number" inputmode="decimal" step="0.01" min="0" value="${l.price_chf_per_kwh}" data-f="price_chf_per_kwh" ${ro}></td>
+      <td><input type="number" inputmode="decimal" step="0.01" min="0" value="${fmtPrice(l.price_chf_per_kwh)}" data-f="price_chf_per_kwh" ${ro}></td>
       <td class="actions">${isEditor ? `
         <button class="link-btn" data-act="save">${t("save")}</button>
         <button class="icon-btn" data-act="del" title="${t("delete")}">🗑</button>` : ""}</td>`;
