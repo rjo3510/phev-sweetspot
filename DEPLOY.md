@@ -4,7 +4,7 @@ Target domain: **phev.xolution.ch**
 
 The image is **built by GitHub Actions** and pushed to GHCR
 (`ghcr.io/rjo3510/phev-sweetspot`). The server **pulls** that image — it never builds and
-never receives the source. The SQLite DB lives in a named volume; NPM forwards to the
+never receives the source. The SQLite DB lives in `./data` next to the compose file; NPM forwards to the
 container over a shared Docker network.
 
 ```
@@ -42,10 +42,12 @@ dev VM ──git push──▶ GitHub ──Actions build──▶ GHCR (private
    (find it with `docker network ls`, e.g. `npm_default`). `COOKIE_SECURE=1` stays on
    behind HTTPS.
 
-3. **Create the DB volume** (external, so it's never removed by compose):
+3. **Create the data directory** (the SQLite DB is bind-mounted from `./data`):
 
    ```bash
-   docker volume create phev-data
+   mkdir -p data
+   # If the container can't write (permission denied), match the in-image user:
+   #   sudo chown -R 1000:1000 data
    ```
 
 4. **Start it:**
@@ -71,7 +73,7 @@ dev VM ──git push──▶ GitHub ──Actions build──▶ GHCR (private
    cd ~/phev-sweetspot && docker compose pull && docker compose up -d
    ```
 
-The DB survives in the `phev-data` volume across every update.
+The DB survives in `./data` across every update.
 
 ### Roll back
 
@@ -98,8 +100,7 @@ also reachable by name on the proxy network. Because HTTPS terminates at NPM and
 ## Back up the database
 
 ```bash
-docker run --rm -v phev-data:/data -v "$PWD":/backup alpine \
-  sh -c 'cp /data/sweetspot.db /backup/sweetspot-backup.db'
+cp data/sweetspot.db data/sweetspot-backup.db    # it's just a file in ./data now
 ```
 
 ## Notes

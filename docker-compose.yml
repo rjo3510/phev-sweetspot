@@ -10,19 +10,11 @@ services:
     restart: unless-stopped
     env_file: .env
     volumes:
-      - phev-data:/data          # SQLite DB persists here across restarts/updates
+      - ./data:/data             # SQLite DB lives in ./data next to this file
     ports:
       - "${APP_PORT:-8082}:8000" # host:container — reach it at http://<host>:8082
     networks:
       - proxy                    # also reachable by name on the proxy network (port 8000)
-
-volumes:
-  # External + fixed name: the DB volume's lifecycle is independent of this project,
-  # so it survives dir/project renames and a stray `docker compose down -v` can't wipe it.
-  # One-time on a fresh host:  docker volume create phev-data
-  phev-data:
-    external: true
-    name: phev-data
 
 # Nginx Proxy Manager forwards to this container by name on the shared docker network.
 # Find NPM's network with:  docker network ls   (often "npm_default" or "npm-network").
