@@ -31,8 +31,6 @@ const I18N = {
     fuel_price_title: "Current fuel price",
     fuel_price_note: "Changes often — set it once, it applies to every scenario.",
     vary_fuel: "Equivalent fuel price", vary_kwh: "Equivalent electricity price",
-    hint_below_elec: "Below the line electricity is cheaper, above it fuel. The dot shows the current position.",
-    hint_below_fuel: "Below the line fuel is cheaper, above it electricity. The dot shows the current position.",
     chart_title_fuel: "When does charging pay off?",
     chart_title_kwh: "When does charging pay off?",
     region_elec: "Electric cheaper", region_fuel: "Fuel cheaper",
@@ -89,8 +87,6 @@ const I18N = {
     fuel_price_title: "Aktueller Benzinpreis",
     fuel_price_note: "Ändert sich oft — einmal setzen, gilt für alle Szenarien.",
     vary_fuel: "Entsprechender Benzinpreis", vary_kwh: "Entsprechender Strompreis",
-    hint_below_elec: "Unterhalb der Linie ist Strom günstiger, oberhalb Benzin. Der Punkt zeigt die aktuelle Position.",
-    hint_below_fuel: "Unterhalb der Linie ist Benzin günstiger, oberhalb Strom. Der Punkt zeigt die aktuelle Position.",
     chart_title_fuel: "Wann lohnt sich Laden?",
     chart_title_kwh: "Wann lohnt sich Laden?",
     region_elec: "Strom günstiger", region_fuel: "Benzin günstiger",
@@ -291,9 +287,6 @@ function applyAxisToggleUI() {
   });
   $("chart-title").textContent =
     axisMode === "fuel" ? t("chart_title_fuel") : t("chart_title_kwh");
-  // Below/above wording depends on which price is on the x-axis.
-  $("chart-hint").innerHTML =
-    axisMode === "fuel" ? t("hint_below_elec") : t("hint_below_fuel");
 }
 
 async function reload() {
