@@ -189,8 +189,6 @@ async function init() {
   $("fuel-down").addEventListener("click", () => nudgeFuelPrice(-0.05));
   $("fuel-up").addEventListener("click", () => nudgeFuelPrice(0.05));
 
-  $("save-scenario").addEventListener("click", saveActiveScenario);
-  $("save-location").addEventListener("click", saveActiveLocation);
   $("add-scenario").addEventListener("click", addScenario);
   $("add-location").addEventListener("click", addLocation);
 
@@ -342,21 +340,6 @@ function inputValues() {
   };
 }
 
-async function saveActiveScenario() {
-  const s = activeScenario();
-  if (!s) return;
-  const v = inputValues();
-  try {
-    await api.put(`/api/scenarios/${s.id}`, {
-      name: s.name,
-      fuel_consumption: v.fuel_consumption,
-      power_consumption: v.power_consumption,
-    });
-    toast(t("toast_scenario_saved"));
-    await reload();
-  } catch (e) { toast(e.message, true); }
-}
-
 // Global fuel price: persist and refresh everything.
 async function saveFuelPrice() {
   // Guests can adjust the price for a what-if, but it is never persisted.
@@ -376,17 +359,6 @@ function nudgeFuelPrice(delta) {
   const current = parseFloat($("in-fuel-price").value) || fuelPrice;
   $("in-fuel-price").value = Math.max(0, Math.round((current + delta) * 100) / 100).toFixed(2);
   saveFuelPrice();
-}
-
-async function saveActiveLocation() {
-  const l = activeLocation();
-  if (!l) return;
-  const v = inputValues();
-  try {
-    await api.put(`/api/locations/${l.id}`, { name: l.name, price_chf_per_kwh: v.kwh_price });
-    toast(t("toast_location_saved"));
-    await reload();
-  } catch (e) { toast(e.message, true); }
 }
 
 // --- Calculation -------------------------------------------------------------
