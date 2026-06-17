@@ -146,8 +146,13 @@
       </section>
     </div>
 
-    <footer class="foot" data-i18n="footer">
-      Break-even fuel price = (kWh/100km × CHF/kWh) ÷ L/100km &nbsp;·&nbsp; all values editable &amp; stored.
+    <footer class="foot">
+      <span data-i18n="footer">Break-even fuel price = (kWh/100km × CHF/kWh) ÷ L/100km &nbsp;·&nbsp; all values editable &amp; stored.</span>
+      {% if version != "dev" %}
+      <span class="build"> · build <a href="https://github.com/rjo3510/phev-sweetspot/commit/{{ version_full }}" target="_blank" rel="noopener">{{ version }}</a></span>
+      {% else %}
+      <span class="build"> · {{ version }}</span>
+      {% endif %}
     </footer>
   </div>
 

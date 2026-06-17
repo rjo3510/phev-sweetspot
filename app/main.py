@@ -40,6 +40,9 @@ def _static_version() -> str:
 
 STATIC_VERSION = _static_version()
 
+# Git commit the image was built from (set by CI; "dev" locally). Shown in the footer.
+APP_VERSION = os.environ.get("APP_VERSION", "dev")
+
 
 # --- Auth: read-only for everyone, writes require the owner password ----------
 def require_editor(edit_session: str | None = Cookie(default=None)) -> bool:
@@ -98,7 +101,11 @@ def on_startup() -> None:
 # --- Page --------------------------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html", context={"v": STATIC_VERSION})
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={"v": STATIC_VERSION, "version": APP_VERSION[:7], "version_full": APP_VERSION},
+    )
 
 
 @app.get("/favicon.ico", include_in_schema=False)

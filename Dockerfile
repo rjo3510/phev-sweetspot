@@ -21,6 +21,11 @@ RUN useradd --create-home appuser \
     && chown -R appuser:appuser /app /data
 USER appuser
 
+# Build metadata (set by CI via --build-arg) — surfaced in the UI footer.
+# Placed late so changing it doesn't bust the dependency/app layers' cache.
+ARG GIT_SHA=dev
+ENV APP_VERSION=$GIT_SHA
+
 EXPOSE 8000
 
 # Single worker on purpose: the login rate-limit state is in-process, and SQLite
