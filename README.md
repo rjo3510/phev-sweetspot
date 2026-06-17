@@ -94,6 +94,7 @@ rate-limited per IP (brute-force protection).
 ```
 app/
   main.py        FastAPI app + REST API
+  auth.py        owner login, password hashing, session cookies (also a CLI: python -m app.auth)
   calc.py        pure cost math (unit-tested)
   models.py      SQLAlchemy models (Scenario, ChargingLocation, Settings)
   schemas.py     Pydantic schemas
@@ -102,16 +103,47 @@ app/
   templates/index.html
   static/css/styles.css
   static/js/app.js
+  static/vendor/ self-hosted Chart.js + annotation plugin (offline)
+  static/fonts/  self-hosted Inter font (offline)
 tests/test_calc.py
+Dockerfile       container image
+deploy/          Docker Compose + Nginx Proxy Manager deployment (see deploy/README.md)
+.github/workflows/deploy.yml   CI: build image on push to main, push to GHCR
 ```
 
 ## API
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| GET/POST | `/api/scenarios` | list / create scenarios |
-| PUT/DELETE | `/api/scenarios/{id}` | update / delete |
-| GET/POST | `/api/locations` | list / create charging locations |
-| PUT/DELETE | `/api/locations/{id}` | update / delete |
-| GET/PUT | `/api/settings` | read / update the global fuel price |
-| GET | `/api/calculate?scenario_id=&location_id=` | compute the comparison |
+All `GET` endpoints are public; every `POST/PUT/DELETE` (except login/logout) requires an
+owner session — see [Access control](#access-control-read-only-for-everyone-owner-edits).
+
+| Method | Path | Purpose | Owner only |
+| --- | --- | --- | --- |
+| GET | `/api/me` | current auth state (logged in?) | — |
+| POST | `/api/login` | log in as owner (rate-limited per IP) | — |
+| POST | `/api/logout` | clear the owner session | — |
+| GET/POST | `/api/scenarios` | list / create scenarios | POST |
+| PUT/DELETE | `/api/scenarios/{id}` | update / delete | yes |
+| GET/POST | `/api/locations` | list / create charging locations | POST |
+| PUT/DELETE | `/api/locations/{id}` | update / delete | yes |
+| GET/PUT | `/api/settings` | read / update the global fuel price | PUT |
+| GET | `/api/calculate?scenario_id=&location_id=` | compute the comparison | — |
+
+## Deployment
+
+CI builds the image and the server pulls it — no manual tarball, no build on the host.
+Full guide (Nginx Proxy Manager, HTTPS, GHCR login, rollback): **[`deploy/README.md`](deploy/README.md)**.
+
+```
+git push  ──▶  GitHub Actions builds & pushes  ──▶  ghcr.io/rjo3510/phev-sweetspot
+                                                          │
+                                deploy/ship.sh  ──ssh──▶  server: docker compose pull && up -d
+```
+
+```bash
+git push                                  # GitHub Actions builds & pushes the image to GHCR
+PHEV_SERVER=user@phev-host deploy/ship.sh # pull the new image on the server and restart
+```
+
+`deploy/ship.sh` runs from any machine that can SSH to the server (the dev VM can't reach it).
+The app listens on container port `8000`, is published on the host as `http://<host>:8082`
+(`APP_PORT`), and is also reachable by container name (`phev-sweetspot`) on the proxy network.

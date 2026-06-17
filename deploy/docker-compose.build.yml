@@ -1,0 +1,8 @@
+# Override for offline / air-gapped hosts that cannot pull from GHCR.
+# Build the image locally from the source tarball instead of pulling:
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+services:
+  phev:
+    build:
+      context: ..
+      dockerfile: Dockerfile

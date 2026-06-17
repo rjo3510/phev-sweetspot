@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Create a clean tarball of the project to move to the Docker host.
-# The Docker image is built ON the host, so the tarball must contain the source.
+# OFFLINE FALLBACK ONLY. The normal flow pulls the prebuilt image from GHCR
+# (see deploy/README.md) and needs no tarball. Use this when the host cannot
+# reach GHCR: it bundles the source so the image can be built on the host.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -20,4 +21,4 @@ echo "On the server:"
 echo "  mkdir phev-sweetspot && tar xzf $OUT -C phev-sweetspot"
 echo "  cd phev-sweetspot/deploy"
 echo "  cp .env.example .env   # fill in OWNER_PASSWORD_HASH, SWEETSPOT_SECRET, PROXY_NETWORK"
-echo "  docker compose up -d --build"
+echo "  docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build"

@@ -1,12 +1,11 @@
-# Run from this directory on the Docker host:
-#   cp .env.example .env   # then fill in the values
-#   docker compose up -d --build
+# Run from this directory on the Docker host. The image is built by GitHub Actions
+# and pulled from GHCR — the host does NOT build anything.
+#   docker login ghcr.io          # one-time: PAT with read:packages (image is private)
+#   cp .env.example .env          # then fill in the values
+#   docker compose pull && docker compose up -d
 services:
   phev:
-    build:
-      context: ..
-      dockerfile: Dockerfile
-    image: phev-sweetspot:latest
+    image: ghcr.io/rjo3510/phev-sweetspot:${IMAGE_TAG:-latest}
     container_name: phev-sweetspot
     restart: unless-stopped
     env_file: .env

@@ -1,50 +1,79 @@
-# Deploy — PHEV Sweetspot Calculator (Docker + Nginx Proxy Manager)
+# Deploy — PHEV Sweetspot Calculator (GHCR image + Nginx Proxy Manager)
 
 Target domain: **phev.xolution.ch**
 
-The app runs in one container, stores its SQLite DB in a named volume, and is reachable by
-Nginx Proxy Manager (NPM) over a shared Docker network. Nothing is published to the host.
+The image is **built by GitHub Actions** and pushed to GHCR
+(`ghcr.io/rjo3510/phev-sweetspot`). The server **pulls** that image — it never builds and
+never receives the source. The SQLite DB lives in a named volume; NPM forwards to the
+container over a shared Docker network.
 
-## 1. Set your edit password (locally, in the project venv)
-
-```bash
-python -m app.auth
+```
+dev VM ──git push──▶ GitHub ──Actions build──▶ GHCR (private image)
+                                                   │
+                          deploy/ship.sh (from a   │  docker compose pull
+                          machine that can SSH) ───▶ server ──────────────▶ restart
 ```
 
-It prints an `OWNER_PASSWORD_HASH` and a `SWEETSPOT_SECRET`. Keep them — your password
-itself is never stored or transmitted.
+## One-time server setup
 
-## 2. Bundle and move to the server
+1. **Log in to GHCR** (the image is private — needs a token with `read:packages`):
 
-```bash
-deploy/bundle.sh                       # creates phev-sweetspot-deploy.tar.gz
-scp phev-sweetspot-deploy.tar.gz user@server:~
-```
+   ```bash
+   # Create a GitHub Personal Access Token (classic) with scope: read:packages
+   echo <TOKEN> | docker login ghcr.io -u rjo3510 --password-stdin
+   ```
 
-On the server:
+2. **Place the deploy files and fill in `.env`:**
 
-```bash
-mkdir phev-sweetspot && tar xzf phev-sweetspot-deploy.tar.gz -C phev-sweetspot
-cd phev-sweetspot/deploy
-cp .env.example .env
-# edit .env: paste OWNER_PASSWORD_HASH + SWEETSPOT_SECRET, set PROXY_NETWORK
-```
+   ```bash
+   mkdir -p ~/phev-sweetspot/deploy
+   # copy deploy/docker-compose.yml and deploy/.env.example into ~/phev-sweetspot/deploy
+   cd ~/phev-sweetspot/deploy
+   cp .env.example .env
+   ```
 
-Find NPM's network name and put it in `.env` as `PROXY_NETWORK`:
+   Generate the secrets locally in the project venv (your password is never transmitted):
 
-```bash
-docker network ls          # e.g. npm_default
-```
+   ```bash
+   python -m app.auth          # prints OWNER_PASSWORD_HASH and SWEETSPOT_SECRET
+   ```
 
-## 3. Start
+   Edit `.env`: paste `OWNER_PASSWORD_HASH` + `SWEETSPOT_SECRET`, set `PROXY_NETWORK`
+   (find it with `docker network ls`, e.g. `npm_default`). `COOKIE_SECURE=1` stays on
+   behind HTTPS.
 
-```bash
-docker compose up -d --build
-```
+3. **Start it:**
 
-Check it:  `docker compose logs -f`  (you should NOT see the default-password warning).
+   ```bash
+   docker compose pull && docker compose up -d
+   docker compose logs -f      # you should NOT see the default-password warning
+   ```
 
-## 4. DNS + Nginx Proxy Manager
+## Day-to-day: deploy a new version
+
+1. **Push to `main`** on the dev VM — GitHub Actions builds and pushes the image to GHCR.
+2. **Deploy** from any machine that can SSH to the server (the dev VM cannot reach it):
+
+   ```bash
+   PHEV_SERVER=user@phev-host deploy/ship.sh
+   ```
+
+   That runs `docker compose pull && docker compose up -d` on the server and prunes the old
+   image. Or do it by hand on the server:
+
+   ```bash
+   cd ~/phev-sweetspot/deploy && docker compose pull && docker compose up -d
+   ```
+
+The DB survives in the `phev-data` volume across every update.
+
+### Roll back
+
+Each build is also tagged with its commit SHA. To pin a previous version, set `IMAGE_TAG`
+in `.env` (e.g. `IMAGE_TAG=sha-<commit>`) and run `docker compose up -d` — find available
+tags under the repo's **Packages** on GitHub.
+
+## DNS + Nginx Proxy Manager
 
 1. **DNS:** create an `A` record `phev.xolution.ch` → your server's public IP.
 2. **NPM → Proxy Hosts → Add Proxy Host:**
@@ -60,15 +89,7 @@ The app is published on the host as **`http://<host>:8082`** (set `APP_PORT` in 
 also reachable by name on the proxy network. Because HTTPS terminates at NPM and `.env` has
 `COOKIE_SECURE=1`, the login cookie is served `Secure` — always use `https://phev.xolution.ch`.
 
-## Updating
-
-```bash
-# replace the files (new tarball) on the server, then:
-cd phev-sweetspot/deploy
-docker compose up -d --build
-```
-
-The DB survives in the `phev-data` volume. To back it up:
+## Back up the database
 
 ```bash
 docker run --rm -v phev-data:/data -v "$PWD":/backup alpine \
@@ -80,5 +101,7 @@ docker run --rm -v phev-data:/data -v "$PWD":/backup alpine \
 - **One worker on purpose** (login rate-limit state is in-process, single SQLite writer).
 - Want NPM's own per-IP rate limiting / Cloudflare in front? Both stack cleanly on top.
 - **Change the host port:** set `APP_PORT` in `.env` (default `8082`).
-- To restrict the published port to localhost only, use `APP_PORT=127.0.0.1:8082` style by
-  editing the `ports:` mapping to `"127.0.0.1:8082:8000"`.
+- To restrict the published port to localhost only, edit the `ports:` mapping to
+  `"127.0.0.1:8082:8000"`.
+- **Offline / air-gapped server?** If the server can't reach GHCR, `deploy/bundle.sh` still
+  produces a source tarball you can carry over and build on the host (`docker compose build`).
