@@ -83,11 +83,31 @@ def _migrate_legacy_fuel_price() -> None:
         conn.execute(text("ALTER TABLE scenarios DROP COLUMN fuel_price"))
 
 
+def _migrate_bilingual_names() -> None:
+    """Upgrade databases that have a single `name` column to `name_de` / `name_en`.
+
+    Adds the two columns, seeds both from the old `name`, then drops `name`.
+    """
+    for table in ("scenarios", "charging_locations"):
+        with engine.begin() as conn:
+            cols = [row[1] for row in conn.execute(text(f"PRAGMA table_info({table})"))]
+            if "name" not in cols:
+                continue  # already migrated, or a fresh DB created with the new schema
+            if "name_de" not in cols:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN name_de VARCHAR"))
+            if "name_en" not in cols:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN name_en VARCHAR"))
+            conn.execute(text(f"UPDATE {table} SET name_de = name WHERE COALESCE(name_de, '') = ''"))
+            conn.execute(text(f"UPDATE {table} SET name_en = name WHERE COALESCE(name_en, '') = ''"))
+            conn.execute(text(f"ALTER TABLE {table} DROP COLUMN name"))
+
+
 @app.on_event("startup")
 def on_startup() -> None:
     logging.getLogger("uvicorn.error").info("PHEV Sweetspot Calculator — build %s", APP_VERSION[:7])
     Base.metadata.create_all(bind=engine)
     _migrate_legacy_fuel_price()
+    _migrate_bilingual_names()
     db = SessionLocal()
     try:
         crud.seed_if_empty(db)

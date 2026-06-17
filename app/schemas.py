@@ -1,12 +1,23 @@
 """Pydantic request/response schemas."""
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+
+class _BilingualName(BaseModel):
+    """Name in both UI languages; at least one must be filled (the other falls back)."""
+    name_de: str = Field("", max_length=100)
+    name_en: str = Field("", max_length=100)
+
+    @model_validator(mode="after")
+    def _require_one_name(self):
+        if not (self.name_de.strip() or self.name_en.strip()):
+            raise ValueError("Provide a name in at least one language")
+        return self
 
 
 # --- Scenarios ---------------------------------------------------------------
-class ScenarioBase(BaseModel):
-    name: str = Field(..., min_length=1, max_length=100)
+class ScenarioBase(_BilingualName):
     fuel_consumption: float = Field(..., gt=0, le=1000, description="liters / 100 km")
     power_consumption: float = Field(..., ge=0, le=1000, description="kWh / 100 km")
 
@@ -21,8 +32,7 @@ class ScenarioRead(ScenarioBase):
 
 
 # --- Charging locations ------------------------------------------------------
-class ChargingLocationBase(BaseModel):
-    name: str = Field(..., min_length=1, max_length=100)
+class ChargingLocationBase(_BilingualName):
     price_chf_per_kwh: float = Field(..., ge=0, le=1000, description="CHF / kWh")
 
 

@@ -97,15 +97,15 @@ def seed_if_empty(db: Session) -> None:
     """Populate example data on first run so the app is useful immediately."""
     if not db.query(models.Scenario).first():
         db.add_all([
-            models.Scenario(name="Summer", fuel_consumption=6.5, power_consumption=21),
-            models.Scenario(name="Winter", fuel_consumption=7.5, power_consumption=26),
-            models.Scenario(name="With trailer", fuel_consumption=9.0, power_consumption=30),
+            models.Scenario(name_de="Sommer", name_en="Summer", fuel_consumption=6.5, power_consumption=21),
+            models.Scenario(name_de="Winter", name_en="Winter", fuel_consumption=7.5, power_consumption=26),
+            models.Scenario(name_de="Mit Anhänger", name_en="With trailer", fuel_consumption=9.0, power_consumption=30),
         ])
     if not db.query(models.ChargingLocation).first():
         db.add_all([
-            models.ChargingLocation(name="Home", price_chf_per_kwh=0.31),
-            models.ChargingLocation(name="Weekend", price_chf_per_kwh=0.40),
-            models.ChargingLocation(name="Public fast charger", price_chf_per_kwh=0.90),
+            models.ChargingLocation(name_de="Zuhause", name_en="Home", price_chf_per_kwh=0.31),
+            models.ChargingLocation(name_de="Wochenende", name_en="Weekend", price_chf_per_kwh=0.40),
+            models.ChargingLocation(name_de="Schnelllader", name_en="Public fast charger", price_chf_per_kwh=0.90),
         ])
     get_settings(db)  # ensure the settings row exists
     db.commit()

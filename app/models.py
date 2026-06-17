@@ -17,7 +17,8 @@ class Scenario(Base):
     __tablename__ = "scenarios"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
+    name_de = Column(String, nullable=False)           # name shown in the German UI
+    name_en = Column(String, nullable=False)           # name shown in the English UI
     fuel_consumption = Column(Float, nullable=False)   # liters / 100 km
     power_consumption = Column(Float, nullable=False)  # kWh / 100 km
 
@@ -28,7 +29,8 @@ class ChargingLocation(Base):
     __tablename__ = "charging_locations"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
+    name_de = Column(String, nullable=False)
+    name_en = Column(String, nullable=False)
     price_chf_per_kwh = Column(Float, nullable=False)  # CHF / kWh
 
 

@@ -221,6 +221,7 @@ function setLang(l) {
   applyStaticTranslations();
   applyAxisToggleUI();
   applyEditMode();
+  renderSelects();          // dropdown names follow the language (with fallback)
   renderScenarioTable();
   renderLocationTable();
   if (lastResult) { renderVerdict(lastResult); renderChart(lastResult); }
@@ -312,12 +313,19 @@ function renderSelects() {
   fillSelect($("scenario-select"), scenarios, activeScenarioId);
   fillSelect($("location-select"), locations, activeLocationId);
 }
+// Name in the active language, falling back to the other if it's empty.
+function dispName(o) {
+  const primary = lang === "de" ? o.name_de : o.name_en;
+  const secondary = lang === "de" ? o.name_en : o.name_de;
+  return (primary && primary.trim()) ? primary : (secondary || "");
+}
+
 function fillSelect(el, items, activeId) {
   el.innerHTML = "";
   items.forEach((it) => {
     const o = document.createElement("option");
     o.value = it.id;
-    o.textContent = it.name;
+    o.textContent = dispName(it);
     if (it.id === activeId) o.selected = true;
     el.appendChild(o);
   });
@@ -603,7 +611,8 @@ function renderScenarioTable() {
     const tr = document.createElement("tr");
     if (s.id === activeScenarioId) tr.classList.add("is-active");
     tr.innerHTML = `
-      <td><input type="text" class="name" value="${esc(s.name)}" data-f="name" ${ro}></td>
+      <td><input type="text" class="name" value="${esc(s.name_de)}" data-f="name_de" ${ro}></td>
+      <td><input type="text" class="name" value="${esc(s.name_en)}" data-f="name_en" ${ro}></td>
       <td><input type="number" inputmode="decimal" step="0.1" min="0.1" value="${fmtCons(s.fuel_consumption)}" data-f="fuel_consumption" ${ro}></td>
       <td><input type="number" inputmode="decimal" step="0.1" min="0" value="${fmtCons(s.power_consumption)}" data-f="power_consumption" ${ro}></td>
       <td class="actions">${isEditor ? `
@@ -625,7 +634,8 @@ function renderLocationTable() {
     const tr = document.createElement("tr");
     if (l.id === activeLocationId) tr.classList.add("is-active");
     tr.innerHTML = `
-      <td><input type="text" class="name" value="${esc(l.name)}" data-f="name" ${ro}></td>
+      <td><input type="text" class="name" value="${esc(l.name_de)}" data-f="name_de" ${ro}></td>
+      <td><input type="text" class="name" value="${esc(l.name_en)}" data-f="name_en" ${ro}></td>
       <td><input type="number" inputmode="decimal" step="0.01" min="0" value="${fmtPrice(l.price_chf_per_kwh)}" data-f="price_chf_per_kwh" ${ro}></td>
       <td class="actions">${isEditor ? `
         <button class="link-btn" data-act="save">${t("save")}</button>
@@ -667,7 +677,8 @@ async function deleteLocation(id) {
 async function addScenario() {
   try {
     const created = await api.post("/api/scenarios", {
-      name: t("new_scenario"), fuel_consumption: 6.5, power_consumption: 21,
+      name_de: I18N.de.new_scenario, name_en: I18N.en.new_scenario,
+      fuel_consumption: 6.5, power_consumption: 21,
     });
     activeScenarioId = created.id;
     localStorage.setItem("activeScenarioId", activeScenarioId);
@@ -677,7 +688,9 @@ async function addScenario() {
 }
 async function addLocation() {
   try {
-    const created = await api.post("/api/locations", { name: t("new_location"), price_chf_per_kwh: 0.30 });
+    const created = await api.post("/api/locations", {
+      name_de: I18N.de.new_location, name_en: I18N.en.new_location, price_chf_per_kwh: 0.30,
+    });
     activeLocationId = created.id;
     localStorage.setItem("activeLocationId", activeLocationId);
     toast(t("toast_location_added"));
