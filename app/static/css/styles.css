@@ -208,8 +208,6 @@ body:not(.is-editor) .editor-only { display: none !important; }
   gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
 }
 .card__head h2 { margin: 0; font-size: 17px; font-weight: 700; }
-.hint { color: var(--muted); font-size: 13px; }
-.hint b { color: var(--sweet); }
 
 /* Toggle */
 .toggle {
