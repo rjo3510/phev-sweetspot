@@ -1,6 +1,6 @@
 # Deploy — PHEV Sweetspot Calculator (GHCR image + Nginx Proxy Manager)
 
-Target domain: **phev.xolution.ch**
+Target domain: **phev.example.com**
 
 The image is **built by GitHub Actions** and pushed to GHCR
 (`ghcr.io/rjo3510/phev-sweetspot`). The server **pulls** that image — it never builds and
@@ -83,9 +83,9 @@ tags under the repo's **Packages** on GitHub.
 
 ## DNS + Nginx Proxy Manager
 
-1. **DNS:** create an `A` record `phev.xolution.ch` → your server's public IP.
+1. **DNS:** create an `A` record `phev.example.com` → your server's public IP.
 2. **NPM → Proxy Hosts → Add Proxy Host:**
-   - Domain Names: `phev.xolution.ch`
+   - Domain Names: `phev.example.com`
    - Scheme: `http`
    - Block Common Exploits: on · Websockets: off · Cache Assets: off
    - Forward target — pick **one**:
@@ -95,7 +95,7 @@ tags under the repo's **Packages** on GitHub.
 
 The app is published on the host as **`http://<host>:8082`** (set `APP_PORT` in `.env`) and is
 also reachable by name on the proxy network. Because HTTPS terminates at NPM and `.env` has
-`COOKIE_SECURE=1`, the login cookie is served `Secure` — always use `https://phev.xolution.ch`.
+`COOKIE_SECURE=1`, the login cookie is served `Secure` — always use `https://phev.example.com`.
 
 ## Back up the database
 
