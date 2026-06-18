@@ -8,7 +8,7 @@ never receives the source. The SQLite DB lives in `./data` next to the compose f
 container over a shared Docker network.
 
 ```
-dev VM ──git push──▶ GitHub ──Actions build──▶ GHCR (private image)
+dev VM ──git push──▶ GitHub ──Actions build──▶ GHCR image
                                                    │
                           ./ship.sh (from a        │  docker compose pull
                           machine that can SSH) ───▶ server ──────────────▶ restart
@@ -16,10 +16,10 @@ dev VM ──git push──▶ GitHub ──Actions build──▶ GHCR (private
 
 ## One-time server setup
 
-1. **Log in to GHCR** (the image is private — needs a token with `read:packages`):
+1. **Log in to GHCR — only if the image is private.** If the GHCR package is public,
+   skip this. Otherwise create a PAT (classic) with scope `read:packages` and:
 
    ```bash
-   # Create a GitHub Personal Access Token (classic) with scope: read:packages
    echo <TOKEN> | docker login ghcr.io -u rjo3510 --password-stdin
    ```
 

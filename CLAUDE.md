@@ -51,13 +51,13 @@ sudo snap install chromium                            # on demand
 ## Deploy (full guide: DEPLOY.md)
 CI builds the image; the server **pulls** it — nothing is built on the host.
 ```
-git push            # → GitHub Actions builds & pushes ghcr.io/rjo3510/phev-sweetspot (private)
+git push            # → GitHub Actions builds & pushes ghcr.io/rjo3510/phev-sweetspot
 # then on the server (your SSH host, dir ~/phev-sweetspot):
 docker compose pull && docker compose up -d      # the owner runs this (alias: dco)
 ```
 - The **dev machine can't reach the server** — don't try to SSH-deploy from here; push and let
   the owner pull (or run `./ship.sh` from a machine that can SSH).
-- Image is **private** on GHCR → server did a one-time `docker login ghcr.io` (PAT `read:packages`).
+- If the GHCR image is **private**, the server needs a one-time `docker login ghcr.io` (PAT `read:packages`); not needed if the package is public.
 - **DB** is the `./data` bind mount next to `docker-compose.yml`.
 - `docker-compose.yml` + `.env` live **only on the server** (not in the image) — update by hand.
 - Served via Nginx Proxy Manager at https://phev.example.com; `COOKIE_SECURE=1` → HTTPS only.
