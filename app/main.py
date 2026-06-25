@@ -20,10 +20,48 @@ from .database import Base, SessionLocal, engine, get_db
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 COOKIE_NAME = "edit_session"
 COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "").lower() in ("1", "true", "yes")
+# Publish the interactive API docs (/docs,/redoc,/openapi.json)? Off by default; the
+# write-endpoint schema is not interesting to the public. Set ENABLE_DOCS=1 for dev.
+ENABLE_DOCS = os.environ.get("ENABLE_DOCS", "").lower() in ("1", "true", "yes")
 
-app = FastAPI(title="PHEV Sweetspot Calculator")
+app = FastAPI(
+    title="PHEV Sweetspot Calculator",
+    docs_url="/docs" if ENABLE_DOCS else None,
+    redoc_url="/redoc" if ENABLE_DOCS else None,
+    openapi_url="/openapi.json" if ENABLE_DOCS else None,
+)
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+
+# Self-protection headers. All scripts are self-hosted (/static/vendor + app.js) with no
+# inline <script> or on*-handlers, so script-src can be strict 'self'. Only inline STYLE
+# attributes (e.g. the legend swatches) need 'unsafe-inline'. frame-ancestors blocks
+# clickjacking. No external origins are used (assets + API are same-origin).
+_CSP = (
+    "default-src 'self'; "
+    "script-src 'self'; "
+    "style-src 'self' 'unsafe-inline'; "
+    "img-src 'self' data:; "
+    "font-src 'self'; "
+    "connect-src 'self'; "
+    "base-uri 'self'; "
+    "form-action 'self'; "
+    "frame-ancestors 'none'"
+)
+
+
+@app.middleware("http")
+async def _security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Content-Security-Policy", _CSP)
+    if COOKIE_SECURE:  # only meaningful when served over HTTPS
+        response.headers.setdefault(
+            "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+        )
+    return response
 
 
 def _static_version() -> str:
@@ -48,22 +86,42 @@ APP_VERSION = os.environ.get("APP_VERSION", "dev")
 # --- Auth: read-only for everyone, writes require the owner password ----------
 def require_editor(edit_session: str | None = Cookie(default=None)) -> bool:
     """Dependency guarding write endpoints. 401 unless a valid edit session exists."""
-    if not auth.verify_token(edit_session):
+    if not auth.is_editor(edit_session):
         raise HTTPException(status_code=401, detail="Editing requires login")
     return True
+
+
+def _client_ip(request: Request) -> str:
+    """Real client IP for the per-client login throttle. The leftmost X-Forwarded-For
+    value is client-supplied and spoofable; prefer Cloudflare's CF-Connecting-IP, else
+    the rightmost XFF entry (the peer our proxy saw). Falls back to the socket peer.
+    Keying on the proxy IP would make one shared bucket (and let anyone lock the owner
+    out), so derive the actual client here."""
+    cf = request.headers.get("cf-connecting-ip")
+    if cf:
+        return cf.strip()
+    fwd = request.headers.get("x-forwarded-for")
+    if fwd:
+        parts = [p.strip() for p in fwd.split(",") if p.strip()]
+        if parts:
+            return parts[-1]
+    return request.client.host if request.client else "?"
 
 
 # Simple in-memory per-IP rate limit for login attempts (brute-force protection).
 _login_attempts: dict[str, list[float]] = {}
 _LOGIN_WINDOW = 300.0   # seconds
-_LOGIN_MAX = 8          # attempts per window per IP
+_LOGIN_MAX = 8          # FAILED attempts per window per client IP
 
 
 def _login_rate_ok(ip: str) -> bool:
     now = time.time()
-    recent = [t for t in _login_attempts.get(ip, []) if now - t < _LOGIN_WINDOW]
-    _login_attempts[ip] = recent
-    return len(recent) < _LOGIN_MAX
+    # Prune stale entries (and empty buckets) so the dict can't grow unbounded.
+    for k in list(_login_attempts.keys()):
+        _login_attempts[k] = [t for t in _login_attempts[k] if now - t < _LOGIN_WINDOW]
+        if not _login_attempts[k]:
+            del _login_attempts[k]
+    return len(_login_attempts.get(ip, [])) < _LOGIN_MAX
 
 
 def _migrate_legacy_fuel_price() -> None:
@@ -113,11 +171,17 @@ def on_startup() -> None:
         crud.seed_if_empty(db)
     finally:
         db.close()
-    if auth.USING_DEFAULT_PASSWORD:
+    if auth.EDITING_DISABLED:
         auth.logger.warning(
-            "OWNER_PASSWORD_HASH is not set — using the default dev password '%s'. "
-            "Set OWNER_PASSWORD_HASH before exposing this app publicly "
-            "(run: python -m app.auth).", auth.DEFAULT_DEV_PASSWORD)
+            "OWNER_PASSWORD_HASH is not set (and ALLOW_DEFAULT_PASSWORD is off) — "
+            "EDITING IS DISABLED, the app runs as a read-only public calculator. "
+            "Set OWNER_PASSWORD_HASH to enable editing (run: python -m app.auth).")
+    elif auth.USING_DEFAULT_PASSWORD:
+        auth.logger.warning(
+            "ALLOW_DEFAULT_PASSWORD is set and OWNER_PASSWORD_HASH is not — using the "
+            "default dev password '%s'. NEVER do this on a public deploy; set "
+            "OWNER_PASSWORD_HASH instead (run: python -m app.auth).",
+            auth.DEFAULT_DEV_PASSWORD)
 
 
 # --- Page --------------------------------------------------------------------
@@ -139,17 +203,18 @@ def favicon():
 # --- Auth --------------------------------------------------------------------
 @app.get("/api/me", response_model=schemas.AuthState)
 def me(edit_session: str | None = Cookie(default=None)):
-    return schemas.AuthState(editor=auth.verify_token(edit_session))
+    return schemas.AuthState(editor=auth.is_editor(edit_session))
 
 
 @app.post("/api/login", response_model=schemas.AuthState)
 def login(data: schemas.Login, request: Request, response: Response):
-    ip = request.client.host if request.client else "?"
+    ip = _client_ip(request)
     if not _login_rate_ok(ip):
         raise HTTPException(status_code=429, detail="Too many attempts — try again later")
-    _login_attempts.setdefault(ip, []).append(time.time())
     if not auth.check_password(data.password):
+        _login_attempts.setdefault(ip, []).append(time.time())  # count only FAILURES
         raise HTTPException(status_code=401, detail="Wrong password")
+    _login_attempts.pop(ip, None)  # a correct login clears this client's failure count
     response.set_cookie(COOKIE_NAME, auth.make_token(), max_age=auth.SESSION_TTL,
                         httponly=True, samesite="lax", secure=COOKIE_SECURE)
     return schemas.AuthState(editor=True)

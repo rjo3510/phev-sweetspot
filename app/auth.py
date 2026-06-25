@@ -46,8 +46,14 @@ def verify_password(password: str, stored: str) -> bool:
 
 
 # --- Owner secret material ---------------------------------------------------
+# Fail SAFE, not open: the repo is public, so the default password is public too.
+# Without OWNER_PASSWORD_HASH editing is DISABLED - the app stays a read-only public
+# calculator. The dev fallback password is only used when ALLOW_DEFAULT_PASSWORD is set
+# explicitly (local development), never by accident on a public deploy.
+ALLOW_DEFAULT_PASSWORD = os.environ.get("ALLOW_DEFAULT_PASSWORD", "").lower() in ("1", "true", "yes")
 OWNER_PASSWORD_HASH = os.environ.get("OWNER_PASSWORD_HASH", "").strip()
-USING_DEFAULT_PASSWORD = not OWNER_PASSWORD_HASH
+USING_DEFAULT_PASSWORD = not OWNER_PASSWORD_HASH and ALLOW_DEFAULT_PASSWORD
+EDITING_DISABLED = not OWNER_PASSWORD_HASH and not ALLOW_DEFAULT_PASSWORD
 if USING_DEFAULT_PASSWORD:
     OWNER_PASSWORD_HASH = hash_password(DEFAULT_DEV_PASSWORD)
 
@@ -58,6 +64,8 @@ _secret = (os.environ.get("SWEETSPOT_SECRET", "").encode()
 
 
 def check_password(password: str) -> bool:
+    if EDITING_DISABLED:
+        return False
     return verify_password(password, OWNER_PASSWORD_HASH)
 
 
@@ -78,6 +86,15 @@ def verify_token(token: str | None) -> bool:
         return hmac.compare_digest(good, sig)
     except Exception:
         return False
+
+
+def is_editor(token: str | None) -> bool:
+    """True only if editing is enabled AND the token is a valid editor session.
+
+    Gates the API regardless of the raw token: when no OWNER_PASSWORD_HASH is set the
+    signing secret would be publicly derivable, so editing must stay off here too -
+    never trust verify_token() alone for an authorization decision."""
+    return not EDITING_DISABLED and verify_token(token)
 
 
 if __name__ == "__main__":
