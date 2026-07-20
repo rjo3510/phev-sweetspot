@@ -154,13 +154,13 @@ async function init() {
     activeScenarioId = Number(e.target.value);
     localStorage.setItem("activeScenarioId", activeScenarioId);
     syncActiveInputs();
-    recalc();
+    recalcFromInputs();  // keep the current (possibly unsaved/guest) fuel price
   });
   $("location-select").addEventListener("change", (e) => {
     activeLocationId = Number(e.target.value);
     localStorage.setItem("activeLocationId", activeLocationId);
     syncActiveInputs();
-    recalc();
+    recalcFromInputs();  // keep the current (possibly unsaved/guest) fuel price
   });
 
   // Live preview while typing in the active inputs (does not persist until Save).
