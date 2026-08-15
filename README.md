@@ -28,7 +28,8 @@ fuel or on electric power** — visualised as the crossing point ("sweetspot") o
   will write (*"Save for Winter, Home, fuel price"*).
 - **Current fuel price** — a single global value (with quick −/+ buttons) shown at the top.
   Fuel price changes often and is the same at the pump for every scenario, so you set it
-  once and it applies everywhere.
+  once and it applies everywhere. Below the field, *"Set on 16 Jul 2026 (30 days ago)"*
+  says how fresh the stored price is — after two weeks the line turns amber.
 - **Scenarios** (Winter, Summer, With trailer, …) — named presets, each holding a consumption
   profile (l/100km and kWh/100km). Names are bilingual (German + English) and shown in the
   active UI language.

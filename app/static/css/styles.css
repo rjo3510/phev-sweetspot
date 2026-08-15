@@ -115,7 +115,11 @@ body:not(.is-editor) .editor-only { display: none !important; }
 .fuelbar__icon { font-size: 28px; }
 .fuelbar__label strong { display: block; font-size: 16px; }
 .fuelbar__label small { color: var(--muted); font-size: 13px; }
+.fuelbar__set { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .fuelbar__input { display: flex; align-items: center; gap: 8px; }
+/* Age of the saved price — quiet by default, amber once it is likely outdated. */
+.fuelbar__age { color: var(--muted); font-size: 12px; }
+.fuelbar__age.is-stale { color: var(--fuel); font-weight: 600; }
 .fuelbar__input input {
   width: 110px; font-size: 22px; font-weight: 700; text-align: center;
   padding: 8px 10px; border-color: rgba(255, 138, 91, 0.5);

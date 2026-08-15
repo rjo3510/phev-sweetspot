@@ -30,6 +30,9 @@ const I18N = {
     subtitle: "Fuel or electric? Find the price where it flips.",
     fuel_price_title: "Current fuel price",
     fuel_price_note: "Changes often — set it once, it applies to every scenario.",
+    fuel_set_on: "Set on {date} ({rel})",
+    fuel_set_unknown: "Set on: date unknown",
+    rel_today: "today", rel_yesterday: "yesterday", rel_days: "{n} days ago",
     chart_title: "When does charging pay off?",
     region_elec: "Electric cheaper", region_fuel: "Fuel cheaper",
     tipping_line: "Tipping line",
@@ -80,6 +83,9 @@ const I18N = {
     subtitle: "Benzin oder Strom? Finde den Preis, bei dem es kippt.",
     fuel_price_title: "Aktueller Benzinpreis",
     fuel_price_note: "Ändert sich oft — einmal setzen, gilt für alle Szenarien.",
+    fuel_set_on: "Gesetzt am {date} ({rel})",
+    fuel_set_unknown: "Gesetzt am: Datum unbekannt",
+    rel_today: "heute", rel_yesterday: "gestern", rel_days: "vor {n} Tagen",
     chart_title: "Wann lohnt sich Laden?",
     region_elec: "Strom günstiger", region_fuel: "Benzin günstiger",
     tipping_line: "Kipp-Linie",
@@ -148,6 +154,7 @@ let activeLocationId = Number(localStorage.getItem("activeLocationId")) || null;
 let lang = localStorage.getItem("lang") === "de" ? "de" : "en";
 let isEditor = false;   // owner logged in? writes are blocked for everyone else
 let fuelPrice = 1.80;   // global current fuel price (CHF/L), loaded from /api/settings
+let fuelPriceSetAt = null;   // when it was last saved (ISO string) — null = unknown
 let chart = null;
 let lastResult = null;  // keep the latest computed result so toggling re-renders instantly
 
@@ -193,6 +200,7 @@ function setLang(l) {
   applyLangToggleUI();
   applyStaticTranslations();
   applyEditMode();
+  renderFuelAge();          // date format and wording follow the language
   renderChips();            // chip names follow the language (with fallback)
   renderScenarioTable();
   renderLocationTable();
@@ -257,7 +265,9 @@ async function reload() {
     api.get("/api/settings"),
   ]);
   fuelPrice = settings.fuel_price;
+  fuelPriceSetAt = settings.fuel_price_updated_at || null;
   $("in-fuel-price").value = Number(fuelPrice).toFixed(2);
+  renderFuelAge();
   if (!scenarios.some((s) => s.id === activeScenarioId)) activeScenarioId = scenarios[0]?.id ?? null;
   if (!locations.some((l) => l.id === activeLocationId)) activeLocationId = locations[0]?.id ?? null;
   renderChips();
@@ -423,6 +433,32 @@ async function saveInputs() {
     toast(t("toast_saved"));
     await reload();
   } catch (e) { toast(e.message, true); }
+}
+
+// --- Freshness of the saved fuel price ---------------------------------------
+// Used rarely, the quiet question is "does that price still hold?". The date the
+// price was last saved answers it; past STALE_DAYS the line turns amber.
+const STALE_DAYS = 14;
+
+function renderFuelAge() {
+  const el = $("fuel-age");
+  const d = fuelPriceSetAt ? new Date(fuelPriceSetAt) : null;
+  if (!d || isNaN(d.getTime())) {
+    el.textContent = t("fuel_set_unknown");
+    el.classList.remove("is-stale");
+    return;
+  }
+  const day = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.max(0, Math.round((day(new Date()) - day(d)) / 86400000));
+  const rel = days === 0 ? t("rel_today") : days === 1 ? t("rel_yesterday") : t("rel_days", { n: days });
+  el.textContent = t("fuel_set_on", { date: fmtDate(d), rel });
+  el.classList.toggle("is-stale", days >= STALE_DAYS);
+}
+
+function fmtDate(d) {
+  return lang === "de"
+    ? d.toLocaleDateString("de-CH", { day: "2-digit", month: "2-digit", year: "numeric" })
+    : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
 function nudgeFuelPrice(delta) {

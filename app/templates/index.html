@@ -47,11 +47,15 @@
           <small data-i18n="fuel_price_note">Changes often — set it once, it applies to every scenario.</small>
         </div>
       </div>
-      <div class="fuelbar__input">
-        <button class="step" id="fuel-down" title="−0.05">−</button>
-        <input type="number" inputmode="decimal" step="0.01" min="0" id="in-fuel-price" />
-        <span class="unit">CHF/l</span>
-        <button class="step" id="fuel-up" title="+0.05">+</button>
+      <div class="fuelbar__set">
+        <div class="fuelbar__input">
+          <button class="step" id="fuel-down" title="−0.05">−</button>
+          <input type="number" inputmode="decimal" step="0.01" min="0" id="in-fuel-price" />
+          <span class="unit">CHF/l</span>
+          <button class="step" id="fuel-up" title="+0.05">+</button>
+        </div>
+        <!-- How fresh is the saved price? Answers "is this still current?" without a click. -->
+        <small class="fuelbar__age" id="fuel-age"></small>
       </div>
     </section>
 
