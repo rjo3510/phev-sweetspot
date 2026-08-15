@@ -24,6 +24,14 @@ const CHF = (n) => "CHF " + Number(n).toFixed(2);
 const fmtCons = (n) => Number(n).toFixed(1);    // consumption: L/100km, kWh/100km → 1 decimal
 const fmtPrice = (n) => Number(n).toFixed(2);   // CHF/kWh → 2 decimals
 
+// Yearly mileage is fixed on purpose: it makes "per 100 km" tangible without
+// adding a field to fill in. Not editable — see CLAUDE.md.
+const ANNUAL_KM = 15000;
+const THOUSANDS = { en: ",", de: "'" };
+const fmtInt = (n) =>
+  Math.round(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, THOUSANDS[lang] || ",");
+const CHF0 = (n) => "CHF " + fmtInt(n);         // whole francs, for the yearly figure
+
 // --- i18n --------------------------------------------------------------------
 const I18N = {
   en: {
@@ -45,6 +53,7 @@ const I18N = {
     sent_elec: "100 km cost <b>{ce}</b> on electricity instead of <b>{cf}</b> on fuel — <b>{save}</b> saved.",
     sent_fuel: "100 km cost <b>{cf}</b> on fuel instead of <b>{ce}</b> on electricity — <b>{save}</b> saved.",
     sent_tie: "100 km cost <b>{ce}</b> either way.",
+    year_save: "That is about <b>{amount}</b> a year at {km} km.",
     thr_elec: "Only above <b>{bek}</b> — or below <b>{bef}</b> — would filling up be cheaper.",
     thr_fuel: "Only below <b>{bek}</b> — or above <b>{bef}</b> — would charging pay off.",
     note_sep: " · ",
@@ -98,6 +107,7 @@ const I18N = {
     sent_elec: "100 km kosten mit Strom <b>{ce}</b> statt <b>{cf}</b> mit Benzin — <b>{save}</b> gespart.",
     sent_fuel: "100 km kosten mit Benzin <b>{cf}</b> statt <b>{ce}</b> mit Strom — <b>{save}</b> gespart.",
     sent_tie: "100 km kosten so oder so <b>{ce}</b>.",
+    year_save: "Das sind rund <b>{amount}</b> pro Jahr bei {km} km.",
     thr_elec: "Erst über <b>{bek}</b> — oder unter <b>{bef}</b> — wäre Tanken günstiger.",
     thr_fuel: "Erst unter <b>{bek}</b> — oder über <b>{bef}</b> — würde sich Laden lohnen.",
     note_sep: " · ",
@@ -559,6 +569,12 @@ function renderVerdict(res) {
     : isElec ? t("sent_elec", { ce, cf, save })
              : t("sent_fuel", { ce, cf, save });
 
+  // The same saving, once a year — what "per 100 km" actually amounts to.
+  // Dropped on a tie and on a near-tie: "about CHF 0 a year" says nothing.
+  const perYear = Math.abs(res.cost_fuel - res.cost_elec) * (ANNUAL_KM / 100);
+  const yearly = isTie || Math.round(perYear) < 1 ? ""
+    : t("year_save", { amount: CHF0(perYear), km: fmtInt(ANNUAL_KM) });
+
   // Both tipping prices at once, each in its own unit — the electricity price
   // where it flips, and the fuel price where it flips.
   let threshold = "";
@@ -577,6 +593,7 @@ function renderVerdict(res) {
       <div class="verdict__main">
         <p class="verdict__title">${title}</p>
         <p class="verdict__sentence">${sentence}</p>
+        ${yearly ? `<p class="verdict__year">${yearly}</p>` : ""}
         ${threshold ? `<p class="verdict__threshold">${threshold}</p>` : ""}
         <p class="verdict__note">${note}</p>
       </div>

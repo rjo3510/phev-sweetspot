@@ -194,6 +194,11 @@ body:not(.is-editor) .editor-only { display: none !important; }
 .verdict__sentence b { font-weight: 700; white-space: nowrap; }
 .is-electric .verdict__sentence b { color: var(--elec); }
 .is-fuel .verdict__sentence b { color: var(--fuel); }
+/* The yearly figure follows the sentence it scales up — same colour coding, one step quieter. */
+.verdict__year { margin: 4px 0 0; font-size: 15px; line-height: 1.45; }
+.verdict__year b { font-weight: 700; white-space: nowrap; }
+.is-electric .verdict__year b { color: var(--elec); }
+.is-fuel .verdict__year b { color: var(--fuel); }
 .verdict__threshold { margin: 6px 0 0; font-size: 15px; line-height: 1.45; color: var(--muted); }
 .verdict__threshold b { color: var(--sweet); white-space: nowrap; }
 /* Assumptions behind the numbers — a footnote, not a second reading task. */

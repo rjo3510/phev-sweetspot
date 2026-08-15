@@ -66,6 +66,11 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   (`_migrate_drop_settings_updated_at` in `main.py`); don't reintroduce it.
 - **Verdict:** one sentence (cheaper option · costs · saving · both break-even prices) plus an
   assumptions footnote — see `renderVerdict()`.
+- **Yearly figure:** the saving scaled to a year sits right under the sentence (`.verdict__year`,
+  i18n `year_save`). The mileage is **hard-wired at 15'000 km** (`ANNUAL_KM` in `app.js`) — the
+  whole point is to make "per 100 km" tangible *without* another input field, so don't make it
+  editable. Whole francs, thousands grouped per language (`15,000` en / `15'000` de, `fmtInt()`);
+  hidden on a tie and whenever it would round to CHF 0.
 - **One truth per number:** every value is edited exactly once, in the *Calculation values*
   block. The lists below are name-only management (add / rename / delete) behind a collapsed
   `Manage lists` (`<details class="manage">`). Row saves send the stored numbers along
