@@ -87,6 +87,7 @@ const I18N = {
     toast_login_ok: "Editing enabled", toast_login_wrong: "Wrong password",
     toast_login_throttled: "Too many attempts — try again later",
     toast_logout: "Logged out — read-only",
+    theme: "Appearance", theme_dark: "Dark", theme_light: "Light",
   },
   de: {
     app_title: "PHEV Kostenvergleich",
@@ -141,6 +142,7 @@ const I18N = {
     toast_login_ok: "Bearbeiten aktiviert", toast_login_wrong: "Falsches Passwort",
     toast_login_throttled: "Zu viele Versuche — später nochmal",
     toast_logout: "Abgemeldet — Nur-Lese-Modus",
+    theme: "Darstellung", theme_dark: "Dunkel", theme_light: "Hell",
   },
 };
 
@@ -163,6 +165,9 @@ let locations = [];
 let activeScenarioId = Number(localStorage.getItem("activeScenarioId")) || null;
 let activeLocationId = Number(localStorage.getItem("activeLocationId")) || null;
 let lang = localStorage.getItem("lang") === "de" ? "de" : "en";
+// The inline script in index.html already picked the theme before first paint
+// (stored choice, else the system setting) — read it back, never re-decide here.
+let theme = document.documentElement.dataset.theme === "light" ? "light" : "dark";
 let isEditor = false;   // owner logged in? writes are blocked for everyone else
 let fuelPrice = 1.80;   // global current fuel price (CHF/L), loaded from /api/settings
 let chart = null;
@@ -171,6 +176,7 @@ let lastResult = null;  // keep the latest computed result so toggling re-render
 // --- Boot --------------------------------------------------------------------
 async function init() {
   applyLangToggleUI();
+  applyThemeToggleUI();
   applyStaticTranslations();
   await reload();
 
@@ -210,6 +216,16 @@ async function init() {
     btn.addEventListener("click", () => setLang(btn.dataset.lang));
   });
 
+  $("theme-toggle").querySelectorAll(".toggle__btn").forEach((btn) => {
+    btn.addEventListener("click", () => setTheme(btn.dataset.theme));
+  });
+  // Until the switch is used, the system decides — and keeps deciding while the
+  // page is open (a Mac flipping to dark at sunset flips the app with it).
+  const mq = window.matchMedia("(prefers-color-scheme: light)");
+  const follow = (e) => { if (!localStorage.getItem("theme")) setTheme(e.matches ? "light" : "dark", false); };
+  if (mq.addEventListener) mq.addEventListener("change", follow);
+  else if (mq.addListener) mq.addListener(follow);   // older WebKit
+
   // Auth: lock button + login modal.
   $("auth-btn").addEventListener("click", () => (isEditor ? doLogout() : openLogin()));
   $("login-cancel").addEventListener("click", closeLogin);
@@ -219,10 +235,42 @@ async function init() {
   await refreshAuth();
 }
 
+// --- Theme -------------------------------------------------------------------
+// Dark and light are the same UI in two palettes: every colour is a CSS token
+// (see styles.css), so switching means one attribute on <html>. Only the chart
+// bakes its colours in at draw time — hence the redraw.
+// persist=false is the system following its own setting; a click stores it.
+function setTheme(next, persist = true) {
+  theme = next === "light" ? "light" : "dark";
+  document.documentElement.dataset.theme = theme;
+  if (persist) localStorage.setItem("theme", theme);
+  applyThemeToggleUI();
+  if (lastResult) renderChart(lastResult);
+}
+
+function applyThemeToggleUI() {
+  $("theme-toggle").setAttribute("aria-label", t("theme"));
+  $("theme-toggle").querySelectorAll(".toggle__btn").forEach((btn) => {
+    const on = btn.dataset.theme === theme;
+    btn.classList.toggle("is-on", on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    // The icon alone would be an unlabelled button — the words carry it.
+    const label = t(btn.dataset.theme === "light" ? "theme_light" : "theme_dark");
+    btn.title = label;
+    btn.setAttribute("aria-label", label);
+  });
+}
+
+// Current value of a CSS token — how the chart stays in sync with the theme.
+function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
 function setLang(l) {
   lang = l === "de" ? "de" : "en";
   localStorage.setItem("lang", lang);
   applyLangToggleUI();
+  applyThemeToggleUI();     // the switch's tooltips are translated too
   applyStaticTranslations();
   applyEditMode();
   renderChips();            // chip names follow the language (with fallback)
@@ -716,13 +764,21 @@ function renderChart(res) {
     topLine.push({ x, y: yMax });
   }
 
-  const belowFill = "rgba(56,225,176,0.12)";   // below the line → electric cheaper
-  const aboveFill = "rgba(255,138,91,0.12)";   // above the line → fuel cheaper
+  // Chart.js bakes colours in at draw time, so they are read from the CSS tokens
+  // on every render — that is what makes the chart follow the theme.
+  const C = {
+    text: cssVar("--text"), muted: cssVar("--muted"), grid: cssVar("--grid"),
+    elec: cssVar("--elec"), fuel: cssVar("--fuel"), accent: cssVar("--accent"),
+    sweet: cssVar("--sweet"), sweetSoft: cssVar("--sweet-soft"),
+    bg: cssVar("--bg"), pointRing: cssVar("--point-ring"),
+  };
+  const belowFill = cssVar("--chart-fill-elec");   // below the line → electric cheaper
+  const aboveFill = cssVar("--chart-fill-fuel");   // above the line → fuel cheaper
 
   const data = {
     datasets: [
       // Tipping line, filling down to the x-axis = the "below" region.
-      { label: t("tipping_line"), data: beLine, borderColor: "#ffd166", borderWidth: 3,
+      { label: t("tipping_line"), data: beLine, borderColor: C.sweet, borderWidth: 3,
         fill: "start", backgroundColor: belowFill, pointRadius: 0, tension: 0, order: 2 },
       // Invisible top line, filling down to the tipping line = the "above" region.
       { label: "above", data: topLine, borderColor: "rgba(0,0,0,0)",
@@ -730,27 +786,27 @@ function renderChart(res) {
     ],
   };
 
-  const pointColor = res.cheaper === "equal" ? "#7c8cff"
-    : res.cheaper === "electric" ? "#38e1b0" : "#ff8a5b";
+  const pointColor = res.cheaper === "equal" ? C.accent
+    : res.cheaper === "electric" ? C.elec : C.fuel;
   // No dashed drop-lines to the axes: the point carries its two prices as a label,
   // so the helper lines only added ink.
   const annotations = {
     here: { type: "point", xValue: cfg.xVal, yValue: cfg.yVal,
-      backgroundColor: pointColor, borderColor: "#fff", borderWidth: 2, radius: 7 },
+      backgroundColor: pointColor, borderColor: C.pointRing, borderWidth: 2, radius: 7 },
     hereLabel: { type: "label", xValue: cfg.xVal, yValue: cfg.yVal,
       content: `${cfg.xVal.toFixed(2)} ${cfg.xUnit} · ${cfg.yVal.toFixed(2)} ${cfg.yUnit}`,
-      color: "#eaf0ff", font: { size: 11, weight: "600" }, yAdjust: -18,
+      color: C.text, font: { size: 11, weight: "600" }, yAdjust: -18,
       // pull the label left when the point is near the right edge so it doesn't clip
       // (narrow phone charts clip earlier, hence the generous threshold)
       xAdjust: cfg.xVal > xMax * 0.55 ? -70 : 0,
       backgroundColor: "rgba(0,0,0,0)" },
     elecRegion: { type: "label",
       xValue: xMax * 0.72, yValue: yMax * 0.12,
-      content: "⚡ " + t("region_elec"), color: "#38e1b0",
+      content: "⚡ " + t("region_elec"), color: C.elec,
       font: { size: 13, weight: "700" }, backgroundColor: "rgba(0,0,0,0)" },
     fuelRegion: { type: "label",
       xValue: xMax * 0.24, yValue: yMax * 0.86,
-      content: "⛽ " + t("region_fuel"), color: "#ff8a5b",
+      content: "⛽ " + t("region_fuel"), color: C.fuel,
       font: { size: 13, weight: "700" }, backgroundColor: "rgba(0,0,0,0)" },
   };
 
@@ -759,12 +815,12 @@ function renderChart(res) {
   if (hasSweet) {
     annotations.sweetConn = { type: "line", yMin: cfg.yVal, yMax: cfg.yVal,
       xMin: Math.min(cfg.xVal, beRule), xMax: Math.max(cfg.xVal, beRule),
-      borderColor: "rgba(255,209,102,0.7)", borderWidth: 1, borderDash: [3, 3] };
+      borderColor: C.sweetSoft, borderWidth: 1, borderDash: [3, 3] };
     annotations.sweet = { type: "point", xValue: beRule, yValue: cfg.yVal,
-      backgroundColor: "#ffd166", borderColor: "#0b1020", borderWidth: 2, radius: 6 };
+      backgroundColor: C.sweet, borderColor: C.bg, borderWidth: 2, radius: 6 };
     annotations.sweetLabel = { type: "label", xValue: beRule, yValue: cfg.yVal,
       content: [t("word_sweetspot"), `${beRule.toFixed(2)} ${cfg.xUnit}`],
-      color: "#ffd166", font: { size: 11, weight: "700" }, yAdjust: 26,
+      color: C.sweet, font: { size: 11, weight: "700" }, yAdjust: 26,
       backgroundColor: "rgba(0,0,0,0)" };
   }
 
@@ -773,13 +829,13 @@ function renderChart(res) {
     interaction: { mode: "nearest", intersect: false, axis: "x" },
     scales: {
       x: { type: "linear", min: 0, max: xMax,
-        title: { display: true, text: cfg.xTitle, color: "#9aa7c7" },
-        ticks: { color: "#9aa7c7", callback: (v) => v.toFixed(2) },
-        grid: { color: "rgba(40,51,88,0.6)" } },
+        title: { display: true, text: cfg.xTitle, color: C.muted },
+        ticks: { color: C.muted, callback: (v) => v.toFixed(2) },
+        grid: { color: C.grid } },
       y: { type: "linear", min: 0, max: yMax,
-        title: { display: true, text: cfg.yTitle, color: "#9aa7c7" },
-        ticks: { color: "#9aa7c7", callback: (v) => v.toFixed(2) },
-        grid: { color: "rgba(40,51,88,0.6)" } },
+        title: { display: true, text: cfg.yTitle, color: C.muted },
+        ticks: { color: C.muted, callback: (v) => v.toFixed(2) },
+        grid: { color: C.grid } },
     },
     plugins: {
       legend: { display: false },

@@ -5,21 +5,117 @@
 @font-face { font-family: "Inter"; font-style: normal; font-weight: 700; font-display: swap; src: url("/static/fonts/inter-latin-700.woff2") format("woff2"); }
 @font-face { font-family: "Inter"; font-style: normal; font-weight: 800; font-display: swap; src: url("/static/fonts/inter-latin-800.woff2") format("woff2"); }
 
+/* ─── Theme tokens ──────────────────────────────────────────────────────────
+   Every colour in this file comes from a token here — nothing is hard-coded
+   further down, so the light theme is one override block and nothing else.
+   The chart is drawn in JS and reads the same tokens (cssVar() in app.js).
+   :root = dark (also what a JS-less browser gets); the inline script in
+   index.html stamps data-theme before first paint, so there is no flash. */
 :root {
+  color-scheme: dark;
   --bg: #0b1020;
   --bg-soft: #121a31;
   --card: #161f3a;
   --card-2: #1b264a;
   --line: #283358;
+  --line-soft: rgba(40, 51, 88, 0.5);
   --text: #eaf0ff;
   --muted: #9aa7c7;
   --fuel: #ff8a5b;       /* warm orange */
+  --fuel-2: #e56a3a;     /* gradient partner / hover */
   --elec: #38e1b0;       /* electric teal */
+  --elec-2: #21b58c;
   --accent: #7c8cff;
+  --accent-2: #5d6bff;
   --sweet: #ffd166;
   --danger: #ff6b81;
+  /* Text sitting ON a filled chip/button of that colour. */
+  --on-fuel: #2a1004;
+  --on-elec: #06231b;
+  --on-accent: #fff;
+  --on-sweet: #1a1200;
+  /* Washes (soft fills) and edges (borders) per accent. */
+  --fuel-wash: rgba(255, 138, 91, 0.10);
+  --fuel-band: rgba(255, 138, 91, 0.20);
+  --fuel-edge: rgba(255, 138, 91, 0.55);
+  --elec-wash: rgba(56, 225, 176, 0.10);
+  --elec-band: rgba(56, 225, 176, 0.20);
+  --elec-edge: rgba(56, 225, 176, 0.55);
+  --accent-wash: rgba(124, 140, 255, 0.14);
+  --accent-edge: rgba(124, 140, 255, 0.30);
+  --sweet-wash: rgba(255, 209, 102, 0.10);
+  --sweet-edge: rgba(255, 209, 102, 0.35);
+  --sweet-soft: rgba(255, 209, 102, 0.7);
+  --focus-ring: rgba(124, 140, 255, 0.18);
+  /* Backdrops: page glow, modal, caption chip, verdict icon, marker ring. */
+  --glow-1: rgba(124, 140, 255, 0.18);
+  --glow-2: rgba(56, 225, 176, 0.12);
+  --overlay: rgba(5, 8, 18, 0.66);
+  --cap-bg: rgba(11, 16, 32, 0.72);
+  --icon-bg: rgba(255, 255, 255, 0.05);
+  --ring: rgba(255, 255, 255, 0.9);
+  --h1-a: #fff;
+  --h1-b: #b9c4ff;
+  /* Chart (read from JS). */
+  --grid: rgba(40, 51, 88, 0.6);
+  --chart-fill-elec: rgba(56, 225, 176, 0.12);
+  --chart-fill-fuel: rgba(255, 138, 91, 0.12);
+  --point-ring: #fff;
   --shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.65);
   --radius: 18px;
+}
+
+/* Light theme — same roles, darker accents so text keeps its contrast on a
+   light ground, and inverted backdrops. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f4f6fb;
+  --bg-soft: #ffffff;
+  --card: #ffffff;
+  --card-2: #eff3fb;
+  --line: #d3daea;
+  --line-soft: rgba(120, 134, 170, 0.28);
+  --text: #16203a;
+  /* Dark enough to still clear 4.5:1 where muted text sits on a tinted band
+     (the fuel bar's note is the worst case), not just on plain white. */
+  --muted: #4c587a;
+  --fuel: #bd4c0e;
+  --fuel-2: #9c3d09;
+  --elec: #07795c;
+  --elec-2: #05604a;
+  --accent: #3f49bd;
+  --accent-2: #5058d8;
+  --sweet: #8a6100;
+  --danger: #c22a44;
+  --on-fuel: #fff;
+  --on-elec: #fff;
+  --on-accent: #fff;
+  --on-sweet: #fff;
+  --fuel-wash: rgba(189, 76, 14, 0.09);
+  --fuel-band: rgba(189, 76, 14, 0.13);
+  --fuel-edge: rgba(189, 76, 14, 0.45);
+  --elec-wash: rgba(7, 121, 92, 0.09);
+  --elec-band: rgba(7, 121, 92, 0.16);
+  --elec-edge: rgba(7, 121, 92, 0.45);
+  --accent-wash: rgba(63, 73, 189, 0.10);
+  --accent-edge: rgba(63, 73, 189, 0.28);
+  --sweet-wash: rgba(138, 97, 0, 0.10);
+  --sweet-edge: rgba(138, 97, 0, 0.35);
+  --sweet-soft: rgba(138, 97, 0, 0.55);
+  --focus-ring: rgba(63, 73, 189, 0.18);
+  --glow-1: rgba(63, 73, 189, 0.10);
+  --glow-2: rgba(7, 121, 92, 0.09);
+  --overlay: rgba(22, 32, 58, 0.42);
+  --cap-bg: rgba(255, 255, 255, 0.82);
+  --icon-bg: rgba(22, 32, 58, 0.06);
+  --ring: rgba(22, 32, 58, 0.22);
+  --h1-a: #16203a;
+  --h1-b: #3f49bd;
+  --grid: rgba(120, 134, 170, 0.28);
+  --chart-fill-elec: rgba(7, 121, 92, 0.10);
+  --chart-fill-fuel: rgba(189, 76, 14, 0.10);
+  --point-ring: #fff;
+  --shadow: 0 14px 30px -20px rgba(22, 32, 58, 0.45);
 }
 
 * { box-sizing: border-box; }
@@ -29,8 +125,8 @@ body {
   font-family: "Inter", system-ui, -apple-system, sans-serif;
   color: var(--text);
   background:
-    radial-gradient(1200px 600px at 80% -10%, rgba(124, 140, 255, 0.18), transparent 60%),
-    radial-gradient(1000px 500px at -10% 10%, rgba(56, 225, 176, 0.12), transparent 55%),
+    radial-gradient(1200px 600px at 80% -10%, var(--glow-1), transparent 60%),
+    radial-gradient(1000px 500px at -10% 10%, var(--glow-2), transparent 55%),
     var(--bg);
   min-height: 100vh;
   overflow-x: hidden;   /* belt-and-suspenders: never allow sideways page scroll */
@@ -50,6 +146,9 @@ body {
 }
 .topbar__right { display: flex; align-items: center; gap: 10px; }
 .lang-toggle .toggle__btn { padding: 5px 12px; font-size: 12px; letter-spacing: .5px; }
+/* Dark / light switch — same component as the language toggle, icons instead of
+   words (they need no translation), the icon alone carries the state. */
+.theme-toggle .toggle__btn { padding: 5px 10px; font-size: 13px; line-height: 1.2; }
 
 /* Owner login / read-only mode */
 .auth-btn {
@@ -58,14 +157,14 @@ body {
   padding: 6px 12px; border-radius: 12px; transition: border-color .15s, color .15s;
 }
 .auth-btn:hover { color: var(--text); border-color: var(--accent); }
-body.is-editor .auth-btn { color: var(--elec); border-color: rgba(56, 225, 176, 0.45); }
+body.is-editor .auth-btn { color: var(--elec); border-color: var(--elec-edge); }
 /* Hide all editor-only controls until the owner is logged in. */
 body:not(.is-editor) .editor-only { display: none !important; }
 
 /* Modal */
 .modal { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; }
 .modal[hidden] { display: none; }
-.modal__backdrop { position: absolute; inset: 0; background: rgba(5, 8, 18, 0.66); backdrop-filter: blur(2px); }
+.modal__backdrop { position: absolute; inset: 0; background: var(--overlay); backdrop-filter: blur(2px); }
 .modal__box {
   position: relative; width: min(360px, 92vw);
   background: linear-gradient(180deg, var(--card), var(--bg-soft));
@@ -86,8 +185,8 @@ body:not(.is-editor) .editor-only { display: none !important; }
   letter-spacing: 2px;
   padding: 6px 14px;
   border-radius: 999px;
-  background: rgba(124, 140, 255, 0.14);
-  border: 1px solid rgba(124, 140, 255, 0.3);
+  background: var(--accent-wash);
+  border: 1px solid var(--accent-edge);
   margin-bottom: 14px;
 }
 .hero h1 {
@@ -95,7 +194,7 @@ body:not(.is-editor) .editor-only { display: none !important; }
   font-size: clamp(28px, 4vw, 42px);
   font-weight: 800;
   letter-spacing: -0.5px;
-  background: linear-gradient(90deg, #fff, #b9c4ff 60%, var(--elec));
+  background: linear-gradient(90deg, var(--h1-a), var(--h1-b) 60%, var(--elec));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -107,8 +206,8 @@ body:not(.is-editor) .editor-only { display: none !important; }
   display: flex; align-items: center; justify-content: space-between; gap: 18px;
   flex-wrap: wrap;
   border-radius: var(--radius); padding: 16px 22px; margin: 18px 0 16px;
-  border: 1px solid rgba(255, 138, 91, 0.4);
-  background: linear-gradient(135deg, rgba(255, 138, 91, 0.16), rgba(255, 138, 91, 0.05));
+  border: 1px solid var(--fuel-edge);
+  background: linear-gradient(135deg, var(--fuel-band), var(--fuel-wash));
   box-shadow: var(--shadow);
 }
 .fuelbar__label { display: flex; align-items: center; gap: 14px; }
@@ -119,7 +218,7 @@ body:not(.is-editor) .editor-only { display: none !important; }
 .fuelbar__input { display: flex; align-items: center; gap: 8px; }
 .fuelbar__input input {
   width: 110px; font-size: 22px; font-weight: 700; text-align: center;
-  padding: 8px 10px; border-color: rgba(255, 138, 91, 0.5);
+  padding: 8px 10px; border-color: var(--fuel-edge);
 }
 .fuelbar__input .unit { color: var(--muted); font-weight: 600; }
 .step {
@@ -145,25 +244,25 @@ body:not(.is-editor) .editor-only { display: none !important; }
 }
 .chip:hover { color: var(--text); border-color: var(--accent); }
 .chip.is-on {
-  background: linear-gradient(135deg, var(--accent), #5d6bff);
-  border-color: transparent; color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-color: transparent; color: var(--on-accent);
 }
 /* Charging chips are coloured at the break-even price: under it charging is
    cheaper (⚡ green), over it fuel is (⛽ amber). The icon comes first, so the
    verdict never rests on colour alone. */
 .chip__ico { font-style: normal; margin-right: 6px; }
 .chip__ico:empty { display: none; }
-.chip--elec { color: var(--elec); border-color: rgba(56, 225, 176, 0.55); background: rgba(56, 225, 176, 0.10); }
-.chip--fuel { color: var(--fuel); border-color: rgba(255, 138, 91, 0.55); background: rgba(255, 138, 91, 0.10); }
+.chip--elec { color: var(--elec); border-color: var(--elec-edge); background: var(--elec-wash); }
+.chip--fuel { color: var(--fuel); border-color: var(--fuel-edge); background: var(--fuel-wash); }
 .chip--elec:hover { color: var(--elec); border-color: var(--elec); }
 .chip--fuel:hover { color: var(--fuel); border-color: var(--fuel); }
 .chip.is-on.chip--elec {
-  background: linear-gradient(135deg, var(--elec), #21b58c);
-  border-color: transparent; color: #06231b;
+  background: linear-gradient(135deg, var(--elec), var(--elec-2));
+  border-color: transparent; color: var(--on-elec);
 }
 .chip.is-on.chip--fuel {
-  background: linear-gradient(135deg, var(--fuel), #e56a3a);
-  border-color: transparent; color: #2a1004;
+  background: linear-gradient(135deg, var(--fuel), var(--fuel-2));
+  border-color: transparent; color: var(--on-fuel);
 }
 
 /* Verdict */
@@ -176,14 +275,14 @@ body:not(.is-editor) .editor-only { display: none !important; }
   background: linear-gradient(135deg, var(--card-2), var(--card));
   transition: border-color .3s, box-shadow .3s;
 }
-.verdict-card.is-electric { border-color: rgba(56, 225, 176, 0.55); }
-.verdict-card.is-fuel { border-color: rgba(255, 138, 91, 0.55); }
+.verdict-card.is-electric { border-color: var(--elec-edge); }
+.verdict-card.is-fuel { border-color: var(--fuel-edge); }
 .verdict__loading { color: var(--muted); }
 .verdict__row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
 .verdict__icon {
   font-size: 40px; line-height: 1;
   width: 64px; height: 64px; display: grid; place-items: center;
-  border-radius: 16px; background: rgba(255,255,255,0.05);
+  border-radius: 16px; background: var(--icon-bg);
 }
 .verdict__main { flex: 1; min-width: 220px; }
 .verdict__title { font-size: 24px; font-weight: 800; margin: 0; }
@@ -241,7 +340,7 @@ body:not(.is-editor) .editor-only { display: none !important; }
   font-family: inherit; font-size: 13px; font-weight: 600;
   padding: 6px 12px; border-radius: 9px; transition: background .15s, color .15s;
 }
-.toggle__btn.is-on { background: linear-gradient(135deg, var(--accent), #5d6bff); color: #fff; }
+.toggle__btn.is-on { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--on-accent); }
 .toggle__btn:not(.is-on):hover { color: var(--text); }
 
 /* Chart: the optional deep view behind the bar, full width, no legend — every
@@ -280,12 +379,12 @@ body:not(.is-editor) .editor-only { display: none !important; }
 .pbar__cap {
   position: relative; z-index: 3; display: inline-flex; align-items: center; gap: 5px;
   font-size: 12px; font-weight: 700; white-space: nowrap;
-  background: rgba(11, 16, 32, 0.72); padding: 2px 7px; border-radius: 7px;
+  background: var(--cap-bg); padding: 2px 7px; border-radius: 7px;
 }
 .pbar__cap i, .pbar__cap em { font-style: normal; }
-.pbar__seg--elec { background: rgba(56, 225, 176, 0.20); justify-content: flex-start; padding-left: 12px; }
+.pbar__seg--elec { background: var(--elec-band); justify-content: flex-start; padding-left: 12px; }
 .pbar__seg--elec .pbar__cap { color: var(--elec); }
-.pbar__seg--fuel { background: rgba(255, 138, 91, 0.20); justify-content: flex-end; padding-right: 12px; }
+.pbar__seg--fuel { background: var(--fuel-band); justify-content: flex-end; padding-right: 12px; }
 .pbar__seg--fuel .pbar__cap { color: var(--fuel); }
 /* Where it tips, and where you are. */
 .pbar__tip {
@@ -294,7 +393,7 @@ body:not(.is-editor) .editor-only { display: none !important; }
 }
 .pbar__here {
   position: absolute; top: -7px; bottom: -7px; width: 4px; margin-left: -2px; z-index: 2;
-  background: var(--accent); border-radius: 3px; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
+  background: var(--accent); border-radius: 3px; box-shadow: 0 0 0 1px var(--ring);
 }
 .pbar__here.is-elec { background: var(--elec); }
 .pbar__here.is-fuel { background: var(--fuel); }
@@ -327,7 +426,7 @@ select, input[type="number"], input[type="text"] {
 }
 select:focus, input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(124, 140, 255, 0.18);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 /* Strip native control chrome so Safari/iOS render the same flat box as Chrome
    (otherwise inputs get a native inner shadow / odd border). Selects keep their
@@ -355,18 +454,18 @@ input:disabled, select:disabled { -webkit-text-fill-color: var(--text); opacity:
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   flex-wrap: wrap; margin: -4px 0 16px; padding: 8px 12px; border-radius: 11px;
   font-size: 13px; color: var(--sweet);
-  background: rgba(255, 209, 102, 0.10); border: 1px solid rgba(255, 209, 102, 0.35);
+  background: var(--sweet-wash); border: 1px solid var(--sweet-edge);
 }
 .preview-bar[hidden] { display: none; }
 .preview-bar .link-btn { color: var(--sweet); font-size: 12px; }
 .preview-bar__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 /* The one save in the app — it stores exactly the values shown in the fields. */
-.preview-bar .btn { background: var(--sweet); color: #1a1200; }
+.preview-bar .btn { background: var(--sweet); color: var(--on-sweet); }
 
 /* Buttons */
 .btn {
-  background: linear-gradient(135deg, var(--accent), #5d6bff);
-  color: #fff; border: none; cursor: pointer;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: var(--on-accent); border: none; cursor: pointer;
   padding: 9px 16px; border-radius: 11px; font-weight: 600; font-size: 14px;
   font-family: inherit; transition: transform .08s, filter .15s;
 }
@@ -411,7 +510,7 @@ input:disabled, select:disabled { -webkit-text-fill-color: var(--text); opacity:
   text-transform: uppercase; letter-spacing: .4px; padding: 8px 10px;
   border-bottom: 1px solid var(--line);
 }
-.data-table td { padding: 6px 10px; border-bottom: 1px solid rgba(40, 51, 88, 0.5); }
+.data-table td { padding: 6px 10px; border-bottom: 1px solid var(--line-soft); }
 /* No active-row marker in the management tables: the chips above already show
    which scenario and location are active. */
 /* min-width:0 overrides an <input>'s intrinsic (size-based) min width so the

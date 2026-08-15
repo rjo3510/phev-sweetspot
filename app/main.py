@@ -33,7 +33,7 @@ app = FastAPI(
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
-# Self-protection headers. All scripts are self-hosted (/static/vendor + app.js) with no
+# Self-protection headers. All scripts are self-hosted (/static/vendor + theme.js + app.js) with no
 # inline <script> or on*-handlers, so script-src can be strict 'self'. Only inline STYLE
 # attributes (e.g. the legend swatches) need 'unsafe-inline'. frame-ancestors blocks
 # clickjacking. No external origins are used (assets + API are same-origin).
@@ -68,7 +68,7 @@ def _static_version() -> str:
     """Short hash of the editable assets, appended as ?v= to bust browser caches
     after a deploy (StaticFiles sends no Cache-Control, so Safari caches CSS/JS)."""
     h = hashlib.md5()
-    for rel in ("css/styles.css", "js/app.js"):
+    for rel in ("css/styles.css", "js/app.js", "js/theme.js"):
         try:
             with open(os.path.join(BASE_DIR, "static", rel), "rb") as f:
                 h.update(f.read())

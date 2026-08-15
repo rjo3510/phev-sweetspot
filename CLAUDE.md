@@ -31,7 +31,16 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
 - **German copy is neutral/passive** — no "du"/"Sie".
 - **Currency stays `CHF`** (Swiss app; values/units are CHF-specific).
 - **Cache-busting:** static assets are loaded as `…?v=<hash>` (StaticFiles sends no
-  Cache-Control); the hash is computed in `main.py` from `styles.css` + `app.js`.
+  Cache-Control); the hash is computed in `main.py` from `styles.css` + `app.js` + `theme.js`.
+- **Two themes, one palette:** dark and light are the same UI in two token sets — `:root`
+  holds the dark palette, `:root[data-theme="light"]` overrides it, and **no colour literal
+  lives anywhere else in `styles.css`**. The chart bakes its colours in at draw time, so it
+  reads the same tokens via `cssVar()` and is redrawn on a switch (`setTheme()` in `app.js`).
+  `theme.js` is loaded **blocking in `<head>`** and stamps `data-theme` before the first paint
+  (its own file, not an inline script — the CSP is a strict `script-src 'self'`). The 🌙/☀️
+  switch stores the choice in `localStorage.theme`; without a stored choice the app follows
+  the system setting and keeps following it while the page is open. Light-mode accents are
+  darker on purpose — every text there measures ≥ 4.5:1, keep it that way.
 - **Build SHA** shows in the footer (linked to the commit) and is logged at startup;
   CI passes it as the `GIT_SHA` build-arg → `APP_VERSION`.
 - **DB migrations** run on startup in `main.py` (`_migrate_*`): additive, idempotent, safe on

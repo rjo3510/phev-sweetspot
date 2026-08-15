@@ -6,12 +6,19 @@
   <title>PHEV Charging Calculator</title>
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
   <link rel="stylesheet" href="/static/css/styles.css?v={{ v }}" />
+  <!-- Sets data-theme before the first paint (no flash of the wrong palette).
+       Blocking on purpose, and a file rather than inline: the CSP is strict. -->
+  <script src="/static/js/theme.js?v={{ v }}"></script>
 </head>
 <body>
   <div class="app">
     <div class="topbar">
       <div class="topbar__right">
         <button class="auth-btn" id="auth-btn" type="button">🔒 Edit</button>
+        <div class="toggle theme-toggle" id="theme-toggle" role="group" aria-label="Theme">
+          <button class="toggle__btn" data-theme="dark" type="button" aria-pressed="false">🌙</button>
+          <button class="toggle__btn" data-theme="light" type="button" aria-pressed="false">☀️</button>
+        </div>
         <div class="toggle lang-toggle" id="lang-toggle" role="tablist" aria-label="Language">
           <button class="toggle__btn is-on" data-lang="en" role="tab">EN</button>
           <button class="toggle__btn" data-lang="de" role="tab">DE</button>
