@@ -43,9 +43,9 @@ body {
   padding: 32px max(20px, env(safe-area-inset-right)) 60px max(20px, env(safe-area-inset-left));
 }
 
-/* Top bar (global view + language toggles) */
+/* Top bar (login + language toggle, right-aligned) */
 .topbar {
-  display: flex; justify-content: space-between; align-items: center;
+  display: flex; justify-content: flex-end; align-items: center;
   gap: 12px; flex-wrap: wrap; margin-bottom: 8px;
 }
 .topbar__right { display: flex; align-items: center; gap: 10px; }
@@ -151,32 +151,15 @@ body:not(.is-editor) .editor-only { display: none !important; }
 .verdict__title { font-size: 24px; font-weight: 800; margin: 0; }
 .verdict__title .accent-elec { color: var(--elec); }
 .verdict__title .accent-fuel { color: var(--fuel); }
-.verdict__sub { color: var(--muted); margin: 4px 0 0; }
-.verdict__rule {
-  margin: 10px 0 2px; padding: 9px 13px; border-radius: 11px;
-  background: rgba(124, 140, 255, 0.12); border: 1px solid rgba(124, 140, 255, 0.32);
-  color: var(--text); font-size: 14.5px; line-height: 1.35;
-}
-.verdict__rule b { color: var(--sweet); white-space: nowrap; }
-/* baseline so the two price numbers (and "vs") line up even when one column has
-   the extra "cheaper" tag below it. */
-.verdict__stats { display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; }
-.stat { text-align: right; }
-.stat--price { text-align: center; min-width: 120px; }
-.stat__num { font-size: 22px; font-weight: 700; white-space: nowrap; }
-.stat--price .stat__num { font-size: 26px; }
-.stat__unit { font-size: 14px; font-weight: 600; color: var(--muted); margin-left: 2px; }
-.stat__lbl { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
-.stat__num.fuel { color: var(--fuel); }
-.stat__num.elec { color: var(--elec); }
-.stat__vs { color: var(--muted); font-size: 13px; font-weight: 600; }
-.stat__tag {
-  display: inline-block; margin-top: 6px; padding: 2px 9px; border-radius: 999px;
-  font-size: 11px; font-weight: 700; letter-spacing: .3px;
-  background: rgba(56, 225, 176, 0.16); color: var(--elec);
-  border: 1px solid rgba(56, 225, 176, 0.4);
-}
-.is-fuel .stat__tag { background: rgba(255, 138, 91, 0.16); color: var(--fuel); border-color: rgba(255, 138, 91, 0.4); }
+/* The answer as a sentence: the numbers carry the weight, the words the meaning. */
+.verdict__sentence { margin: 8px 0 0; font-size: 17px; line-height: 1.45; }
+.verdict__sentence b { font-weight: 700; white-space: nowrap; }
+.is-electric .verdict__sentence b { color: var(--elec); }
+.is-fuel .verdict__sentence b { color: var(--fuel); }
+.verdict__threshold { margin: 6px 0 0; font-size: 15px; line-height: 1.45; color: var(--muted); }
+.verdict__threshold b { color: var(--sweet); white-space: nowrap; }
+/* Assumptions behind the numbers — a footnote, not a second reading task. */
+.verdict__note { margin: 12px 0 0; font-size: 12.5px; color: var(--muted); opacity: .85; }
 
 /* Layout */
 .grid {
@@ -270,6 +253,16 @@ input:disabled, select:disabled { -webkit-text-fill-color: var(--text); opacity:
 /* Current selection: each selector + its values is a block; generous gap between blocks. */
 .sel-block + .sel-block { margin-top: 60px; }
 
+/* "Preview — not saved": appears when an input differs from the stored value. */
+.preview-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  flex-wrap: wrap; margin: -4px 0 16px; padding: 8px 12px; border-radius: 11px;
+  font-size: 13px; color: var(--sweet);
+  background: rgba(255, 209, 102, 0.10); border: 1px solid rgba(255, 209, 102, 0.35);
+}
+.preview-bar[hidden] { display: none; }
+.preview-bar .link-btn { color: var(--sweet); font-size: 12px; }
+
 /* Buttons */
 .btn {
   background: linear-gradient(135deg, var(--accent), #5d6bff);
@@ -337,8 +330,10 @@ input:disabled, select:disabled { -webkit-text-fill-color: var(--text); opacity:
   .fuelbar { gap: 12px; padding: 16px 15px; }
   .fuelbar__input input { font-size: 20px; }
   .verdict-card { padding: 20px 16px; }
-  .verdict__stats { width: 100%; justify-content: space-between; gap: 10px; }
-  .stat--price { min-width: 0; }
+  .verdict__row { gap: 12px; }
+  .verdict__icon { width: 48px; height: 48px; font-size: 30px; }
+  .verdict__title { font-size: 21px; }
+  .verdict__sentence { font-size: 16px; }
   /* Keep the edit tables inside the card (tighter cells, name input may shrink). */
   .data-table th, .data-table td { padding: 6px 4px; }
   .data-table th { letter-spacing: 0; }

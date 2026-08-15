@@ -16,7 +16,8 @@ logs in to edit. Bilingual **EN/DE**.
 ## Run & test locally
 ```bash
 .venv/bin/python -m uvicorn app.main:app --reload --port 8000 --log-config uvicorn_log_config.json
-# http://localhost:8000  — read-only; log in with the dev password "sweetspot" (unset OWNER_PASSWORD_HASH)
+# http://localhost:8000  — read-only; editing needs OWNER_PASSWORD_HASH, or
+#   ALLOW_DEFAULT_PASSWORD=1 for the dev password "sweetspot"
 .venv/bin/python -m pytest -q          # unit tests for the cost math in app/calc.py
 ```
 Deps: `requirements.txt` is runtime-only (what ships in the image); `requirements-dev.txt`
@@ -35,7 +36,14 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   CI passes it as the `GIT_SHA` build-arg → `APP_VERSION`.
 - **DB migrations** run on startup in `main.py` (`_migrate_*`): additive, idempotent, safe on
   existing data (they backfill, never drop user data).
-- **Chart:** the sweetspot is a point on the break-even line at the current y; the x-range is
+- **Vocabulary:** the UI says *tipping line / Kipp-Linie*, *Sweetspot*, *Now / Aktuell*; the
+  API and `calc.py` keep the `break_even_*` names. One fixed chart orientation (x = fuel
+  price) — there is no axis toggle any more.
+- **Verdict:** one sentence (cheaper option · costs · saving · both tipping prices) plus an
+  assumptions footnote — see `renderVerdict()`.
+- **What-if vs. saved:** anyone may edit the inputs, only the owner persists. `isDirty()`
+  shows the "Preview — not saved" bar with a reset back to the stored values.
+- **Chart:** the sweetspot is a point on the tipping line at the current y; the x-range is
   anchored on the sweetspot so it stays put while the (global) fuel price is nudged.
 
 ## Verifying UI changes

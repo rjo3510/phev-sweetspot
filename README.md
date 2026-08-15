@@ -8,15 +8,17 @@ fuel or on electric power** — visualised as the crossing point ("sweetspot") o
 
 ## What it does
 
-- Compares fuel vs. electricity as an **equivalent price in one familiar unit** (CHF/l or
-  CHF/kWh): the verdict shows your actual price next to the other option translated into the
-  same unit, plus the real cost per 100 km.
-- The **chart** is a 2D break-even map: fuel price on one axis (CHF/l), electricity price on
-  the other (CHF/kWh). The diagonal **break-even line** is where both cost the same; below it
-  charging wins, above it fuel wins. A **current-position dot** marks your prices and a
-  **sweetspot marker** sits on the line at the tipping price, so you see at a glance which
-  side you're on and how far away the sweetspot is.
-- A chart **toggle** swaps which price is on the x-axis (fuel ↔ electricity).
+- The **verdict is one sentence**: which is cheaper, what 100 km cost either way, how much
+  that saves — and both tipping prices at once (*"only above CHF 0.56/kWh — or below
+  CHF 1.00/l — would filling up be cheaper"*). The assumptions behind the numbers follow as
+  a small footnote, so nothing has to be decoded.
+- The **chart** is one fixed 2D map: fuel price on x (CHF/l), electricity price on y
+  (CHF/kWh). The diagonal **tipping line** (`break_even_*` in the API) is where both cost the
+  same; below it charging wins, above it fuel wins. A **current-position dot** marks your
+  prices and a **sweetspot marker** sits on the line at the tipping price, so you see at a
+  glance which side you're on and how far away the sweetspot is.
+- Anyone may change the inputs for a what-if; only the owner's changes are stored. Unsaved
+  values are flagged **"Preview — not saved"** with one click back to the saved version.
 - **Current fuel price** — a single global value (with quick −/+ buttons) shown at the top.
   Fuel price changes often and is the same at the pump for every scenario, so you set it
   once and it applies everywhere.
@@ -81,9 +83,10 @@ Then provide these as environment variables (e.g. in Docker / the reverse proxy)
 | `SWEETSPOT_SECRET` | Random secret for signing the session cookie (`python -m app.auth` prints one). |
 | `COOKIE_SECURE` | Set to `1` when served over HTTPS so the session cookie is `Secure`. |
 
-If `OWNER_PASSWORD_HASH` is unset, a **default dev password** (`sweetspot`) is used and a
-warning is logged — never expose the app publicly without setting it. Login attempts are
-rate-limited per IP (brute-force protection).
+If `OWNER_PASSWORD_HASH` is unset, editing is **disabled** (read-only calculator) — the app
+fails safe. For local development set `ALLOW_DEFAULT_PASSWORD=1` to enable the default dev
+password (`sweetspot`); a warning is logged. Login attempts are rate-limited per IP
+(brute-force protection).
 
 ## Test
 

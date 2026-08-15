@@ -10,10 +10,6 @@
 <body>
   <div class="app">
     <div class="topbar">
-      <div class="toggle" id="axis-toggle" role="tablist" aria-label="Chart orientation">
-        <button class="toggle__btn is-on" data-axis="fuel" data-i18n="vary_fuel" role="tab">Fuel price on x</button>
-        <button class="toggle__btn" data-axis="kwh" data-i18n="vary_kwh" role="tab">Electricity price on x</button>
-      </div>
       <div class="topbar__right">
         <button class="auth-btn" id="auth-btn" type="button">🔒 Edit</button>
         <div class="toggle lang-toggle" id="lang-toggle" role="tablist" aria-label="Language">
@@ -68,7 +64,7 @@
       <!-- Left column: chart -->
       <section class="card chart-card">
         <div class="card__head">
-          <h2 id="chart-title">Break-even: fuel price (x) vs. electricity price (y)</h2>
+          <h2 id="chart-title" data-i18n="chart_title">When does charging pay off?</h2>
         </div>
         <div class="chart-wrap">
           <canvas id="chart"></canvas>
@@ -79,6 +75,13 @@
       <!-- Right column: active inputs -->
       <section class="card">
         <div class="card__head"><h2 data-i18n="current_selection">Current selection</h2></div>
+
+        <!-- Anyone may try out numbers; only the owner's changes are stored.
+             Shown as soon as an input differs from the saved value. -->
+        <div class="preview-bar" id="preview-bar" hidden>
+          <span data-i18n="preview_note">Preview — not saved</span>
+          <button class="link-btn" id="reset-inputs" type="button" data-i18n="reset_values">Back to saved values</button>
+        </div>
 
         <div class="active-inputs" id="active-inputs">
           <div class="sel-block">

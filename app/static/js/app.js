@@ -30,32 +30,31 @@ const I18N = {
     subtitle: "Fuel or electric? Find the price where it flips.",
     fuel_price_title: "Current fuel price",
     fuel_price_note: "Changes often — set it once, it applies to every scenario.",
-    vary_fuel: "Equivalent fuel price", vary_kwh: "Equivalent electricity price",
-    chart_title_fuel: "When does charging pay off?",
-    chart_title_kwh: "When does charging pay off?",
+    chart_title: "When does charging pay off?",
     region_elec: "Electric cheaper", region_fuel: "Fuel cheaper",
-    break_even_line: "Break-even line", you_are_here: "Current position",
-    costline_elec: "At {cur}, electricity costs {ce} per 100 km.",
-    costline_fuel: "At {cur}, fuel costs {cf} per 100 km.",
-    box_elec_fuel: "From {be}, driving electric is cheaper. At {cur} the saving is <b>{save}</b> per 100 km.",
-    box_elec_kwh: "Up to {be}, driving electric is cheaper. At {cur} the saving is <b>{save}</b> per 100 km.",
-    box_fuel_fuel: "Only from {be} would driving electric be cheaper. Fuel's cost advantage right now is <b>{save}</b> per 100 km.",
-    box_fuel_kwh: "Only below {be} would driving electric be cheaper. Fuel's cost advantage right now is <b>{save}</b> per 100 km.",
+    tipping_line: "Tipping line", you_are_here: "Now",
+    // Verdict as one sentence: cost comparison + both tipping prices + assumptions.
+    verdict_elec: '<span class="accent-elec">Charging</span> pays off',
+    verdict_fuel: '<span class="accent-fuel">Filling up</span> pays off',
+    verdict_tie: "It's a tie",
+    sent_elec: "100 km cost <b>{ce}</b> on electricity instead of <b>{cf}</b> on fuel — <b>{save}</b> saved.",
+    sent_fuel: "100 km cost <b>{cf}</b> on fuel instead of <b>{ce}</b> on electricity — <b>{save}</b> saved.",
+    sent_tie: "100 km cost <b>{ce}</b> either way.",
+    thr_elec: "Only above <b>{bek}</b> — or below <b>{bef}</b> — would filling up be cheaper.",
+    thr_fuel: "Only below <b>{bek}</b> — or above <b>{bef}</b> — would charging pay off.",
+    note_sep: " · ",
     current_selection: "Calculation values",
     scenario: "Scenario", charging_location: "Charging location",
     save: "Save",
+    preview_note: "Preview — not saved",
+    reset_values: "Back to saved values",
     fuel_consumption: "Fuel consumption", power_consumption: "Power consumption",
     electricity_price: "Electricity price",
     scenarios: "Scenarios", charging_locations: "Charging locations",
     add: "+ Add", delete: "Delete",
-    footer: "Break-even fuel price = (kWh/100km × CHF/kWh) ÷ l/100km",
+    footer: "Tipping fuel price = (kWh/100km × CHF/kWh) ÷ l/100km",
     verdict_loading: "Calculating…",
     verdict_start: "Add a scenario and a charging location to start.",
-    tie_title: "It's a tie", tie_sub: "Fuel and electric cost the same right now.",
-    drive_electric: 'Driving <span class="accent-elec">electric</span> is cheaper',
-    drive_fuel: 'Driving on <span class="accent-fuel">fuel</span> is cheaper',
-    pump_price: "Pump price", your_elec_price: "Current electricity price",
-    cheaper_tag: "cheaper",
     axis_per_liter: "Fuel price (CHF/l)", axis_per_kwh: "Electricity price (CHF/kWh)",
     word_sweetspot: "Sweetspot",
     toast_scenario_saved: "Scenario saved", toast_location_saved: "Location saved",
@@ -76,32 +75,31 @@ const I18N = {
     subtitle: "Benzin oder Strom? Finde den Preis, bei dem es kippt.",
     fuel_price_title: "Aktueller Benzinpreis",
     fuel_price_note: "Ändert sich oft — einmal setzen, gilt für alle Szenarien.",
-    vary_fuel: "Entsprechender Benzinpreis", vary_kwh: "Entsprechender Strompreis",
-    chart_title_fuel: "Wann lohnt sich Laden?",
-    chart_title_kwh: "Wann lohnt sich Laden?",
+    chart_title: "Wann lohnt sich Laden?",
     region_elec: "Strom günstiger", region_fuel: "Benzin günstiger",
-    break_even_line: "Break-even-Linie", you_are_here: "Aktuelle Position",
-    costline_elec: "Bei {cur} kostet Strom {ce} pro 100 km.",
-    costline_fuel: "Bei {cur} kostet Benzin {cf} pro 100 km.",
-    box_elec_fuel: "Ab {be} ist elektrisches Fahren günstiger. Bei {cur} beträgt die Ersparnis <b>{save}</b> pro 100 km.",
-    box_elec_kwh: "Bis {be} ist elektrisches Fahren günstiger. Bei {cur} beträgt die Ersparnis <b>{save}</b> pro 100 km.",
-    box_fuel_fuel: "Erst ab {be} wäre elektrisches Fahren günstiger. Aktuell beträgt der Kostenvorteil von Benzin <b>{save}</b> pro 100 km.",
-    box_fuel_kwh: "Erst unter {be} wäre elektrisches Fahren günstiger. Aktuell beträgt der Kostenvorteil von Benzin <b>{save}</b> pro 100 km.",
+    tipping_line: "Kipp-Linie", you_are_here: "Aktuell",
+    // Antwort als ein Satz: Kostenvergleich + beide Kipp-Preise + Annahmen.
+    verdict_elec: '<span class="accent-elec">Laden</span> lohnt sich',
+    verdict_fuel: '<span class="accent-fuel">Tanken</span> lohnt sich',
+    verdict_tie: "Unentschieden",
+    sent_elec: "100 km kosten mit Strom <b>{ce}</b> statt <b>{cf}</b> mit Benzin — <b>{save}</b> gespart.",
+    sent_fuel: "100 km kosten mit Benzin <b>{cf}</b> statt <b>{ce}</b> mit Strom — <b>{save}</b> gespart.",
+    sent_tie: "100 km kosten so oder so <b>{ce}</b>.",
+    thr_elec: "Erst über <b>{bek}</b> — oder unter <b>{bef}</b> — wäre Tanken günstiger.",
+    thr_fuel: "Erst unter <b>{bek}</b> — oder über <b>{bef}</b> — würde sich Laden lohnen.",
+    note_sep: " · ",
     current_selection: "Berechnungswerte",
     scenario: "Szenario", charging_location: "Standort",
     save: "Speichern",
+    preview_note: "Vorschau — nicht gespeichert",
+    reset_values: "Zurück zu gespeicherten Werten",
     fuel_consumption: "Benzinverbrauch", power_consumption: "Stromverbrauch",
     electricity_price: "Strompreis",
     scenarios: "Szenarien", charging_locations: "Standorte",
     add: "+ Hinzufügen", delete: "Löschen",
-    footer: "Break-even-Benzinpreis = (kWh/100km × CHF/kWh) ÷ l/100km",
+    footer: "Kipp-Benzinpreis = (kWh/100km × CHF/kWh) ÷ l/100km",
     verdict_loading: "Berechne…",
     verdict_start: "Füge ein Szenario und einen Standort hinzu, um zu starten.",
-    tie_title: "Unentschieden", tie_sub: "Benzin und Strom kosten gerade gleich viel.",
-    drive_electric: '<span class="accent-elec">Elektrisch</span> fahren ist günstiger',
-    drive_fuel: 'Mit <span class="accent-fuel">Benzin</span> fahren ist günstiger',
-    pump_price: "Tankstellenpreis", your_elec_price: "Aktueller Strompreis",
-    cheaper_tag: "günstiger",
     axis_per_liter: "Benzinpreis (CHF/l)", axis_per_kwh: "Strompreis (CHF/kWh)",
     word_sweetspot: "Sweetspot",
     toast_scenario_saved: "Szenario gespeichert", toast_location_saved: "Standort gespeichert",
@@ -138,7 +136,6 @@ let scenarios = [];
 let locations = [];
 let activeScenarioId = Number(localStorage.getItem("activeScenarioId")) || null;
 let activeLocationId = Number(localStorage.getItem("activeLocationId")) || null;
-let axisMode = localStorage.getItem("axisMode") === "kwh" ? "kwh" : "fuel";
 let lang = localStorage.getItem("lang") === "de" ? "de" : "en";
 let isEditor = false;   // owner logged in? writes are blocked for everyone else
 let fuelPrice = 1.80;   // global current fuel price (CHF/L), loaded from /api/settings
@@ -176,10 +173,9 @@ async function init() {
   $("add-scenario").addEventListener("click", addScenario);
   $("add-location").addEventListener("click", addLocation);
 
-  $("axis-toggle").querySelectorAll(".toggle__btn").forEach((btn) => {
-    btn.addEventListener("click", () => setAxisMode(btn.dataset.axis));
-  });
-  applyAxisToggleUI();
+  // Anyone may play with the numbers; only the owner's edits are stored. This
+  // discards the unsaved what-if and brings the saved version back.
+  $("reset-inputs").addEventListener("click", resetInputs);
 
   $("lang-toggle").querySelectorAll(".toggle__btn").forEach((btn) => {
     btn.addEventListener("click", () => setLang(btn.dataset.lang));
@@ -199,7 +195,6 @@ function setLang(l) {
   localStorage.setItem("lang", lang);
   applyLangToggleUI();
   applyStaticTranslations();
-  applyAxisToggleUI();
   applyEditMode();
   renderSelects();          // dropdown names follow the language (with fallback)
   renderScenarioTable();
@@ -256,20 +251,6 @@ function applyLangToggleUI() {
   });
 }
 
-function setAxisMode(mode) {
-  axisMode = mode === "kwh" ? "kwh" : "fuel";
-  localStorage.setItem("axisMode", axisMode);
-  applyAxisToggleUI();
-  if (lastResult) { renderVerdict(lastResult); renderChart(lastResult); }
-}
-function applyAxisToggleUI() {
-  $("axis-toggle").querySelectorAll(".toggle__btn").forEach((btn) => {
-    btn.classList.toggle("is-on", btn.dataset.axis === axisMode);
-  });
-  $("chart-title").textContent =
-    axisMode === "fuel" ? t("chart_title_fuel") : t("chart_title_kwh");
-}
-
 async function reload() {
   let settings;
   [scenarios, locations, settings] = await Promise.all([
@@ -321,6 +302,35 @@ function syncActiveInputs() {
     $("in-power-consumption").value = fmtCons(s.power_consumption);
   }
   if (l) $("in-kwh-price").value = fmtPrice(l.price_chf_per_kwh);
+  updateDirty();
+}
+
+// --- What-if vs. saved -------------------------------------------------------
+// Everyone may change the inputs, but only the owner's changes are stored. As soon
+// as an input differs from the stored value, say so and offer a way back.
+function isDirty() {
+  const s = activeScenario();
+  const l = activeLocation();
+  if (!s || !l) return false;
+  const v = inputValues();
+  // Tolerance = half of the displayed precision: a change that shows up in the
+  // field counts as unsaved, floating-point noise does not.
+  const off = (a, b, tol) => !isNaN(a) && Math.abs(a - b) >= tol;
+  return off(v.fuel_consumption, s.fuel_consumption, 0.05)
+      || off(v.power_consumption, s.power_consumption, 0.05)
+      || off(v.kwh_price, l.price_chf_per_kwh, 0.005)
+      || off(v.fuel_price, fuelPrice, 0.005);
+}
+
+function updateDirty() {
+  $("preview-bar").hidden = !isDirty();
+}
+
+// Drop the unsaved what-if and show the stored version again.
+function resetInputs() {
+  $("in-fuel-price").value = Number(fuelPrice).toFixed(2);
+  syncActiveInputs();
+  recalc();
 }
 
 function inputValues() {
@@ -355,6 +365,7 @@ function nudgeFuelPrice(delta) {
 
 // --- Calculation -------------------------------------------------------------
 async function recalc() {
+  updateDirty();
   if (!activeScenarioId || !activeLocationId) {
     $("verdict").innerHTML = `<div class="verdict__loading">${t("verdict_start")}</div>`;
     lastResult = null;
@@ -371,6 +382,7 @@ async function recalc() {
 // Recompute locally from the (possibly unsaved) input fields, for instant feedback.
 function recalcFromInputs() {
   const v = inputValues();
+  updateDirty();
   if ([v.fuel_consumption, v.power_consumption, v.fuel_price, v.kwh_price].some((x) => isNaN(x))) return;
   const cost_fuel = v.fuel_consumption * v.fuel_price;
   const cost_elec = v.power_consumption * v.kwh_price;
@@ -389,100 +401,71 @@ function recalcFromInputs() {
   renderChart(res);
 }
 
+// The whole answer in one sentence: which is cheaper, by how much, and where it
+// would tip — both thresholds at once, so no view has to be switched.
 function renderVerdict(res) {
   const card = $("verdict");
   card.classList.remove("is-electric", "is-fuel");
-  const isFuel = axisMode === "fuel";
 
   const isTie = res.cheaper === "equal";
   const isElec = res.cheaper === "electric";
   let icon, title;
-  if (isTie) { icon = "⚖️"; title = t("tie_title"); }
-  else if (isElec) { card.classList.add("is-electric"); icon = "⚡"; title = t("drive_electric"); }
-  else { card.classList.add("is-fuel"); icon = "⛽"; title = t("drive_fuel"); }
+  if (isTie) { icon = "⚖️"; title = t("verdict_tie"); }
+  else if (isElec) { card.classList.add("is-electric"); icon = "⚡"; title = t("verdict_elec"); }
+  else { card.classList.add("is-fuel"); icon = "⛽"; title = t("verdict_fuel"); }
 
-  // Two comparable prices in the SAME unit, following the chart toggle.
-  const unit = isFuel ? "/l" : "/kWh";
-  const fuelCur = `${CHF(res.fuel_price)}/l`;
-  const kwhCur = `${CHF(res.location.price_chf_per_kwh)}/kWh`;
-  const statA = isFuel
-    ? { energy: "fuel", label: t("pump_price"), val: res.fuel_price }
-    : { energy: "elec", label: t("your_elec_price"), val: res.location.price_chf_per_kwh };
-  const statB = isFuel
-    ? { energy: "elec", label: t("vary_fuel"), val: res.break_even_fuel_price }
-    : { energy: "fuel", label: t("vary_kwh"), val: res.break_even_kwh_price };
-  const cheaperEnergy = isTie ? null : (isElec ? "elec" : "fuel");
-
-  // Cost line (cheaper option) + break-even box (threshold + savings), in the toggle's unit.
-  const beRule = isFuel ? res.break_even_fuel_price : res.break_even_kwh_price;
+  const ce = CHF(res.cost_elec), cf = CHF(res.cost_fuel);
   const save = CHF(Math.abs(res.cost_fuel - res.cost_elec));
-  let costLine, box = "";
-  if (isTie) {
-    costLine = t("tie_sub");
-  } else {
-    costLine = isElec
-      ? t("costline_elec", { cur: kwhCur, ce: CHF(res.cost_elec) })
-      : t("costline_fuel", { cur: fuelCur, cf: CHF(res.cost_fuel) });
-    if (beRule != null) {
-      const be = `${CHF(beRule)}${unit}`;
-      if (isElec) box = isFuel ? t("box_elec_fuel", { be, cur: fuelCur, save })
-                               : t("box_elec_kwh", { be, cur: kwhCur, save });
-      else box = isFuel ? t("box_fuel_fuel", { be, save })
-                        : t("box_fuel_kwh", { be, save });
-    }
+  const sentence = isTie ? t("sent_tie", { ce })
+    : isElec ? t("sent_elec", { ce, cf, save })
+             : t("sent_fuel", { ce, cf, save });
+
+  // Both tipping prices at once, each in its own unit — the electricity price
+  // where it flips, and the fuel price where it flips.
+  let threshold = "";
+  if (!isTie && res.break_even_kwh_price != null && res.break_even_fuel_price != null) {
+    const bek = `${CHF(res.break_even_kwh_price)}/kWh`;
+    const bef = `${CHF(res.break_even_fuel_price)}/l`;
+    threshold = isElec ? t("thr_elec", { bek, bef }) : t("thr_fuel", { bek, bef });
   }
 
-  const statHtml = (s) => {
-    const cls = s.energy === "fuel" ? "fuel" : "elec";
-    const tag = cheaperEnergy === s.energy ? `<div class="stat__tag">${t("cheaper_tag")}</div>` : "";
-    const val = s.val != null
-      ? `${CHF(s.val)}<span class="stat__unit">${unit}</span>` : "—";
-    return `<div class="stat stat--price"><div class="stat__num ${cls}">${val}</div>` +
-           `<div class="stat__lbl">${s.label}</div>${tag}</div>`;
-  };
+  // The assumptions behind the numbers, as a small footnote.
+  const note = [
+    `⛽ ${CHF(res.fuel_price)}/l`,
+    `${esc(dispName(res.scenario))}: ${fmtCons(res.scenario.fuel_consumption)} l/100km · ${fmtCons(res.scenario.power_consumption)} kWh/100km`,
+    `⚡ ${esc(dispName(res.location))}: ${CHF(res.location.price_chf_per_kwh)}/kWh`,
+  ].join(t("note_sep"));
 
   card.innerHTML = `
     <div class="verdict__row">
       <div class="verdict__icon">${icon}</div>
       <div class="verdict__main">
         <p class="verdict__title">${title}</p>
-        ${costLine ? `<p class="verdict__sub">${costLine}</p>` : ""}
-        ${box ? `<p class="verdict__rule">⚡ ${box}</p>` : ""}
-      </div>
-      <div class="verdict__stats">
-        ${statHtml(statA)}
-        <div class="stat__vs">vs</div>
-        ${statHtml(statB)}
+        <p class="verdict__sentence">${sentence}</p>
+        ${threshold ? `<p class="verdict__threshold">${threshold}</p>` : ""}
+        <p class="verdict__note">${note}</p>
       </div>
     </div>`;
 }
 
 // --- Chart -------------------------------------------------------------------
-// 2D break-even map. Each price sits on its own axis in its natural unit:
-//   fuel mode → x = fuel price (CHF/L),  y = electricity price (CHF/kWh)
-// The diagonal break-even line is where fuel and electric cost the same
-// (fc·fuel_price = pc·kwh_price). Below it one energy wins, above it the other.
-// A dot marks your current prices, so you see at a glance which side you're on.
+// 2D tipping map — always the same view: x = fuel price (CHF/l), y = electricity
+// price (CHF/kWh). The diagonal tipping line is where fuel and electric cost the
+// same (fc·fuel_price = pc·kwh_price); below it charging wins, above it fuel does.
+// A dot marks the current prices, so the side you are on is visible at a glance.
 function renderChart(res) {
   lastResult = res;
-  const isFuel = axisMode === "fuel";
   const fc = res.scenario.fuel_consumption;
   const pc = res.scenario.power_consumption;
 
-  const cfg = isFuel ? {
+  const cfg = {
     xUnit: "CHF/l", yUnit: "CHF/kWh", xTitle: t("axis_per_liter"), yTitle: t("axis_per_kwh"),
     xVal: res.fuel_price, yVal: res.location.price_chf_per_kwh,
-    slope: pc > 0 ? fc / pc : 0,   // break-even y for a given x
-    belowIsElectric: true,         // below the line (low kWh price) → charging wins
-  } : {
-    xUnit: "CHF/kWh", yUnit: "CHF/l", xTitle: t("axis_per_kwh"), yTitle: t("axis_per_liter"),
-    xVal: res.location.price_chf_per_kwh, yVal: res.fuel_price,
-    slope: fc > 0 ? pc / fc : 0,
-    belowIsElectric: false,        // below the line (low fuel price) → fuel wins
+    slope: pc > 0 ? fc / pc : 0,   // tipping y for a given x
   };
 
-  // The sweetspot: the break-even price (in the x-axis unit) at the current y — a point ON the line.
-  const beRule = isFuel ? res.break_even_fuel_price : res.break_even_kwh_price;
+  // The sweetspot: the tipping fuel price at the current electricity price — a point ON the line.
+  const beRule = res.break_even_fuel_price;
   const hasSweet = beRule != null && beRule > 0;
   // Anchor the range on the sweetspot so it stays put across the realistic price
   // range (~2.5× the sweetspot); only widen further if the current price exceeds that.
@@ -501,16 +484,15 @@ function renderChart(res) {
     topLine.push({ x, y: yMax });
   }
 
-  const teal = "rgba(56,225,176,0.12)", orange = "rgba(255,138,91,0.12)";
-  const belowFill = cfg.belowIsElectric ? teal : orange;
-  const aboveFill = cfg.belowIsElectric ? orange : teal;
+  const belowFill = "rgba(56,225,176,0.12)";   // below the line → electric cheaper
+  const aboveFill = "rgba(255,138,91,0.12)";   // above the line → fuel cheaper
 
   const data = {
     datasets: [
-      // Break-even line, filling down to the x-axis = the "below" region.
-      { label: t("break_even_line"), data: beLine, borderColor: "#ffd166", borderWidth: 3,
+      // Tipping line, filling down to the x-axis = the "below" region.
+      { label: t("tipping_line"), data: beLine, borderColor: "#ffd166", borderWidth: 3,
         fill: "start", backgroundColor: belowFill, pointRadius: 0, tension: 0, order: 2 },
-      // Invisible top line, filling down to the break-even line = the "above" region.
+      // Invisible top line, filling down to the tipping line = the "above" region.
       { label: "above", data: topLine, borderColor: "rgba(0,0,0,0)",
         fill: "-1", backgroundColor: aboveFill, pointRadius: 0, tension: 0, order: 3 },
     ],
@@ -529,21 +511,20 @@ function renderChart(res) {
       content: `${cfg.xVal.toFixed(2)} ${cfg.xUnit} · ${cfg.yVal.toFixed(2)} ${cfg.yUnit}`,
       color: "#eaf0ff", font: { size: 11, weight: "600" }, yAdjust: -18,
       // pull the label left when the point is near the right edge so it doesn't clip
-      xAdjust: cfg.xVal > xMax * 0.72 ? -70 : 0,
+      // (narrow phone charts clip earlier, hence the generous threshold)
+      xAdjust: cfg.xVal > xMax * 0.55 ? -70 : 0,
       backgroundColor: "rgba(0,0,0,0)" },
     elecRegion: { type: "label",
-      xValue: xMax * (cfg.belowIsElectric ? 0.72 : 0.26),
-      yValue: yMax * (cfg.belowIsElectric ? 0.12 : 0.86),
+      xValue: xMax * 0.72, yValue: yMax * 0.12,
       content: "⚡ " + t("region_elec"), color: "#38e1b0",
       font: { size: 13, weight: "700" }, backgroundColor: "rgba(0,0,0,0)" },
     fuelRegion: { type: "label",
-      xValue: xMax * (cfg.belowIsElectric ? 0.24 : 0.72),
-      yValue: yMax * (cfg.belowIsElectric ? 0.86 : 0.12),
+      xValue: xMax * 0.24, yValue: yMax * 0.86,
       content: "⛽ " + t("region_fuel"), color: "#ff8a5b",
       font: { size: 13, weight: "700" }, backgroundColor: "rgba(0,0,0,0)" },
   };
 
-  // Sweetspot marker: the point on the break-even line at the current y, with a dotted
+  // Sweetspot marker: the point on the tipping line at the current y, with a dotted
   // connector from the current position so it reads as "slide across to the tipping point".
   if (hasSweet) {
     annotations.sweetConn = { type: "line", yMin: cfg.yVal, yMax: cfg.yVal,
@@ -576,7 +557,7 @@ function renderChart(res) {
       tooltip: {
         filter: (item) => item.datasetIndex === 0,
         callbacks: {
-          title: () => t("break_even_line"),
+          title: () => t("tipping_line"),
           label: (item) => `${item.parsed.x.toFixed(2)} ${cfg.xUnit} ↔ ${item.parsed.y.toFixed(2)} ${cfg.yUnit}`,
         },
       },
@@ -595,7 +576,7 @@ function renderChart(res) {
 
 function renderLegend(pointColor) {
   const items = [
-    ["#ffd166", t("break_even_line")],
+    ["#ffd166", t("tipping_line")],
     ["#ffd166", t("word_sweetspot")],
     ["#38e1b0", t("region_elec")],
     ["#ff8a5b", t("region_fuel")],
