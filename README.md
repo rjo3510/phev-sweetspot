@@ -12,11 +12,15 @@ fuel or on electric power** — visualised as the crossing point ("sweetspot") o
   that saves — and both tipping prices at once (*"only above CHF 0.56/kWh — or below
   CHF 1.00/l — would filling up be cheaper"*). The assumptions behind the numbers follow as
   a small footnote, so nothing has to be decoded.
+- **Profiles as chips, in one line each** — `Trip: Summer · Winter · With trailer` and
+  `Charging: Home · Weekend · Public fast charger`. Every option is visible without opening
+  anything, switching is a single click, and the current fuel price stays as it is.
 - The **chart** is one fixed 2D map: fuel price on x (CHF/l), electricity price on y
   (CHF/kWh). The diagonal **tipping line** (`break_even_*` in the API) is where both cost the
   same; below it charging wins, above it fuel wins. A **current-position dot** marks your
   prices and a **sweetspot marker** sits on the line at the tipping price, so you see at a
-  glance which side you're on and how far away the sweetspot is.
+  glance which side you're on and how far away the sweetspot is. It sits under the answer as
+  its evidence — no legend, everything is labelled in the picture itself.
 - **One editing place per value, one saving rule.** All numbers are edited in
   *Calculation values*; nothing is stored until you press Save. Anyone may change them for a
   what-if — unsaved values are flagged **"Preview — not saved"** with one click back to the

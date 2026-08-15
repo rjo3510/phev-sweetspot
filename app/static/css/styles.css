@@ -128,6 +128,26 @@ body:not(.is-editor) .editor-only { display: none !important; }
 }
 .step:hover { border-color: var(--fuel); color: var(--fuel); }
 
+/* Profiles as chips — all options visible, one click to switch. */
+.profiles { display: flex; flex-direction: column; gap: 10px; margin: 0 0 18px; }
+.profile-row { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.profile-row__label {
+  color: var(--muted); font-size: 13px; font-weight: 700;
+  letter-spacing: .3px; min-width: 58px;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  background: var(--bg-soft); border: 1px solid var(--line); color: var(--muted);
+  font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  padding: 7px 14px; border-radius: 999px;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.chip:hover { color: var(--text); border-color: var(--accent); }
+.chip.is-on {
+  background: linear-gradient(135deg, var(--accent), #5d6bff);
+  border-color: transparent; color: #fff;
+}
+
 /* Verdict */
 .verdict-card {
   border-radius: var(--radius);
@@ -161,21 +181,17 @@ body:not(.is-editor) .editor-only { display: none !important; }
 /* Assumptions behind the numbers — a footnote, not a second reading task. */
 .verdict__note { margin: 12px 0 0; font-size: 12.5px; color: var(--muted); opacity: .85; }
 
-/* Layout */
+/* Layout: one column top to bottom — prices, profiles, answer, chart, values.
+   The only grid left is the pair of name lists inside "Manage lists". */
 .grid {
   display: grid;
-  /* Chart takes the remaining space; the "current selection" column stays narrow. */
-  grid-template-columns: minmax(0, 1fr) 330px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 22px;
   margin-bottom: 22px;
 }
-/* Grid items default to min-width:auto; a rendered <canvas> then blocks the column
-   from shrinking, so the layout breaks when the window is narrowed and re-widened.
-   min-width:0 lets columns (and the chart) resize cleanly in both directions. */
+/* Grid items default to min-width:auto, which lets wide content block the column
+   from shrinking; min-width:0 lets columns resize cleanly in both directions. */
 .grid > * { min-width: 0; }
-/* .grid--lists shares the base template (minmax(0,1fr) 330px) so the lower row's
-   columns line up with the upper row: Scenarios under the chart, Charging
-   locations under Current selection. */
 /* Responsive overrides live at the END of this file (see bottom) so they reliably
    win over the base component rules below, which would otherwise come later in source. */
 
@@ -205,18 +221,10 @@ body:not(.is-editor) .editor-only { display: none !important; }
 .toggle__btn.is-on { background: linear-gradient(135deg, var(--accent), #5d6bff); color: #fff; }
 .toggle__btn:not(.is-on):hover { color: var(--text); }
 
-/* Chart */
-.chart-wrap { position: relative; height: 340px; }
-.legend {
-  list-style: none; padding: 0; margin: 14px 0 0;
-  display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--muted);
-}
-.legend li { display: flex; align-items: center; gap: 7px; }
-.dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
-.dot--fuel { background: var(--fuel); }
-.dot--elec { background: var(--elec); }
-.dot--sweet { background: var(--sweet); }
-.dot--today { background: var(--accent); }
+/* Chart: the evidence under the answer, full width, no legend — every element in
+   the picture is labelled where it sits. */
+.chart-card { margin-bottom: 22px; }
+.chart-wrap { position: relative; height: 380px; }
 
 /* Fields */
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
@@ -250,8 +258,18 @@ input[type="number"] { -moz-appearance: textfield; }
 /* Read-only (disabled) fields: keep full-contrast text instead of Safari's grey. */
 input:disabled, select:disabled { -webkit-text-fill-color: var(--text); opacity: 1; cursor: default; }
 
-/* Current selection: each selector + its values is a block; generous gap between blocks. */
-.sel-block + .sel-block { margin-top: 60px; }
+/* Calculation values: one group per record, each headed by the record's name so
+   an edit is never attributed to the wrong profile. */
+.values-card { margin-bottom: 22px; }
+.values { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 40px; }
+.values__name {
+  margin: 0 0 10px; font-size: 13px; font-weight: 700; color: var(--accent);
+  letter-spacing: .3px;
+}
+.values .field:last-child { margin-bottom: 0; }
+/* Cap the row width so label and field stay near each other on wide screens. */
+.values .field--inline { max-width: 400px; }
+.values .field--inline input { width: 130px; }
 
 /* "Preview — not saved": appears when an input differs from the stored value. */
 .preview-bar {
@@ -313,8 +331,8 @@ input:disabled, select:disabled { -webkit-text-fill-color: var(--text); opacity:
   border-bottom: 1px solid var(--line);
 }
 .data-table td { padding: 6px 10px; border-bottom: 1px solid rgba(40, 51, 88, 0.5); }
-/* No active-row marker in the management tables: it's read-only here and the
-   current selection is already shown by the dropdowns in "Current selection". */
+/* No active-row marker in the management tables: the chips above already show
+   which scenario and location are active. */
 /* min-width:0 overrides an <input>'s intrinsic (size-based) min width so the
    numeric columns shrink to the cell instead of widening the whole table. */
 .data-table input { width: 100%; min-width: 0; padding: 7px 9px; font-size: 14px; }
@@ -340,12 +358,17 @@ input:disabled, select:disabled { -webkit-text-fill-color: var(--text); opacity:
 /* ─── Responsive (kept last so they override the base rules above) ─────────── */
 
 /* Both grids collapse to a single column on tablet/phone widths. */
-@media (max-width: 860px) { .grid, .grid--lists, .manage .grid--lists { grid-template-columns: 1fr; } }
+@media (max-width: 860px) {
+  .grid, .grid--lists, .manage .grid--lists { grid-template-columns: 1fr; }
+  .values { grid-template-columns: 1fr; gap: 22px; }
+}
 
 @media (max-width: 560px) {
   .app { padding: 16px max(13px, env(safe-area-inset-right)) 48px max(13px, env(safe-area-inset-left)); }
   .hero h1 { font-size: 26px; }
-  .chart-wrap { height: 300px; }
+  .chart-wrap { height: 320px; }
+  .profile-row__label { min-width: 0; }
+  .chip { font-size: 13px; padding: 6px 12px; }
   .card { padding: 18px 15px; }
   .fuelbar { gap: 12px; padding: 16px 15px; }
   .fuelbar__input input { font-size: 20px; }

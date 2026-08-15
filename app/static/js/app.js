@@ -32,7 +32,8 @@ const I18N = {
     fuel_price_note: "Changes often — set it once, it applies to every scenario.",
     chart_title: "When does charging pay off?",
     region_elec: "Electric cheaper", region_fuel: "Fuel cheaper",
-    tipping_line: "Tipping line", you_are_here: "Now",
+    tipping_line: "Tipping line",
+    profile_drive: "Trip", profile_charge: "Charging",
     // Verdict as one sentence: cost comparison + both tipping prices + assumptions.
     verdict_elec: '<span class="accent-elec">Charging</span> pays off',
     verdict_fuel: '<span class="accent-fuel">Filling up</span> pays off',
@@ -44,7 +45,6 @@ const I18N = {
     thr_fuel: "Only below <b>{bek}</b> — or above <b>{bef}</b> — would charging pay off.",
     note_sep: " · ",
     current_selection: "Calculation values",
-    scenario: "Scenario", charging_location: "Charging location",
     save: "Save",
     preview_note: "Preview — not saved",
     unsaved_note: "Not saved yet",
@@ -82,7 +82,8 @@ const I18N = {
     fuel_price_note: "Ändert sich oft — einmal setzen, gilt für alle Szenarien.",
     chart_title: "Wann lohnt sich Laden?",
     region_elec: "Strom günstiger", region_fuel: "Benzin günstiger",
-    tipping_line: "Kipp-Linie", you_are_here: "Aktuell",
+    tipping_line: "Kipp-Linie",
+    profile_drive: "Fahrt", profile_charge: "Laden",
     // Antwort als ein Satz: Kostenvergleich + beide Kipp-Preise + Annahmen.
     verdict_elec: '<span class="accent-elec">Laden</span> lohnt sich',
     verdict_fuel: '<span class="accent-fuel">Tanken</span> lohnt sich',
@@ -94,7 +95,6 @@ const I18N = {
     thr_fuel: "Erst unter <b>{bek}</b> — oder über <b>{bef}</b> — würde sich Laden lohnen.",
     note_sep: " · ",
     current_selection: "Berechnungswerte",
-    scenario: "Szenario", charging_location: "Standort",
     save: "Speichern",
     preview_note: "Vorschau — nicht gespeichert",
     unsaved_note: "Noch nicht gespeichert",
@@ -156,18 +156,6 @@ async function init() {
   applyLangToggleUI();
   applyStaticTranslations();
   await reload();
-  $("scenario-select").addEventListener("change", (e) => {
-    activeScenarioId = Number(e.target.value);
-    localStorage.setItem("activeScenarioId", activeScenarioId);
-    syncActiveInputs();
-    recalcFromInputs();  // keep the current (possibly unsaved/guest) fuel price
-  });
-  $("location-select").addEventListener("change", (e) => {
-    activeLocationId = Number(e.target.value);
-    localStorage.setItem("activeLocationId", activeLocationId);
-    syncActiveInputs();
-    recalcFromInputs();  // keep the current (possibly unsaved/guest) fuel price
-  });
 
   // Live preview while typing in the active inputs (does not persist until Save).
   ["in-fuel-consumption", "in-power-consumption", "in-kwh-price"]
@@ -205,7 +193,7 @@ function setLang(l) {
   applyLangToggleUI();
   applyStaticTranslations();
   applyEditMode();
-  renderSelects();          // dropdown names follow the language (with fallback)
+  renderChips();            // chip names follow the language (with fallback)
   renderScenarioTable();
   renderLocationTable();
   if (lastResult) { renderVerdict(lastResult); renderChart(lastResult); }
@@ -272,17 +260,29 @@ async function reload() {
   $("in-fuel-price").value = Number(fuelPrice).toFixed(2);
   if (!scenarios.some((s) => s.id === activeScenarioId)) activeScenarioId = scenarios[0]?.id ?? null;
   if (!locations.some((l) => l.id === activeLocationId)) activeLocationId = locations[0]?.id ?? null;
-  renderSelects();
+  renderChips();
   renderScenarioTable();
   renderLocationTable();
   syncActiveInputs();
   recalc();
 }
 
-// --- Selects + active inputs -------------------------------------------------
-function renderSelects() {
-  fillSelect($("scenario-select"), scenarios, activeScenarioId);
-  fillSelect($("location-select"), locations, activeLocationId);
+// --- Profile chips + active inputs -------------------------------------------
+// Both lists as chips instead of dropdowns: every profile is visible without a
+// click, switching costs one click, and it is obvious that profiles exist.
+function renderChips() {
+  fillChips($("scenario-chips"), scenarios, activeScenarioId, pickScenario);
+  fillChips($("location-chips"), locations, activeLocationId, pickLocation);
+  renderValueNames();
+}
+
+// Which record each number belongs to — the chips are the selector, these are
+// just headings so an edit is never attributed to the wrong profile.
+function renderValueNames() {
+  const s = activeScenario();
+  const l = activeLocation();
+  $("values-scenario-name").textContent = s ? dispName(s) : "";
+  $("values-location-name").textContent = l ? dispName(l) : "";
 }
 // Name in the active language, falling back to the other if it's empty.
 function dispName(o) {
@@ -291,16 +291,37 @@ function dispName(o) {
   return (primary && primary.trim()) ? primary : (secondary || "");
 }
 
-function fillSelect(el, items, activeId) {
+function fillChips(el, items, activeId, onPick) {
   el.innerHTML = "";
   items.forEach((it) => {
-    const o = document.createElement("option");
-    o.value = it.id;
-    o.textContent = dispName(it);
-    if (it.id === activeId) o.selected = true;
-    el.appendChild(o);
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip" + (it.id === activeId ? " is-on" : "");
+    b.setAttribute("aria-pressed", it.id === activeId ? "true" : "false");
+    b.textContent = dispName(it);
+    b.addEventListener("click", () => onPick(it.id));
+    el.appendChild(b);
   });
 }
+
+// Switching a profile keeps the current (possibly unsaved/guest) fuel price.
+function pickScenario(id) {
+  if (id === activeScenarioId) return;
+  activeScenarioId = id;
+  localStorage.setItem("activeScenarioId", activeScenarioId);
+  renderChips();
+  syncActiveInputs();
+  recalcFromInputs();
+}
+function pickLocation(id) {
+  if (id === activeLocationId) return;
+  activeLocationId = id;
+  localStorage.setItem("activeLocationId", activeLocationId);
+  renderChips();
+  syncActiveInputs();
+  recalcFromInputs();
+}
+
 function activeScenario() { return scenarios.find((s) => s.id === activeScenarioId); }
 function activeLocation() { return locations.find((l) => l.id === activeLocationId); }
 
@@ -312,6 +333,7 @@ function syncActiveInputs() {
     $("in-power-consumption").value = fmtCons(s.power_consumption);
   }
   if (l) $("in-kwh-price").value = fmtPrice(l.price_chf_per_kwh);
+  renderValueNames();
   updateDirty();
 }
 
@@ -546,11 +568,9 @@ function renderChart(res) {
 
   const pointColor = res.cheaper === "equal" ? "#7c8cff"
     : res.cheaper === "electric" ? "#38e1b0" : "#ff8a5b";
+  // No dashed drop-lines to the axes: the point carries its two prices as a label,
+  // so the helper lines only added ink.
   const annotations = {
-    vline: { type: "line", xMin: cfg.xVal, xMax: cfg.xVal, yMin: 0, yMax: cfg.yVal,
-      borderColor: "rgba(124,140,255,0.55)", borderWidth: 1, borderDash: [4, 4] },
-    hline: { type: "line", yMin: cfg.yVal, yMax: cfg.yVal, xMin: 0, xMax: cfg.xVal,
-      borderColor: "rgba(124,140,255,0.55)", borderWidth: 1, borderDash: [4, 4] },
     here: { type: "point", xValue: cfg.xVal, yValue: cfg.yVal,
       backgroundColor: pointColor, borderColor: "#fff", borderWidth: 2, radius: 7 },
     hereLabel: { type: "label", xValue: cfg.xVal, yValue: cfg.yVal,
@@ -617,20 +637,6 @@ function renderChart(res) {
   } else {
     chart = new Chart($("chart").getContext("2d"), { type: "line", data, options });
   }
-  renderLegend(pointColor);
-}
-
-function renderLegend(pointColor) {
-  const items = [
-    ["#ffd166", t("tipping_line")],
-    ["#ffd166", t("word_sweetspot")],
-    ["#38e1b0", t("region_elec")],
-    ["#ff8a5b", t("region_fuel")],
-    [pointColor, t("you_are_here")],
-  ];
-  $("legend").innerHTML = items
-    .map(([c, txt]) => `<li><span class="dot" style="background:${c}"></span> ${txt}</li>`)
-    .join("");
 }
 
 // --- Tables ------------------------------------------------------------------

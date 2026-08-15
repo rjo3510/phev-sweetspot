@@ -36,9 +36,13 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   CI passes it as the `GIT_SHA` build-arg → `APP_VERSION`.
 - **DB migrations** run on startup in `main.py` (`_migrate_*`): additive, idempotent, safe on
   existing data (they backfill, never drop user data).
-- **Vocabulary:** the UI says *tipping line / Kipp-Linie*, *Sweetspot*, *Now / Aktuell*; the
-  API and `calc.py` keep the `break_even_*` names. One fixed chart orientation (x = fuel
-  price) — there is no axis toggle any more.
+- **Vocabulary:** the UI says *tipping line / Kipp-Linie* and *Sweetspot*; the profile rows are
+  *Trip / Fahrt* and *Charging / Laden*. The API and `calc.py` keep the `break_even_*` names.
+  One fixed chart orientation (x = fuel price) — there is no axis toggle any more.
+- **Profiles are chips, not dropdowns** (`renderChips()`): every scenario / location is visible
+  without a click, switching is one click and keeps the current fuel price. Each group in
+  *Calculation values* is headed by the active record's name, so an edit is never attributed to
+  the wrong profile.
 - **Verdict:** one sentence (cheaper option · costs · saving · both tipping prices) plus an
   assumptions footnote — see `renderVerdict()`.
 - **One truth per number:** every value is edited exactly once, in the *Calculation values*
@@ -49,8 +53,10 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   stored until Save, the fuel price included (no auto-save on blur). `dirtyParts()` drives the
   bar: guests see "Preview — not saved" + reset, the owner additionally gets
   `Save for <targets>`, which lists the records the click would write (`saveInputs()`).
-- **Chart:** the sweetspot is a point on the tipping line at the current y; the x-range is
-  anchored on the sweetspot so it stays put while the (global) fuel price is nudged.
+- **Chart:** the answer comes first, the chart is the evidence below it — one column, full
+  width, **no legend** (every element is labelled where it sits) and no dashed drop-lines to the
+  axes. The sweetspot is a point on the tipping line at the current y; the x-range is anchored
+  on the sweetspot so it stays put while the (global) fuel price is nudged.
 
 ## Verifying UI changes
 No browser test suite. To check a visual/behaviour change, run the app on a spare port and

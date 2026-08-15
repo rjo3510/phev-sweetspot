@@ -55,67 +55,71 @@
       </div>
     </section>
 
-    <!-- Verdict -->
+    <!-- Profiles as a sentence: every option visible, switching = one click. -->
+    <section class="profiles">
+      <div class="profile-row">
+        <span class="profile-row__label" data-i18n="profile_drive">Trip</span>
+        <div class="chips" id="scenario-chips" role="group" aria-label="Trip"></div>
+      </div>
+      <div class="profile-row">
+        <span class="profile-row__label" data-i18n="profile_charge">Charging</span>
+        <div class="chips" id="location-chips" role="group" aria-label="Charging"></div>
+      </div>
+    </section>
+
+    <!-- Verdict: the answer, above the chart -->
     <section class="verdict-card" id="verdict">
       <div class="verdict__loading" data-i18n="verdict_loading">Calculating…</div>
     </section>
 
-    <div class="grid">
-      <!-- Left column: chart -->
-      <section class="card chart-card">
-        <div class="card__head">
-          <h2 id="chart-title" data-i18n="chart_title">When does charging pay off?</h2>
-        </div>
-        <div class="chart-wrap">
-          <canvas id="chart"></canvas>
-        </div>
-        <ul class="legend" id="legend"></ul>
-      </section>
+    <!-- The chart is the evidence for the sentence above — full width, no legend
+         (everything in the picture is labelled in place). -->
+    <section class="card chart-card">
+      <div class="card__head">
+        <h2 id="chart-title" data-i18n="chart_title">When does charging pay off?</h2>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart"></canvas>
+      </div>
+    </section>
 
-      <!-- Right column: active inputs -->
-      <section class="card">
-        <div class="card__head"><h2 data-i18n="current_selection">Current selection</h2></div>
+    <!-- The one editing place for every number -->
+    <section class="card values-card">
+      <div class="card__head"><h2 data-i18n="current_selection">Current selection</h2></div>
 
-        <!-- Anyone may try out numbers; only the owner's changes are stored.
-             Shown as soon as an input differs from the saved value. One rule for
-             every field here (fuel price included): nothing is stored until Save. -->
-        <div class="preview-bar" id="preview-bar" hidden>
-          <span id="preview-note">Preview — not saved</span>
-          <span class="preview-bar__actions">
-            <button class="btn btn--small editor-only" id="save-inputs" type="button">Save</button>
-            <button class="link-btn" id="reset-inputs" type="button" data-i18n="reset_values">Back to saved values</button>
-          </span>
+      <!-- Anyone may try out numbers; only the owner's changes are stored.
+           Shown as soon as an input differs from the saved value. One rule for
+           every field here (fuel price included): nothing is stored until Save. -->
+      <div class="preview-bar" id="preview-bar" hidden>
+        <span id="preview-note">Preview — not saved</span>
+        <span class="preview-bar__actions">
+          <button class="btn btn--small editor-only" id="save-inputs" type="button">Save</button>
+          <button class="link-btn" id="reset-inputs" type="button" data-i18n="reset_values">Back to saved values</button>
+        </span>
+      </div>
+
+      <div class="values" id="active-inputs">
+        <div class="values__group">
+          <h3 class="values__name" id="values-scenario-name"></h3>
+          <label class="field field--inline">
+            <span><span data-i18n="fuel_consumption">Fuel consumption</span> <em>(l/100km)</em></span>
+            <input type="number" inputmode="decimal" step="0.1" min="0.1" id="in-fuel-consumption" />
+          </label>
+          <label class="field field--inline">
+            <span><span data-i18n="power_consumption">Power consumption</span> <em>(kWh/100km)</em></span>
+            <input type="number" inputmode="decimal" step="0.1" min="0" id="in-power-consumption" />
+          </label>
         </div>
 
-        <div class="active-inputs" id="active-inputs">
-          <div class="sel-block">
-            <label class="field">
-              <span data-i18n="charging_location">Charging location</span>
-              <select id="location-select"></select>
-            </label>
-            <label class="field field--inline">
-              <span><span data-i18n="electricity_price">Electricity price</span> <em>(CHF/kWh)</em></span>
-              <input type="number" inputmode="decimal" step="0.01" min="0" id="in-kwh-price" />
-            </label>
-          </div>
-
-          <div class="sel-block">
-            <label class="field">
-              <span data-i18n="scenario">Scenario</span>
-              <select id="scenario-select"></select>
-            </label>
-            <label class="field field--inline">
-              <span><span data-i18n="fuel_consumption">Fuel consumption</span> <em>(l/100km)</em></span>
-              <input type="number" inputmode="decimal" step="0.1" min="0.1" id="in-fuel-consumption" />
-            </label>
-            <label class="field field--inline">
-              <span><span data-i18n="power_consumption">Power consumption</span> <em>(kWh/100km)</em></span>
-              <input type="number" inputmode="decimal" step="0.1" min="0" id="in-power-consumption" />
-            </label>
-          </div>
+        <div class="values__group">
+          <h3 class="values__name" id="values-location-name"></h3>
+          <label class="field field--inline">
+            <span><span data-i18n="electricity_price">Electricity price</span> <em>(CHF/kWh)</em></span>
+            <input type="number" inputmode="decimal" step="0.01" min="0" id="in-kwh-price" />
+          </label>
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
 
     <!-- List management (owner only): add / rename / delete. The numbers live in
          "Calculation values" above — one editing place per value, no duplicates. -->
