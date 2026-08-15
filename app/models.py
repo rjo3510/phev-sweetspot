@@ -1,7 +1,7 @@
 """ORM models for scenarios and charging locations."""
 from __future__ import annotations
 
-from sqlalchemy import Column, DateTime, Float, Integer, String
+from sqlalchemy import Column, Float, Integer, String
 
 from .database import Base
 
@@ -41,7 +41,3 @@ class Settings(Base):
 
     id = Column(Integer, primary_key=True)             # always 1
     fuel_price = Column(Float, nullable=False)         # CHF / liter (current market price)
-    # When the price was last written (naive UTC). NULL = unknown: seeded default, or a
-    # database from before this column existed. The UI shows the age so a rare visitor
-    # can tell whether the price is still plausible.
-    fuel_price_updated_at = Column(DateTime, nullable=True)

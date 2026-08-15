@@ -1,9 +1,7 @@
 """Pydantic request/response schemas."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class _BilingualName(BaseModel):
@@ -54,17 +52,6 @@ class SettingsBase(BaseModel):
 
 class SettingsRead(SettingsBase):
     model_config = ConfigDict(from_attributes=True)
-    # When the fuel price was last written; null = unknown (never set through this app).
-    fuel_price_updated_at: datetime | None = None
-
-    @field_serializer("fuel_price_updated_at")
-    def _as_utc(self, value: datetime | None) -> str | None:
-        """Stored naive (UTC) in SQLite — mark it as UTC so the browser converts it."""
-        if value is None:
-            return None
-        if value.tzinfo is None:
-            value = value.replace(tzinfo=timezone.utc)
-        return value.isoformat().replace("+00:00", "Z")
 
 
 # --- Auth --------------------------------------------------------------------

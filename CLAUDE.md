@@ -51,13 +51,9 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   without a click, switching is one click and keeps the current fuel price. Each group in
   *Calculation values* is headed by the active record's name, so an edit is never attributed to
   the wrong profile.
-- **Price freshness:** `Settings.fuel_price_updated_at` is stamped on every settings PUT
-  (naive UTC; `null` = unknown, e.g. a DB from before the column). The fuelbar shows
-  *"Set on <date> (<n> days ago)"* and turns amber past `STALE_DAYS` (14) — it answers
-  "is that price still current?" without a click. Only the owner can act on it: with an
-  unknown or stale date the line carries a *Confirm price / Preis bestätigen* link
-  (`confirmFuelPrice()`) that re-PUTs the stored price unchanged, just to stamp today. A guest
-  with an unknown date sees **no line at all** — it would only state a dead end.
+- **No price date:** the fuel price carries no timestamp and no freshness warning — the app
+  states what is stored, nothing about its age. Removed on 15.08.2026 including the DB column
+  (`_migrate_drop_settings_updated_at` in `main.py`); don't reintroduce it.
 - **Verdict:** one sentence (cheaper option · costs · saving · both break-even prices) plus an
   assumptions footnote — see `renderVerdict()`.
 - **One truth per number:** every value is edited exactly once, in the *Calculation values*

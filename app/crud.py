@@ -1,8 +1,6 @@
 """Database access helpers and first-run seeding."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
 from sqlalchemy.orm import Session
 
 from . import models, schemas
@@ -89,9 +87,6 @@ def get_settings(db: Session) -> models.Settings:
 def update_settings(db: Session, data: schemas.SettingsBase) -> models.Settings:
     obj = get_settings(db)
     obj.fuel_price = data.fuel_price
-    # Stamp every write: "set on <date>" answers the silent question of the rare
-    # visitor — is this price still current? Naive UTC (SQLite has no timezones).
-    obj.fuel_price_updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     db.commit()
     db.refresh(obj)
     return obj

@@ -160,18 +160,17 @@ def _migrate_bilingual_names() -> None:
             conn.execute(text(f"ALTER TABLE {table} DROP COLUMN name"))
 
 
-def _migrate_settings_updated_at() -> None:
-    """Add `settings.fuel_price_updated_at` (when the fuel price was last set).
+def _migrate_drop_settings_updated_at() -> None:
+    """Drop `settings.fuel_price_updated_at` — the price-freshness feature is gone.
 
-    Existing rows stay NULL on purpose: for a database written before this column
-    existed the date is genuinely unknown, and the UI says "unknown" rather than
-    inventing today's date. The first save fills it in.
+    Only ever held a timestamp, no user data. Idempotent: a database that never had
+    the column (or already lost it) is left alone.
     """
     with engine.begin() as conn:
         cols = [row[1] for row in conn.execute(text("PRAGMA table_info(settings)"))]
-        if not cols or "fuel_price_updated_at" in cols:
+        if "fuel_price_updated_at" not in cols:
             return
-        conn.execute(text("ALTER TABLE settings ADD COLUMN fuel_price_updated_at DATETIME"))
+        conn.execute(text("ALTER TABLE settings DROP COLUMN fuel_price_updated_at"))
 
 
 @app.on_event("startup")
@@ -180,7 +179,7 @@ def on_startup() -> None:
     Base.metadata.create_all(bind=engine)
     _migrate_legacy_fuel_price()
     _migrate_bilingual_names()
-    _migrate_settings_updated_at()
+    _migrate_drop_settings_updated_at()
     db = SessionLocal()
     try:
         crud.seed_if_empty(db)
