@@ -40,7 +40,12 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   (its own file, not an inline script — the CSP is a strict `script-src 'self'`). The 🌙/☀️
   switch stores the choice in `localStorage.theme`; without a stored choice the app follows
   the system setting and keeps following it while the page is open. Light-mode accents are
-  darker on purpose — every text there measures ≥ 4.5:1, keep it that way.
+  darker on purpose — every text there measures ≥ 4.5:1, keep it that way. **Filled surfaces
+  take the `--on-*` ink of their colour:** in light mode that is white, in dark mode it is a
+  dark tint (`--on-accent: #0d1233`, like `--on-fuel` / `--on-elec`) — the accent has to stay
+  light there to work as text and border on the dark ground, so white on it would only reach
+  3:1. Button modifiers (`.btn--ghost`) must sit **after** `.btn` in `styles.css`; same
+  specificity, so the later rule wins.
 - **Build SHA** shows in the footer (linked to the commit) and is logged at startup;
   CI passes it as the `GIT_SHA` build-arg → `APP_VERSION`.
 - **DB migrations** run on startup in `main.py` (`_migrate_*`): additive, idempotent, safe on

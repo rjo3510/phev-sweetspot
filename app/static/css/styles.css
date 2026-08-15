@@ -26,13 +26,15 @@
   --elec: #38e1b0;       /* electric teal */
   --elec-2: #21b58c;
   --accent: #7c8cff;
-  --accent-2: #5d6bff;
+  --accent-2: #6e7dff;   /* gradient partner — light enough for dark ink on it */
   --sweet: #ffd166;
   --danger: #ff6b81;
-  /* Text sitting ON a filled chip/button of that colour. */
+  /* Text sitting ON a filled chip/button of that colour. Dark here: the accent
+     has to stay light so it also works as text/border on the dark ground, so
+     the filled surfaces take dark ink — same as fuel and elec. */
   --on-fuel: #2a1004;
   --on-elec: #06231b;
-  --on-accent: #fff;
+  --on-accent: #0d1233;
   --on-sweet: #1a1200;
   /* Washes (soft fills) and edges (borders) per accent. */
   --fuel-wash: rgba(255, 138, 91, 0.10);
@@ -174,8 +176,6 @@ body:not(.is-editor) .editor-only { display: none !important; }
 .modal__box h3 { margin: 0 0 14px; font-size: 17px; }
 .modal__box input[type="password"] { width: 100%; }
 .modal__actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
-.btn--ghost { background: none; border: 1px solid var(--line); color: var(--muted); }
-.btn--ghost:hover { color: var(--text); filter: none; }
 
 /* Hero */
 .hero { text-align: center; margin-bottom: 22px; }
@@ -472,6 +472,9 @@ input:disabled, select:disabled { -webkit-text-fill-color: var(--text); opacity:
 .btn:hover { filter: brightness(1.08); }
 .btn:active { transform: translateY(1px); }
 .btn--small { padding: 6px 12px; font-size: 13px; }
+/* Modifiers stay right after .btn — same specificity, so the later rule wins. */
+.btn--ghost { background: none; border: 1px solid var(--line); color: var(--muted); }
+.btn--ghost:hover { color: var(--text); filter: none; }
 .link-btn {
   background: none; border: none; color: var(--accent); cursor: pointer;
   font-size: 12px; font-weight: 600; font-family: inherit; padding: 2px 4px;
