@@ -148,6 +148,23 @@ body:not(.is-editor) .editor-only { display: none !important; }
   background: linear-gradient(135deg, var(--accent), #5d6bff);
   border-color: transparent; color: #fff;
 }
+/* Charging chips are coloured at the break-even price: under it charging is
+   cheaper (⚡ green), over it fuel is (⛽ amber). The icon comes first, so the
+   verdict never rests on colour alone. */
+.chip__ico { font-style: normal; margin-right: 6px; }
+.chip__ico:empty { display: none; }
+.chip--elec { color: var(--elec); border-color: rgba(56, 225, 176, 0.55); background: rgba(56, 225, 176, 0.10); }
+.chip--fuel { color: var(--fuel); border-color: rgba(255, 138, 91, 0.55); background: rgba(255, 138, 91, 0.10); }
+.chip--elec:hover { color: var(--elec); border-color: var(--elec); }
+.chip--fuel:hover { color: var(--fuel); border-color: var(--fuel); }
+.chip.is-on.chip--elec {
+  background: linear-gradient(135deg, var(--elec), #21b58c);
+  border-color: transparent; color: #06231b;
+}
+.chip.is-on.chip--fuel {
+  background: linear-gradient(135deg, var(--fuel), #e56a3a);
+  border-color: transparent; color: #2a1004;
+}
 
 /* Verdict */
 .verdict-card {

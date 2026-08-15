@@ -51,6 +51,16 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   without a click, switching is one click and keeps the current fuel price. Each group in
   *Calculation values* is headed by the active record's name, so an edit is never attributed to
   the wrong profile.
+- **Charging chips carry the verdict** (`paintLocationChips()`): each location chip is green ⚡
+  when its kWh price is at or below the break-even price and amber ⛽ above it — the icon comes
+  first, so it is never colour-only; the price and the wording sit in `title` / `aria-label`.
+  The active chip follows the (possibly unsaved) input, the others their stored price; repainted
+  from every result in `renderAll()`. This replaces the once-planned **comparison table** "all
+  locations at a glance" — the break-even price is the same for every location, so the table
+  would only have restated each location's price. Don't add one.
+- **Prices always show two decimals** — `1.90`, never `1.9`. Both price inputs (fuel price and
+  kWh price) are normalised on `blur` (`normalizePriceInput()`), not while typing, and a rounded
+  value triggers a recalculation so the shown price is the one being calculated with.
 - **No price date:** the fuel price carries no timestamp and no freshness warning — the app
   states what is stored, nothing about its age. Removed on 15.08.2026 including the DB column
   (`_migrate_drop_settings_updated_at` in `main.py`); don't reintroduce it.

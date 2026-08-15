@@ -170,6 +170,11 @@ async function init() {
 
   // Global fuel price: same rule as every other input — live preview, stored on Save.
   $("in-fuel-price").addEventListener("input", recalcFromInputs);
+  // A price always reads with two decimals — "1.90", never "1.9". Normalised on
+  // blur, not while typing, so "1.9" can still be typed one character at a time.
+  ["in-fuel-price", "in-kwh-price"].forEach((id) => {
+    $(id).addEventListener("blur", () => normalizePriceInput(id));
+  });
   $("fuel-down").addEventListener("click", () => nudgeFuelPrice(-0.05));
   $("fuel-up").addEventListener("click", () => nudgeFuelPrice(0.05));
 
@@ -290,7 +295,34 @@ async function reload() {
 function renderChips() {
   fillChips($("scenario-chips"), scenarios, activeScenarioId, pickScenario);
   fillChips($("location-chips"), locations, activeLocationId, pickLocation);
+  if (lastResult) paintLocationChips(lastResult);   // keep the colours across a re-render
   renderValueNames();
+}
+
+// The charging chips carry the answer for every location at once: a place whose
+// kWh price stays under the break-even price is cheaper than fuel (⚡ green),
+// above it fuel wins (⛽ amber). That is the "compare all locations" question
+// answered without a click and without a second table — the break-even price is
+// the same for all of them, only each location's own price differs.
+function paintLocationChips(res) {
+  const bek = res ? res.break_even_kwh_price : null;
+  $("location-chips").querySelectorAll(".chip").forEach((b) => {
+    const loc = locations.find((l) => l.id === Number(b.dataset.id));
+    const ico = b.querySelector(".chip__ico");
+    b.classList.remove("chip--elec", "chip--fuel");
+    ico.textContent = "";
+    b.removeAttribute("title");
+    b.removeAttribute("aria-label");
+    if (!loc || bek == null || !(bek > 0)) return;
+    // The active chip follows the (possibly unsaved) input, the others the stored price.
+    const price = loc.id === activeLocationId ? res.location.price_chf_per_kwh : loc.price_chf_per_kwh;
+    const elec = price <= bek;
+    b.classList.add(elec ? "chip--elec" : "chip--fuel");
+    ico.textContent = elec ? "⚡" : "⛽";   // never colour alone
+    const words = `${CHF(price)}/kWh · ${t(elec ? "region_elec" : "region_fuel")}`;
+    b.title = words;
+    b.setAttribute("aria-label", `${dispName(loc)} — ${words}`);
+  });
 }
 
 // Which record each number belongs to — the chips are the selector, these are
@@ -314,8 +346,10 @@ function fillChips(el, items, activeId, onPick) {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "chip" + (it.id === activeId ? " is-on" : "");
+    b.dataset.id = it.id;
     b.setAttribute("aria-pressed", it.id === activeId ? "true" : "false");
-    b.textContent = dispName(it);
+    b.innerHTML = `<i class="chip__ico" aria-hidden="true"></i><span class="chip__name"></span>`;
+    b.querySelector(".chip__name").textContent = dispName(it);
     b.addEventListener("click", () => onPick(it.id));
     el.appendChild(b);
   });
@@ -443,6 +477,17 @@ async function saveInputs() {
   } catch (e) { toast(e.message, true); }
 }
 
+// Show a typed price the way every other price is shown: two decimals.
+function normalizePriceInput(id) {
+  const el = $(id);
+  const v = parseFloat(el.value);
+  if (isNaN(v) || v < 0) return;
+  const rounded = fmtPrice(v);
+  if (rounded === el.value) return;
+  el.value = rounded;          // "1.904" → "1.90": recompute so the shown price is the one used
+  recalcFromInputs();
+}
+
 function nudgeFuelPrice(delta) {
   const current = parseFloat($("in-fuel-price").value) || fuelPrice;
   $("in-fuel-price").value = Math.max(0, Math.round((current + delta) * 100) / 100).toFixed(2);
@@ -485,9 +530,11 @@ function recalcFromInputs() {
   renderAll(res);
 }
 
-// One result, three views of it: the sentence, the one-axis bar, the 2D map.
+// One result, three views of it: the sentence, the one-axis bar, the 2D map —
+// plus the charging chips, which show the same verdict for every location.
 function renderAll(res) {
   lastResult = res;
+  paintLocationChips(res);
   renderVerdict(res);
   renderPriceBar(res);
   renderChart(res);
