@@ -33,6 +33,8 @@ const I18N = {
     fuel_price_note: "Changes often — set it once, it applies to every scenario.",
     fuel_set_on: "Set on {date} ({rel})",
     fuel_set_unknown: "Set on: date unknown",
+    fuel_confirm: "Confirm price",
+    fuel_confirm_title: "Price still correct? Save today as the date it was checked.",
     rel_today: "today", rel_yesterday: "yesterday", rel_days: "{n} days ago",
     chart_title: "Every price combination",
     bar_title: "Your break-even electricity price",
@@ -68,6 +70,7 @@ const I18N = {
     axis_per_liter: "Fuel price (CHF/l)", axis_per_kwh: "Electricity price (CHF/kWh)",
     word_sweetspot: "Sweetspot",
     toast_saved: "Saved",
+    toast_confirmed: "Price confirmed — dated today",
     toast_scenario_saved: "Scenario saved", toast_location_saved: "Location saved",
     toast_scenario_added: "Scenario added", toast_location_added: "Location added",
     toast_scenario_deleted: "Scenario deleted", toast_location_deleted: "Location deleted",
@@ -89,6 +92,8 @@ const I18N = {
     fuel_price_note: "Ändert sich oft — einmal setzen, gilt für alle Szenarien.",
     fuel_set_on: "Gesetzt am {date} ({rel})",
     fuel_set_unknown: "Gesetzt am: Datum unbekannt",
+    fuel_confirm: "Preis bestätigen",
+    fuel_confirm_title: "Preis noch korrekt? Heutiges Datum als Prüfdatum speichern.",
     rel_today: "heute", rel_yesterday: "gestern", rel_days: "vor {n} Tagen",
     chart_title: "Alle Preiskombinationen",
     bar_title: "Wo der Strompreis kippt",
@@ -124,6 +129,7 @@ const I18N = {
     axis_per_liter: "Benzinpreis (CHF/l)", axis_per_kwh: "Strompreis (CHF/kWh)",
     word_sweetspot: "Sweetspot",
     toast_saved: "Gespeichert",
+    toast_confirmed: "Preis bestätigt — mit heutigem Datum",
     toast_scenario_saved: "Szenario gespeichert", toast_location_saved: "Standort gespeichert",
     toast_scenario_added: "Szenario hinzugefügt", toast_location_added: "Standort hinzugefügt",
     toast_scenario_deleted: "Szenario gelöscht", toast_location_deleted: "Standort gelöscht",
@@ -236,6 +242,7 @@ async function refreshAuth() {
 function applyEditMode() {
   document.body.classList.toggle("is-editor", isEditor);
   $("auth-btn").textContent = (isEditor ? "🔓 " : "🔒 ") + t(isEditor ? "auth_logout" : "auth_edit");
+  renderFuelAge();   // the confirm link (and the unknown-date line) is owner-only
   updateDirty();   // the unsaved bar reads differently for owner and guest
 }
 function openLogin() {
@@ -456,21 +463,50 @@ async function saveInputs() {
 // --- Freshness of the saved fuel price ---------------------------------------
 // Used rarely, the quiet question is "does that price still hold?". The date the
 // price was last saved answers it; past STALE_DAYS the line turns amber.
+// Only the owner can do anything about it: with an unknown or stale date they get
+// a "Confirm price" link (stamps today without changing the price). A guest sees
+// nothing when the date is unknown — the line would only state a dead end.
 const STALE_DAYS = 14;
 
 function renderFuelAge() {
   const el = $("fuel-age");
   const d = fuelPriceSetAt ? new Date(fuelPriceSetAt) : null;
-  if (!d || isNaN(d.getTime())) {
-    el.textContent = t("fuel_set_unknown");
-    el.classList.remove("is-stale");
-    return;
-  }
+  const known = !!d && !isNaN(d.getTime());
   const day = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
-  const days = Math.max(0, Math.round((day(new Date()) - day(d)) / 86400000));
-  const rel = days === 0 ? t("rel_today") : days === 1 ? t("rel_yesterday") : t("rel_days", { n: days });
-  el.textContent = t("fuel_set_on", { date: fmtDate(d), rel });
-  el.classList.toggle("is-stale", days >= STALE_DAYS);
+  const days = known ? Math.max(0, Math.round((day(new Date()) - day(d)) / 86400000)) : null;
+  const stale = known && days >= STALE_DAYS;
+
+  el.hidden = !known && !isEditor;
+  el.classList.toggle("is-stale", stale);
+  if (el.hidden) { el.textContent = ""; return; }
+
+  if (known) {
+    const rel = days === 0 ? t("rel_today") : days === 1 ? t("rel_yesterday") : t("rel_days", { n: days });
+    el.textContent = t("fuel_set_on", { date: fmtDate(d), rel });
+  } else {
+    el.textContent = t("fuel_set_unknown");
+  }
+  if (isEditor && (!known || stale)) {
+    el.append(" · ");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "link-btn";
+    btn.id = "fuel-confirm";
+    btn.textContent = t("fuel_confirm");
+    btn.title = t("fuel_confirm_title");
+    btn.addEventListener("click", confirmFuelPrice);
+    el.append(btn);
+  }
+}
+
+// Re-save the stored price unchanged, purely to stamp today's date.
+async function confirmFuelPrice() {
+  try {
+    const s = await api.put("/api/settings", { fuel_price: fuelPrice });
+    fuelPriceSetAt = s.fuel_price_updated_at || null;
+    renderFuelAge();
+    toast(t("toast_confirmed"));
+  } catch (e) { toast(e.message, true); }
 }
 
 function fmtDate(d) {
