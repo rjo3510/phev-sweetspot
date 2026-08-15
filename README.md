@@ -17,16 +17,22 @@ fuel or on electric power** — visualised as the crossing point ("sweetspot") o
   same; below it charging wins, above it fuel wins. A **current-position dot** marks your
   prices and a **sweetspot marker** sits on the line at the tipping price, so you see at a
   glance which side you're on and how far away the sweetspot is.
-- Anyone may change the inputs for a what-if; only the owner's changes are stored. Unsaved
-  values are flagged **"Preview — not saved"** with one click back to the saved version.
+- **One editing place per value, one saving rule.** All numbers are edited in
+  *Calculation values*; nothing is stored until you press Save. Anyone may change them for a
+  what-if — unsaved values are flagged **"Preview — not saved"** with one click back to the
+  saved version. The owner gets a Save button in the same bar that names exactly what it
+  will write (*"Save for Winter, Home, fuel price"*).
 - **Current fuel price** — a single global value (with quick −/+ buttons) shown at the top.
   Fuel price changes often and is the same at the pump for every scenario, so you set it
   once and it applies everywhere.
-- **Scenarios** (Winter, Summer, With trailer, …) — fully editable named presets, each
-  holding a consumption profile (l/100km and kWh/100km). Names are bilingual
-  (German + English) and shown in the active UI language.
+- **Scenarios** (Winter, Summer, With trailer, …) — named presets, each holding a consumption
+  profile (l/100km and kWh/100km). Names are bilingual (German + English) and shown in the
+  active UI language.
 - **Charging locations** — a list of places, each with its own CHF/kWh price (changes rarely).
   Seeded with Home (0.31), Weekend (0.40) and Public fast charger (0.90).
+- **Manage lists** — a collapsed section (owner only) for adding, renaming and deleting
+  scenarios and locations. Names only; the numbers live in *Calculation values*. New entries
+  need a name in the current language, the other one can follow later.
 - **English / German** — switch the whole UI language with the EN/DE toggle (top right).
   Your choice is remembered.
 - Everything is stored in a local **SQLite** database and survives restarts. Databases

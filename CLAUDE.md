@@ -41,8 +41,14 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   price) — there is no axis toggle any more.
 - **Verdict:** one sentence (cheaper option · costs · saving · both tipping prices) plus an
   assumptions footnote — see `renderVerdict()`.
-- **What-if vs. saved:** anyone may edit the inputs, only the owner persists. `isDirty()`
-  shows the "Preview — not saved" bar with a reset back to the stored values.
+- **One truth per number:** every value is edited exactly once, in the *Calculation values*
+  block. The lists below are name-only management (add / rename / delete) behind a collapsed
+  `Manage lists` (`<details class="manage">`). Row saves send the stored numbers along
+  unchanged (PUT replaces the whole record).
+- **What-if vs. saved:** anyone may edit the inputs, only the owner persists — and nothing is
+  stored until Save, the fuel price included (no auto-save on blur). `dirtyParts()` drives the
+  bar: guests see "Preview — not saved" + reset, the owner additionally gets
+  `Save for <targets>`, which lists the records the click would write (`saveInputs()`).
 - **Chart:** the sweetspot is a point on the tipping line at the current y; the x-range is
   anchored on the sweetspot so it stays put while the (global) fuel price is nudged.
 

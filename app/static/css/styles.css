@@ -262,6 +262,9 @@ input:disabled, select:disabled { -webkit-text-fill-color: var(--text); opacity:
 }
 .preview-bar[hidden] { display: none; }
 .preview-bar .link-btn { color: var(--sweet); font-size: 12px; }
+.preview-bar__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* The one save in the app — it stores exactly the values shown in the fields. */
+.preview-bar .btn { background: var(--sweet); color: #1a1200; }
 
 /* Buttons */
 .btn {
@@ -283,6 +286,23 @@ input:disabled, select:disabled { -webkit-text-fill-color: var(--text); opacity:
   width: 30px; height: 30px; border-radius: 9px; cursor: pointer; font-size: 14px;
 }
 .icon-btn:hover { color: var(--danger); border-color: var(--danger); }
+
+/* "Manage lists": collapsed by default — rarely needed, so it stays out of the way. */
+.manage { margin-bottom: 22px; }
+.manage > summary {
+  cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 8px;
+  color: var(--muted); font-size: 13px; font-weight: 600;
+  padding: 8px 14px; border: 1px solid var(--line); border-radius: 11px;
+  background: var(--bg-soft);
+}
+.manage > summary::-webkit-details-marker { display: none; }
+.manage > summary::before { content: "▸"; font-size: 11px; }
+.manage[open] > summary::before { content: "▾"; }
+.manage > summary:hover { color: var(--text); }
+.manage[open] > summary { margin-bottom: 16px; }
+/* Two equal name-list columns — the numbers moved out, so nothing has to line up
+   with the chart column any more. */
+.manage .grid--lists { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 0; }
 
 /* Tables */
 .table-wrap { overflow-x: auto; }
@@ -320,7 +340,7 @@ input:disabled, select:disabled { -webkit-text-fill-color: var(--text); opacity:
 /* ─── Responsive (kept last so they override the base rules above) ─────────── */
 
 /* Both grids collapse to a single column on tablet/phone widths. */
-@media (max-width: 860px) { .grid, .grid--lists { grid-template-columns: 1fr; } }
+@media (max-width: 860px) { .grid, .grid--lists, .manage .grid--lists { grid-template-columns: 1fr; } }
 
 @media (max-width: 560px) {
   .app { padding: 16px max(13px, env(safe-area-inset-right)) 48px max(13px, env(safe-area-inset-left)); }

@@ -77,10 +77,14 @@
         <div class="card__head"><h2 data-i18n="current_selection">Current selection</h2></div>
 
         <!-- Anyone may try out numbers; only the owner's changes are stored.
-             Shown as soon as an input differs from the saved value. -->
+             Shown as soon as an input differs from the saved value. One rule for
+             every field here (fuel price included): nothing is stored until Save. -->
         <div class="preview-bar" id="preview-bar" hidden>
-          <span data-i18n="preview_note">Preview — not saved</span>
-          <button class="link-btn" id="reset-inputs" type="button" data-i18n="reset_values">Back to saved values</button>
+          <span id="preview-note">Preview — not saved</span>
+          <span class="preview-bar__actions">
+            <button class="btn btn--small editor-only" id="save-inputs" type="button">Save</button>
+            <button class="link-btn" id="reset-inputs" type="button" data-i18n="reset_values">Back to saved values</button>
+          </span>
         </div>
 
         <div class="active-inputs" id="active-inputs">
@@ -113,38 +117,42 @@
       </section>
     </div>
 
-    <!-- Manage lists (owner only — read-only visitors use the dropdowns above) -->
-    <div class="grid grid--lists editor-only">
-      <section class="card">
-        <div class="card__head">
-          <h2 data-i18n="scenarios">Scenarios</h2>
-          <button class="btn btn--small editor-only" id="add-scenario" data-i18n="add">+ Add</button>
-        </div>
-        <div class="table-wrap">
-          <table class="data-table" id="scenario-table">
-            <thead>
-              <tr><th>Name (DE)</th><th>Name (EN)</th><th>l/100km</th><th>kWh/100km</th><th></th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </section>
+    <!-- List management (owner only): add / rename / delete. The numbers live in
+         "Calculation values" above — one editing place per value, no duplicates. -->
+    <details class="manage editor-only" id="manage">
+      <summary data-i18n="manage_lists">Manage lists</summary>
+      <div class="grid grid--lists">
+        <section class="card">
+          <div class="card__head">
+            <h2 data-i18n="scenarios">Scenarios</h2>
+            <button class="btn btn--small" id="add-scenario" data-i18n="add">+ Add</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="scenario-table">
+              <thead>
+                <tr><th>Name (DE)</th><th>Name (EN)</th><th></th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
 
-      <section class="card">
-        <div class="card__head">
-          <h2 data-i18n="charging_locations">Charging locations</h2>
-          <button class="btn btn--small editor-only" id="add-location" data-i18n="add">+ Add</button>
-        </div>
-        <div class="table-wrap">
-          <table class="data-table" id="location-table">
-            <thead>
-              <tr><th>Name (DE)</th><th>Name (EN)</th><th>CHF/kWh</th><th></th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </section>
-    </div>
+        <section class="card">
+          <div class="card__head">
+            <h2 data-i18n="charging_locations">Charging locations</h2>
+            <button class="btn btn--small" id="add-location" data-i18n="add">+ Add</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="location-table">
+              <thead>
+                <tr><th>Name (DE)</th><th>Name (EN)</th><th></th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </details>
 
     <footer class="foot">
       <span data-i18n="footer">Break-even fuel price = (kWh/100km × CHF/kWh) ÷ L/100km</span>

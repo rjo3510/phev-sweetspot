@@ -47,9 +47,13 @@ const I18N = {
     scenario: "Scenario", charging_location: "Charging location",
     save: "Save",
     preview_note: "Preview — not saved",
+    unsaved_note: "Not saved yet",
+    save_for: "Save for {targets}",
+    save_target_fuel: "fuel price",
     reset_values: "Back to saved values",
     fuel_consumption: "Fuel consumption", power_consumption: "Power consumption",
     electricity_price: "Electricity price",
+    manage_lists: "Manage lists",
     scenarios: "Scenarios", charging_locations: "Charging locations",
     add: "+ Add", delete: "Delete",
     footer: "Tipping fuel price = (kWh/100km × CHF/kWh) ÷ l/100km",
@@ -57,10 +61,11 @@ const I18N = {
     verdict_start: "Add a scenario and a charging location to start.",
     axis_per_liter: "Fuel price (CHF/l)", axis_per_kwh: "Electricity price (CHF/kWh)",
     word_sweetspot: "Sweetspot",
+    toast_saved: "Saved",
     toast_scenario_saved: "Scenario saved", toast_location_saved: "Location saved",
     toast_scenario_added: "Scenario added", toast_location_added: "Location added",
     toast_scenario_deleted: "Scenario deleted", toast_location_deleted: "Location deleted",
-    toast_fuel_set: "Fuel price set to {p}/l", toast_invalid_fuel: "Enter a valid fuel price",
+    toast_invalid_values: "Enter valid values first",
     confirm_delete_scenario: "Delete this scenario?",
     confirm_delete_location: "Delete this charging location?",
     new_scenario: "New scenario", new_location: "New location",
@@ -92,9 +97,13 @@ const I18N = {
     scenario: "Szenario", charging_location: "Standort",
     save: "Speichern",
     preview_note: "Vorschau — nicht gespeichert",
+    unsaved_note: "Noch nicht gespeichert",
+    save_for: "Für {targets} speichern",
+    save_target_fuel: "Benzinpreis",
     reset_values: "Zurück zu gespeicherten Werten",
     fuel_consumption: "Benzinverbrauch", power_consumption: "Stromverbrauch",
     electricity_price: "Strompreis",
+    manage_lists: "Listen verwalten",
     scenarios: "Szenarien", charging_locations: "Standorte",
     add: "+ Hinzufügen", delete: "Löschen",
     footer: "Kipp-Benzinpreis = (kWh/100km × CHF/kWh) ÷ l/100km",
@@ -102,11 +111,11 @@ const I18N = {
     verdict_start: "Füge ein Szenario und einen Standort hinzu, um zu starten.",
     axis_per_liter: "Benzinpreis (CHF/l)", axis_per_kwh: "Strompreis (CHF/kWh)",
     word_sweetspot: "Sweetspot",
+    toast_saved: "Gespeichert",
     toast_scenario_saved: "Szenario gespeichert", toast_location_saved: "Standort gespeichert",
     toast_scenario_added: "Szenario hinzugefügt", toast_location_added: "Standort hinzugefügt",
     toast_scenario_deleted: "Szenario gelöscht", toast_location_deleted: "Standort gelöscht",
-    toast_fuel_set: "Benzinpreis auf {p}/l gesetzt",
-    toast_invalid_fuel: "Gib einen gültigen Benzinpreis ein",
+    toast_invalid_values: "Zuerst gültige Werte eingeben",
     confirm_delete_scenario: "Dieses Szenario löschen?",
     confirm_delete_location: "Diesen Standort löschen?",
     new_scenario: "Neues Szenario", new_location: "Neuer Standort",
@@ -164,17 +173,17 @@ async function init() {
   ["in-fuel-consumption", "in-power-consumption", "in-kwh-price"]
     .forEach((id) => $(id).addEventListener("input", recalcFromInputs));
 
-  // Global fuel price: live preview while typing, auto-saved when you finish editing.
+  // Global fuel price: same rule as every other input — live preview, stored on Save.
   $("in-fuel-price").addEventListener("input", recalcFromInputs);
-  $("in-fuel-price").addEventListener("change", saveFuelPrice);
   $("fuel-down").addEventListener("click", () => nudgeFuelPrice(-0.05));
   $("fuel-up").addEventListener("click", () => nudgeFuelPrice(0.05));
 
   $("add-scenario").addEventListener("click", addScenario);
   $("add-location").addEventListener("click", addLocation);
 
-  // Anyone may play with the numbers; only the owner's edits are stored. This
-  // discards the unsaved what-if and brings the saved version back.
+  // Anyone may play with the numbers; only the owner's edits are stored. Save
+  // persists them, reset discards them and brings the saved version back.
+  $("save-inputs").addEventListener("click", saveInputs);
   $("reset-inputs").addEventListener("click", resetInputs);
 
   $("lang-toggle").querySelectorAll(".toggle__btn").forEach((btn) => {
@@ -214,6 +223,7 @@ async function refreshAuth() {
 function applyEditMode() {
   document.body.classList.toggle("is-editor", isEditor);
   $("auth-btn").textContent = (isEditor ? "🔓 " : "🔒 ") + t(isEditor ? "auth_logout" : "auth_edit");
+  updateDirty();   // the unsaved bar reads differently for owner and guest
 }
 function openLogin() {
   $("login-password").value = "";
@@ -306,24 +316,43 @@ function syncActiveInputs() {
 }
 
 // --- What-if vs. saved -------------------------------------------------------
-// Everyone may change the inputs, but only the owner's changes are stored. As soon
-// as an input differs from the stored value, say so and offer a way back.
-function isDirty() {
+// Everyone may change the inputs, but only the owner's changes are stored. One
+// rule for all four fields — nothing is persisted until Save. As soon as an input
+// differs from the stored value, say so and offer Save (owner) / a way back.
+// Which stored records the current inputs differ from.
+function dirtyParts() {
   const s = activeScenario();
   const l = activeLocation();
-  if (!s || !l) return false;
+  if (!s || !l) return { scenario: false, location: false, fuel: false, any: false };
   const v = inputValues();
   // Tolerance = half of the displayed precision: a change that shows up in the
   // field counts as unsaved, floating-point noise does not.
   const off = (a, b, tol) => !isNaN(a) && Math.abs(a - b) >= tol;
-  return off(v.fuel_consumption, s.fuel_consumption, 0.05)
-      || off(v.power_consumption, s.power_consumption, 0.05)
-      || off(v.kwh_price, l.price_chf_per_kwh, 0.005)
-      || off(v.fuel_price, fuelPrice, 0.005);
+  const scenario = off(v.fuel_consumption, s.fuel_consumption, 0.05)
+                || off(v.power_consumption, s.power_consumption, 0.05);
+  const location = off(v.kwh_price, l.price_chf_per_kwh, 0.005);
+  const fuel = off(v.fuel_price, fuelPrice, 0.005);
+  return { scenario, location, fuel, any: scenario || location || fuel };
 }
 
+function isDirty() { return dirtyParts().any; }
+
 function updateDirty() {
-  $("preview-bar").hidden = !isDirty();
+  const d = dirtyParts();
+  $("preview-bar").hidden = !d.any;
+  if (!d.any) return;
+  // Guests see what-if wording, the owner sees what exactly Save would store.
+  $("preview-note").textContent = t(isEditor ? "unsaved_note" : "preview_note");
+  if (isEditor) $("save-inputs").textContent = t("save_for", { targets: dirtyTargets(d) });
+}
+
+// "Winter, Home, fuel price" — the records the Save button would write to.
+function dirtyTargets(d) {
+  const names = [];
+  if (d.scenario) names.push(dispName(activeScenario()));
+  if (d.location) names.push(dispName(activeLocation()));
+  if (d.fuel) names.push(t("save_target_fuel"));
+  return names.join(", ");
 }
 
 // Drop the unsaved what-if and show the stored version again.
@@ -342,25 +371,42 @@ function inputValues() {
   };
 }
 
-// Global fuel price: persist and refresh everything.
-async function saveFuelPrice() {
-  // Guests can adjust the price for a what-if, but it is never persisted.
-  if (!isEditor) { recalcFromInputs(); return; }
-  const price = parseFloat($("in-fuel-price").value);
-  if (isNaN(price) || price < 0) { toast(t("toast_invalid_fuel"), true); return; }
-  if (price === fuelPrice) return;  // nothing changed
+// The single save: writes exactly the values shown in the fields — scenario
+// consumptions, the location's price, the global fuel price — but only what
+// actually changed. Guests never get here (the button is owner-only).
+async function saveInputs() {
+  if (!isEditor) return;
+  const d = dirtyParts();
+  if (!d.any) return;
+  const v = inputValues();
+  const invalid = [v.fuel_consumption, v.power_consumption, v.fuel_price, v.kwh_price]
+    .some((x) => isNaN(x) || x < 0) || v.fuel_consumption <= 0;
+  if (invalid) { toast(t("toast_invalid_values"), true); return; }
+  const s = activeScenario();
+  const l = activeLocation();
   try {
-    await api.put("/api/settings", { fuel_price: price });
-    fuelPrice = price;
-    toast(t("toast_fuel_set", { p: CHF(price) }));
-    recalc();
+    // PUT replaces the whole record, so the untouched names travel along.
+    if (d.scenario) {
+      await api.put(`/api/scenarios/${s.id}`, {
+        name_de: s.name_de, name_en: s.name_en,
+        fuel_consumption: v.fuel_consumption, power_consumption: v.power_consumption,
+      });
+    }
+    if (d.location) {
+      await api.put(`/api/locations/${l.id}`, {
+        name_de: l.name_de, name_en: l.name_en, price_chf_per_kwh: v.kwh_price,
+      });
+    }
+    if (d.fuel) await api.put("/api/settings", { fuel_price: v.fuel_price });
+    toast(t("toast_saved"));
+    await reload();
   } catch (e) { toast(e.message, true); }
 }
 
 function nudgeFuelPrice(delta) {
   const current = parseFloat($("in-fuel-price").value) || fuelPrice;
   $("in-fuel-price").value = Math.max(0, Math.round((current + delta) * 100) / 100).toFixed(2);
-  saveFuelPrice();
+  recalcFromInputs();
 }
 
 // --- Calculation -------------------------------------------------------------
@@ -588,6 +634,8 @@ function renderLegend(pointColor) {
 }
 
 // --- Tables ------------------------------------------------------------------
+// List management only: names in, names out. The numbers belong to "Calculation
+// values" above and are deliberately not editable a second time here.
 function renderScenarioTable() {
   const tb = $("scenario-table").querySelector("tbody");
   tb.innerHTML = "";
@@ -598,8 +646,6 @@ function renderScenarioTable() {
     tr.innerHTML = `
       <td><input type="text" class="name" value="${esc(s.name_de)}" data-f="name_de" ${ro}></td>
       <td><input type="text" class="name" value="${esc(s.name_en)}" data-f="name_en" ${ro}></td>
-      <td><input type="number" inputmode="decimal" step="0.1" min="0.1" value="${fmtCons(s.fuel_consumption)}" data-f="fuel_consumption" ${ro}></td>
-      <td><input type="number" inputmode="decimal" step="0.1" min="0" value="${fmtCons(s.power_consumption)}" data-f="power_consumption" ${ro}></td>
       <td class="actions">${isEditor ? `
         <button class="link-btn" data-act="save">${t("save")}</button>
         <button class="icon-btn" data-act="del" title="${t("delete")}">🗑</button>` : ""}</td>`;
@@ -621,7 +667,6 @@ function renderLocationTable() {
     tr.innerHTML = `
       <td><input type="text" class="name" value="${esc(l.name_de)}" data-f="name_de" ${ro}></td>
       <td><input type="text" class="name" value="${esc(l.name_en)}" data-f="name_en" ${ro}></td>
-      <td><input type="number" inputmode="decimal" step="0.01" min="0" value="${fmtPrice(l.price_chf_per_kwh)}" data-f="price_chf_per_kwh" ${ro}></td>
       <td class="actions">${isEditor ? `
         <button class="link-btn" data-act="save">${t("save")}</button>
         <button class="icon-btn" data-act="del" title="${t("delete")}">🗑</button>` : ""}</td>`;
@@ -641,12 +686,18 @@ function rowValues(tr) {
   return out;
 }
 
+// Only the names come from the row; the stored numbers travel along untouched
+// (PUT replaces the whole record).
 async function saveScenarioRow(id, tr) {
-  try { await api.put(`/api/scenarios/${id}`, rowValues(tr)); toast(t("toast_scenario_saved")); await reload(); }
+  const s = scenarios.find((x) => x.id === id);
+  const body = { fuel_consumption: s.fuel_consumption, power_consumption: s.power_consumption, ...rowValues(tr) };
+  try { await api.put(`/api/scenarios/${id}`, body); toast(t("toast_scenario_saved")); await reload(); }
   catch (e) { toast(e.message, true); }
 }
 async function saveLocationRow(id, tr) {
-  try { await api.put(`/api/locations/${id}`, rowValues(tr)); toast(t("toast_location_saved")); await reload(); }
+  const l = locations.find((x) => x.id === id);
+  const body = { price_chf_per_kwh: l.price_chf_per_kwh, ...rowValues(tr) };
+  try { await api.put(`/api/locations/${id}`, body); toast(t("toast_location_saved")); await reload(); }
   catch (e) { toast(e.message, true); }
 }
 async function deleteScenario(id) {
@@ -659,10 +710,12 @@ async function deleteLocation(id) {
   try { await api.del(`/api/locations/${id}`); toast(t("toast_location_deleted")); await reload(); }
   catch (e) { toast(e.message, true); }
 }
+// New entries only need a name in the current language — the other one can be
+// filled in later in "Manage lists" (dispName() falls back until then).
 async function addScenario() {
   try {
     const created = await api.post("/api/scenarios", {
-      name_de: I18N.de.new_scenario, name_en: I18N.en.new_scenario,
+      ...oneName("new_scenario"),
       fuel_consumption: 6.5, power_consumption: 21,
     });
     activeScenarioId = created.id;
@@ -674,7 +727,7 @@ async function addScenario() {
 async function addLocation() {
   try {
     const created = await api.post("/api/locations", {
-      name_de: I18N.de.new_location, name_en: I18N.en.new_location, price_chf_per_kwh: 0.30,
+      ...oneName("new_location"), price_chf_per_kwh: 0.30,
     });
     activeLocationId = created.id;
     localStorage.setItem("activeLocationId", activeLocationId);
@@ -684,6 +737,10 @@ async function addLocation() {
 }
 
 // --- Utils -------------------------------------------------------------------
+// Name in the current language only; the other stays empty on purpose.
+function oneName(key) {
+  return lang === "de" ? { name_de: I18N.de[key], name_en: "" } : { name_de: "", name_en: I18N.en[key] };
+}
 function esc(s) { return String(s).replace(/"/g, "&quot;").replace(/</g, "&lt;"); }
 let toastTimer = null;
 function toast(msg, isError = false) {
