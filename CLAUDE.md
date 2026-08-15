@@ -36,6 +36,9 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   CI passes it as the `GIT_SHA` build-arg → `APP_VERSION`.
 - **DB migrations** run on startup in `main.py` (`_migrate_*`): additive, idempotent, safe on
   existing data (they backfill, never drop user data).
+- **App name is bilingual:** *PHEV Charging Calculator* (en) / *PHEV Kostenvergleich* (de),
+  i18n key `app_title` — it drives the `<h1>` and `document.title`, so the browser tab follows
+  the language. The repo, image and DB keep the name `phev-sweetspot`.
 - **Vocabulary:** the UI says *tipping line / Kipp-Linie* and *Sweetspot*; the profile rows are
   *Trip / Fahrt* and *Charging / Laden*. The API and `calc.py` keep the `break_even_*` names.
   One fixed chart orientation (x = fuel price) — there is no axis toggle any more.

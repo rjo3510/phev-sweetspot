@@ -25,7 +25,7 @@ COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "").lower() in ("1", "true", "ye
 ENABLE_DOCS = os.environ.get("ENABLE_DOCS", "").lower() in ("1", "true", "yes")
 
 app = FastAPI(
-    title="PHEV Sweetspot Calculator",
+    title="PHEV Charging Calculator",
     docs_url="/docs" if ENABLE_DOCS else None,
     redoc_url="/redoc" if ENABLE_DOCS else None,
     openapi_url="/openapi.json" if ENABLE_DOCS else None,
@@ -176,7 +176,7 @@ def _migrate_settings_updated_at() -> None:
 
 @app.on_event("startup")
 def on_startup() -> None:
-    logging.getLogger("uvicorn.error").info("PHEV Sweetspot Calculator — build %s", APP_VERSION[:7])
+    logging.getLogger("uvicorn.error").info("PHEV Charging Calculator — build %s", APP_VERSION[:7])
     Base.metadata.create_all(bind=engine)
     _migrate_legacy_fuel_price()
     _migrate_bilingual_names()

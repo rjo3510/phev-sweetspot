@@ -1,4 +1,4 @@
-# PHEV Sweetspot Calculator
+# PHEV Charging Calculator (EN) · PHEV Kostenvergleich (DE)
 
 A small, beautiful web app for plug-in hybrid (PHEV) drivers: enter current fuel and
 electricity prices plus your consumption, and instantly see whether you should **drive on

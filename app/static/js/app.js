@@ -27,7 +27,8 @@ const fmtPrice = (n) => Number(n).toFixed(2);   // CHF/kWh → 2 decimals
 // --- i18n --------------------------------------------------------------------
 const I18N = {
   en: {
-    subtitle: "Fuel or electric? Find the price where it flips.",
+    app_title: "PHEV Charging Calculator",
+    subtitle: "Find the break-even electricity price for your plug-in hybrid.",
     fuel_price_title: "Current fuel price",
     fuel_price_note: "Changes often — set it once, it applies to every scenario.",
     fuel_set_on: "Set on {date} ({rel})",
@@ -82,7 +83,8 @@ const I18N = {
     toast_logout: "Logged out — read-only",
   },
   de: {
-    subtitle: "Benzin oder Strom? Finde den Preis, bei dem es kippt.",
+    app_title: "PHEV Kostenvergleich",
+    subtitle: "Lohnt sich Laden? Der Kipp-Punkt zwischen Strom- und Benzinkosten.",
     fuel_price_title: "Aktueller Benzinpreis",
     fuel_price_note: "Ändert sich oft — einmal setzen, gilt für alle Szenarien.",
     fuel_set_on: "Gesetzt am {date} ({rel})",
@@ -148,6 +150,7 @@ function applyStaticTranslations() {
   document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll("[data-i18n-html]").forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml); });
   document.documentElement.lang = lang;
+  document.title = t("app_title");   // browser tab / bookmark follows the language too
 }
 
 // --- State -------------------------------------------------------------------
