@@ -9,21 +9,21 @@ fuel or on electric power** — visualised as the crossing point ("sweetspot") o
 ## What it does
 
 - The **verdict is one sentence**: which is cheaper, what 100 km cost either way, how much
-  that saves — and both tipping prices at once (*"only above CHF 0.56/kWh — or below
+  that saves — and both break-even prices at once (*"only above CHF 0.56/kWh — or below
   CHF 1.00/l — would filling up be cheaper"*). The assumptions behind the numbers follow as
   a small footnote, so nothing has to be decoded.
 - **Profiles as chips, in one line each** — `Trip: Summer · Winter · With trailer` and
   `Charging: Home · Weekend · Public fast charger`. Every option is visible without opening
   anything, switching is a single click, and the current fuel price stays as it is.
-- **Where the electricity price tips** — the picture under the answer, one axis only: the
+- **Your break-even electricity price** — the picture under the answer, one axis only: the
   electricity price scale, green while charging is cheaper, amber once fuel is, a white-edged
-  marker for the price you pay and a yellow mark at the tipping price. It answers the
+  marker for the price you pay and a yellow mark at the break-even price. It answers the
   question asked at the charger without reading any axes.
 - The **chart** is the deeper view behind it, collapsed by default (open it once and it stays
   open). One fixed 2D map: fuel price on x (CHF/l), electricity price on y (CHF/kWh). The
-  diagonal **tipping line** (`break_even_*` in the API) is where both cost the same; below it
+  diagonal **break-even line** (`break_even_*` in the API) is where both cost the same; below it
   charging wins, above it fuel wins. A **current-position dot** marks your prices and a
-  **sweetspot marker** sits on the line at the tipping price, so you see at a glance which
+  **sweetspot marker** sits on the line at the break-even price, so you see at a glance which
   side you're on and how far away the sweetspot is — no legend, everything is labelled in the
   picture itself.
 - **One editing place per value, one saving rule.** All numbers are edited in

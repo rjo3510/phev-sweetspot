@@ -39,9 +39,14 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
 - **App name is bilingual:** *PHEV Charging Calculator* (en) / *PHEV Kostenvergleich* (de),
   i18n key `app_title` — it drives the `<h1>` and `document.title`, so the browser tab follows
   the language. The repo, image and DB keep the name `phev-sweetspot`.
-- **Vocabulary:** the UI says *tipping line / Kipp-Linie* and *Sweetspot*; the profile rows are
-  *Trip / Fahrt* and *Charging / Laden*. The API and `calc.py` keep the `break_even_*` names.
-  One fixed chart orientation (x = fuel price) — there is no axis toggle any more.
+- **Vocabulary:** **EN says *break-even* throughout** (break-even line / break-even price —
+  the term English-speaking PHEV drivers know), **DE says *Kipp-*** (Kipp-Linie, Kipp-Preis,
+  Kipp-Punkt as the umbrella term in the subtitle); *Sweetspot* stays in both. The profile
+  rows are *Trip / Fahrt* and *Charging / Laden*. The API and `calc.py` keep the
+  `break_even_*` names, and so do the i18n keys (`tipping_line`, `bar_tip`) — keys are code,
+  not copy. One fixed chart orientation (x = fuel price) — there is no axis toggle any more.
+  Chart heading is neutral (*Every price combination / Alle Preiskombinationen*) so it does
+  not repeat the subtitle's question.
 - **Profiles are chips, not dropdowns** (`renderChips()`): every scenario / location is visible
   without a click, switching is one click and keeps the current fuel price. Each group in
   *Calculation values* is headed by the active record's name, so an edit is never attributed to
@@ -50,7 +55,7 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   (naive UTC; `null` = unknown, e.g. a DB from before the column). The fuelbar shows
   *"Set on <date> (<n> days ago)"* and turns amber past `STALE_DAYS` (14) — it answers
   "is that price still current?" without a click.
-- **Verdict:** one sentence (cheaper option · costs · saving · both tipping prices) plus an
+- **Verdict:** one sentence (cheaper option · costs · saving · both break-even prices) plus an
   assumptions footnote — see `renderVerdict()`.
 - **One truth per number:** every value is edited exactly once, in the *Calculation values*
   block. The lists below are name-only management (add / rename / delete) behind a collapsed
@@ -63,9 +68,9 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   drives it: "Not saved yet" + reset + `Save for <targets>`, which lists the records the click
   would write (`saveInputs()`).
 - **Price bar (`renderPriceBar()`):** the **main picture**, always visible right under the
-  verdict — electricity-price scale, green up to the tipping kWh price, amber beyond, marks
-  for "you pay" and the tipping price, headed by `.pbar__title` (i18n `bar_title`). Plain
-  DOM/CSS (no Chart.js), scale anchored on the tipping price (`max(bek*1.6, cur*1.25, 0.1)`)
+  verdict — electricity-price scale, green up to the break-even kWh price, amber beyond, marks
+  for "you pay" and the break-even price, headed by `.pbar__title` (i18n `bar_title`). Plain
+  DOM/CSS (no Chart.js), scale anchored on the break-even price (`max(bek*1.6, cur*1.25, 0.1)`)
   so it stays put while prices are nudged; on phones the band captions shrink to their icon.
   `renderAll()` keeps verdict, bar and chart on the same result (and stores `lastResult`).
 - **Chart:** the deeper 2D view behind the bar, in a `<details id="chart-details">` that is
@@ -73,7 +78,7 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   canvas, so `renderChart()` returns early while the disclosure is closed and the toggle
   handler draws it from `lastResult` on open. Full width, **no legend** (every element is
   labelled where it sits), no dashed drop-lines to the axes. The sweetspot is a point on the
-  tipping line at the current y; the x-range is anchored on the sweetspot so it stays put
+  break-even line at the current y; the x-range is anchored on the sweetspot so it stays put
   while the (global) fuel price is nudged.
 
 ## Verifying UI changes
