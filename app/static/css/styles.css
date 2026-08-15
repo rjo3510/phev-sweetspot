@@ -230,6 +230,60 @@ body:not(.is-editor) .editor-only { display: none !important; }
 .chart-card { margin-bottom: 22px; }
 .chart-wrap { position: relative; height: 380px; }
 
+/* One-axis price bar: the electricity price scale, green while charging wins,
+   amber once fuel does, one marker for the price actually paid. */
+.pbar {
+  background: linear-gradient(180deg, var(--card), var(--bg-soft));
+  border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 18px 22px; box-shadow: var(--shadow);
+}
+/* Label rows: the marks sit at a percentage, so the labels are positioned, not flowed. */
+.pbar__row { position: relative; height: 20px; }
+.pbar__lab { position: absolute; top: 0; white-space: nowrap; font-size: 13px; color: var(--muted); }
+.pbar__lab b { font-weight: 700; }
+.pbar__lab--here.is-elec b { color: var(--elec); }
+.pbar__lab--here.is-fuel b { color: var(--fuel); }
+.pbar__lab--here.is-tie b { color: var(--accent); }
+.pbar__lab--tip b { color: var(--sweet); }
+/* The track carries the marks, the bands inside it carry the colours — so a mark
+   can stick out above and below the bar and stays visible wherever it lands. */
+.pbar__track { position: relative; height: 34px; margin: 10px 0 11px; }
+.pbar__bands {
+  position: absolute; inset: 0; display: flex;
+  border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+}
+/* Segment captions sit at the outer ends, and they sit ON TOP of the marks (own
+   backdrop, higher z-index) — on a narrow bar a mark would otherwise strike the
+   text through. */
+.pbar__seg { display: flex; align-items: center; overflow: hidden; }
+.pbar__cap {
+  position: relative; z-index: 3; display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 700; white-space: nowrap;
+  background: rgba(11, 16, 32, 0.72); padding: 2px 7px; border-radius: 7px;
+}
+.pbar__cap i, .pbar__cap em { font-style: normal; }
+.pbar__seg--elec { background: rgba(56, 225, 176, 0.20); justify-content: flex-start; padding-left: 12px; }
+.pbar__seg--elec .pbar__cap { color: var(--elec); }
+.pbar__seg--fuel { background: rgba(255, 138, 91, 0.20); justify-content: flex-end; padding-right: 12px; }
+.pbar__seg--fuel .pbar__cap { color: var(--fuel); }
+/* Where it tips, and where you are. */
+.pbar__tip {
+  position: absolute; top: -5px; bottom: -5px; width: 2px; margin-left: -1px; z-index: 2;
+  background: var(--sweet); border-radius: 2px;
+}
+.pbar__here {
+  position: absolute; top: -7px; bottom: -7px; width: 4px; margin-left: -2px; z-index: 2;
+  background: var(--accent); border-radius: 3px; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
+}
+.pbar__here.is-elec { background: var(--elec); }
+.pbar__here.is-fuel { background: var(--fuel); }
+.pbar__scale {
+  display: flex; justify-content: space-between;
+  font-size: 11px; color: var(--muted); opacity: .75; margin-top: 8px;
+}
+.pbar__note { margin: 12px 0 0; font-size: 12.5px; color: var(--muted); opacity: .85; }
+.pbar__empty { margin: 0; font-size: 14px; color: var(--muted); }
+
 /* Fields */
 .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
 .field > span { font-size: 13px; color: var(--muted); }
@@ -309,19 +363,21 @@ input:disabled, select:disabled { -webkit-text-fill-color: var(--text); opacity:
 }
 .icon-btn:hover { color: var(--danger); border-color: var(--danger); }
 
-/* "Manage lists": collapsed by default — rarely needed, so it stays out of the way. */
-.manage { margin-bottom: 22px; }
-.manage > summary {
+/* Collapsed disclosure — used by "Manage lists" (rarely needed) and by the price
+   bar (an alternative view of the same answer). Closed, it costs one line. */
+.disclosure, .manage { margin-bottom: 22px; }
+.disclosure > summary, .manage > summary {
   cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 8px;
   color: var(--muted); font-size: 13px; font-weight: 600;
   padding: 8px 14px; border: 1px solid var(--line); border-radius: 11px;
   background: var(--bg-soft);
 }
+.disclosure > summary::-webkit-details-marker,
 .manage > summary::-webkit-details-marker { display: none; }
-.manage > summary::before { content: "▸"; font-size: 11px; }
-.manage[open] > summary::before { content: "▾"; }
-.manage > summary:hover { color: var(--text); }
-.manage[open] > summary { margin-bottom: 16px; }
+.disclosure > summary::before, .manage > summary::before { content: "▸"; font-size: 11px; }
+.disclosure[open] > summary::before, .manage[open] > summary::before { content: "▾"; }
+.disclosure > summary:hover, .manage > summary:hover { color: var(--text); }
+.disclosure[open] > summary, .manage[open] > summary { margin-bottom: 16px; }
 /* Two equal name-list columns — the numbers moved out, so nothing has to line up
    with the chart column any more. */
 .manage .grid--lists { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 0; }
@@ -374,6 +430,15 @@ input:disabled, select:disabled { -webkit-text-fill-color: var(--text); opacity:
   .profile-row__label { min-width: 0; }
   .chip { font-size: 13px; padding: 6px 12px; }
   .card { padding: 18px 15px; }
+  .pbar { padding: 16px 14px; }
+  .pbar__lab { font-size: 12px; }
+  .pbar__track { height: 30px; }
+  /* Too narrow for the caption text inside the bands — the icon stays, so the
+     side is never colour-only, and the sentence above says it in words anyway. */
+  .pbar__cap em { display: none; }
+  .pbar__cap { padding: 2px 5px; }
+  .pbar__seg--elec { padding-left: 8px; }
+  .pbar__seg--fuel { padding-right: 8px; }
   .fuelbar { gap: 12px; padding: 16px 15px; }
   .fuelbar__input input { font-size: 20px; }
   .verdict-card { padding: 20px 16px; }

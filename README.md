@@ -15,6 +15,11 @@ fuel or on electric power** — visualised as the crossing point ("sweetspot") o
 - **Profiles as chips, in one line each** — `Trip: Summer · Winter · With trailer` and
   `Charging: Home · Weekend · Public fast charger`. Every option is visible without opening
   anything, switching is a single click, and the current fuel price stays as it is.
+- **Where the electricity price tips** — a collapsed one-axis view of the same answer: the
+  electricity price scale, green while charging is cheaper, amber once fuel is, a white-edged
+  marker for the price you pay and a yellow mark at the tipping price. It answers the
+  question asked at the charger without reading any axes; the 2D map below stays the main
+  picture. Whether it is left open is remembered.
 - The **chart** is one fixed 2D map: fuel price on x (CHF/l), electricity price on y
   (CHF/kWh). The diagonal **tipping line** (`break_even_*` in the API) is where both cost the
   same; below it charging wins, above it fuel wins. A **current-position dot** marks your

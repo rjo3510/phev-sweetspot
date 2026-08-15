@@ -76,6 +76,14 @@
       <div class="verdict__loading" data-i18n="verdict_loading">Calculating…</div>
     </section>
 
+    <!-- One-axis view of the same answer: the electricity price scale, green up to
+         the tipping price, amber beyond, a marker where you are. Collapsed by
+         default; the 2D map below stays the main picture. -->
+    <details class="disclosure pricebar-card" id="pricebar-details">
+      <summary data-i18n="bar_title">Where the electricity price tips</summary>
+      <div id="pricebar"></div>
+    </details>
+
     <!-- The chart is the evidence for the sentence above — full width, no legend
          (everything in the picture is labelled in place). -->
     <section class="card chart-card">

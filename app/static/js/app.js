@@ -34,6 +34,9 @@ const I18N = {
     fuel_set_unknown: "Set on: date unknown",
     rel_today: "today", rel_yesterday: "yesterday", rel_days: "{n} days ago",
     chart_title: "When does charging pay off?",
+    bar_title: "Where the electricity price tips",
+    bar_here: "You pay", bar_tip: "Tipping price",
+    bar_no_tip: "With 0 kWh/100km there is no tipping price — charging costs nothing.",
     region_elec: "Electric cheaper", region_fuel: "Fuel cheaper",
     tipping_line: "Tipping line",
     profile_drive: "Trip", profile_charge: "Charging",
@@ -87,6 +90,9 @@ const I18N = {
     fuel_set_unknown: "Gesetzt am: Datum unbekannt",
     rel_today: "heute", rel_yesterday: "gestern", rel_days: "vor {n} Tagen",
     chart_title: "Wann lohnt sich Laden?",
+    bar_title: "Wo der Strompreis kippt",
+    bar_here: "Bezahlt wird", bar_tip: "Kipp-Preis",
+    bar_no_tip: "Bei 0 kWh/100km gibt es keinen Kipp-Preis — Laden kostet nichts.",
     region_elec: "Strom günstiger", region_fuel: "Benzin günstiger",
     tipping_line: "Kipp-Linie",
     profile_drive: "Fahrt", profile_charge: "Laden",
@@ -181,6 +187,12 @@ async function init() {
   $("save-inputs").addEventListener("click", saveInputs);
   $("reset-inputs").addEventListener("click", resetInputs);
 
+  // The price bar is an alternative view of the same answer — remember whether
+  // it was left open, so the choice survives the (rare) next visit.
+  const pb = $("pricebar-details");
+  pb.open = localStorage.getItem("pricebarOpen") === "1";
+  pb.addEventListener("toggle", () => localStorage.setItem("pricebarOpen", pb.open ? "1" : "0"));
+
   $("lang-toggle").querySelectorAll(".toggle__btn").forEach((btn) => {
     btn.addEventListener("click", () => setLang(btn.dataset.lang));
   });
@@ -204,7 +216,7 @@ function setLang(l) {
   renderChips();            // chip names follow the language (with fallback)
   renderScenarioTable();
   renderLocationTable();
-  if (lastResult) { renderVerdict(lastResult); renderChart(lastResult); }
+  if (lastResult) renderAll(lastResult);
   else recalc();
 }
 
@@ -478,8 +490,7 @@ async function recalc() {
   }
   try {
     const res = await api.get(`/api/calculate?scenario_id=${activeScenarioId}&location_id=${activeLocationId}`);
-    renderVerdict(res);
-    renderChart(res);
+    renderAll(res);
   } catch (e) { toast(e.message, true); }
 }
 
@@ -501,7 +512,13 @@ function recalcFromInputs() {
     cost_fuel, cost_elec, break_even_fuel_price: break_even, break_even_kwh_price: break_even_kwh,
     cheaper, savings_per_100km: Math.abs(diff),
   };
+  renderAll(res);
+}
+
+// One result, three views of it: the sentence, the one-axis bar, the 2D map.
+function renderAll(res) {
   renderVerdict(res);
+  renderPriceBar(res);
   renderChart(res);
 }
 
@@ -534,11 +551,7 @@ function renderVerdict(res) {
   }
 
   // The assumptions behind the numbers, as a small footnote.
-  const note = [
-    `⛽ ${CHF(res.fuel_price)}/l`,
-    `${esc(dispName(res.scenario))}: ${fmtCons(res.scenario.fuel_consumption)} l/100km · ${fmtCons(res.scenario.power_consumption)} kWh/100km`,
-    `⚡ ${esc(dispName(res.location))}: ${CHF(res.location.price_chf_per_kwh)}/kWh`,
-  ].join(t("note_sep"));
+  const note = assumptionNote(res, true);
 
   card.innerHTML = `
     <div class="verdict__row">
@@ -550,6 +563,82 @@ function renderVerdict(res) {
         <p class="verdict__note">${note}</p>
       </div>
     </div>`;
+}
+
+// What the numbers rest on. The bar shows the electricity price itself, so it
+// only needs the fuel side of the assumptions.
+function assumptionNote(res, withLocation) {
+  const parts = [
+    `⛽ ${CHF(res.fuel_price)}/l`,
+    `${esc(dispName(res.scenario))}: ${fmtCons(res.scenario.fuel_consumption)} l/100km · ${fmtCons(res.scenario.power_consumption)} kWh/100km`,
+  ];
+  if (withLocation) parts.push(`⚡ ${esc(dispName(res.location))}: ${CHF(res.location.price_chf_per_kwh)}/kWh`);
+  return parts.join(t("note_sep"));
+}
+
+// --- One-axis price bar (collapsed by default) -------------------------------
+// The 2D map shows how the two prices relate; this bar answers the question that
+// is actually asked at the charger — "at the price I pay per kWh, is charging
+// still cheaper?" — on a single scale: green up to the tipping price, amber
+// beyond it, one marker for where you are. Same numbers, no axes to decode.
+function renderPriceBar(res) {
+  const el = $("pricebar");
+  const bek = res.break_even_kwh_price;
+  if (bek == null || !(bek > 0)) {
+    el.innerHTML = `<div class="pbar"><p class="pbar__empty">${t("bar_no_tip")}</p></div>`;
+    return;
+  }
+  const cur = res.location.price_chf_per_kwh;
+  // Anchor the scale on the tipping price (like the chart does on the sweetspot)
+  // so it stays put while prices are nudged; widen only if the marker needs it.
+  const max = Math.max(bek * 1.6, cur * 1.25, 0.1);
+  const pct = (v) => Math.min(100, Math.max(0, (v / max) * 100));
+  const tipP = pct(bek);
+  const hereP = pct(cur);
+  const side = res.cheaper === "equal" ? "is-tie" : res.cheaper === "electric" ? "is-elec" : "is-fuel";
+
+  el.innerHTML = `
+    <div class="pbar">
+      <div class="pbar__row">
+        <span class="pbar__lab pbar__lab--here ${side}" style="${anchorStyle(hereP)}">
+          ${t("bar_here")} <b>${CHF(cur)}/kWh</b>
+        </span>
+      </div>
+      <div class="pbar__track">
+        <div class="pbar__bands">
+          <div class="pbar__seg pbar__seg--elec" style="width:${tipP}%">
+            ${segCap("⚡", t("region_elec"), tipP)}
+          </div>
+          <div class="pbar__seg pbar__seg--fuel" style="width:${100 - tipP}%">
+            ${segCap("⛽", t("region_fuel"), 100 - tipP)}
+          </div>
+        </div>
+        <div class="pbar__tip" style="left:${tipP}%"></div>
+        <div class="pbar__here ${side}" style="left:${hereP}%"></div>
+      </div>
+      <div class="pbar__row">
+        <span class="pbar__lab pbar__lab--tip" style="${anchorStyle(tipP)}">
+          ${t("bar_tip")} <b>${CHF(bek)}/kWh</b>
+        </span>
+      </div>
+      <div class="pbar__scale"><span>0.00</span><span>${max.toFixed(2)} CHF/kWh</span></div>
+      <p class="pbar__note">${assumptionNote(res, false)}</p>
+    </div>`;
+}
+
+// Caption inside a band — dropped when the band is too narrow to hold it. On a
+// phone only the icon stays (see the 560px rules), so the side is never colour-only.
+function segCap(icon, text, widthPct) {
+  if (widthPct < 24) return "";
+  return `<span class="pbar__cap"><i>${icon}</i><em>${text}</em></span>`;
+}
+
+// Keep a label inside the bar: centred over its mark, but flush left/right near
+// the ends so it never hangs over the card edge.
+function anchorStyle(p) {
+  if (p <= 12) return "left:0;transform:none;text-align:left";
+  if (p >= 88) return "left:auto;right:0;transform:none;text-align:right";
+  return `left:${p}%;transform:translateX(-50%)`;
 }
 
 // --- Chart -------------------------------------------------------------------

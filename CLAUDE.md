@@ -57,6 +57,12 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   stored until Save, the fuel price included (no auto-save on blur). `dirtyParts()` drives the
   bar: guests see "Preview — not saved" + reset, the owner additionally gets
   `Save for <targets>`, which lists the records the click would write (`saveInputs()`).
+- **Price bar (`renderPriceBar()`):** a collapsed one-axis alternative between verdict and
+  chart — electricity-price scale, green up to the tipping kWh price, amber beyond, marks for
+  "you pay" and the tipping price. Plain DOM/CSS (no Chart.js), scale anchored on the tipping
+  price (`max(bek*1.6, cur*1.25, 0.1)`) so it stays put while prices are nudged. Open state
+  lives in `localStorage.pricebarOpen`; on phones the band captions shrink to their icon.
+  `renderAll()` keeps verdict, bar and chart on the same result.
 - **Chart:** the answer comes first, the chart is the evidence below it — one column, full
   width, **no legend** (every element is labelled where it sits) and no dashed drop-lines to the
   axes. The sweetspot is a point on the tipping line at the current y; the x-range is anchored
