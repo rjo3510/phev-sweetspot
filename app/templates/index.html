@@ -76,34 +76,31 @@
       <div class="verdict__loading" data-i18n="verdict_loading">Calculating…</div>
     </section>
 
-    <!-- One-axis view of the same answer: the electricity price scale, green up to
-         the tipping price, amber beyond, a marker where you are. Collapsed by
-         default; the 2D map below stays the main picture. -->
-    <details class="disclosure pricebar-card" id="pricebar-details">
-      <summary data-i18n="bar_title">Where the electricity price tips</summary>
-      <div id="pricebar"></div>
-    </details>
+    <!-- The picture for the sentence above: one axis, the electricity price scale,
+         green up to the tipping price, amber beyond, a marker where you are.
+         Always visible — the question at the charger needs no axes to decode. -->
+    <section id="pricebar"></section>
 
-    <!-- The chart is the evidence for the sentence above — full width, no legend
-         (everything in the picture is labelled in place). -->
-    <section class="card chart-card">
-      <div class="card__head">
-        <h2 id="chart-title" data-i18n="chart_title">When does charging pay off?</h2>
-      </div>
+    <!-- The 2D map is the background evidence: how the two prices relate over the
+         whole range. Collapsed by default, opened by whoever wants it; full
+         width, no legend (everything in the picture is labelled in place). -->
+    <details class="disclosure chart-details" id="chart-details">
+      <summary id="chart-title" data-i18n="chart_title">When does charging pay off?</summary>
       <div class="chart-wrap">
         <canvas id="chart"></canvas>
       </div>
-    </section>
+    </details>
 
     <!-- The one editing place for every number -->
     <section class="card values-card">
       <div class="card__head"><h2 data-i18n="current_selection">Current selection</h2></div>
 
-      <!-- Anyone may try out numbers; only the owner's changes are stored.
-           Shown as soon as an input differs from the saved value. One rule for
-           every field here (fuel price included): nothing is stored until Save. -->
+      <!-- Anyone may try out numbers; only the owner's changes are stored. This
+           bar is therefore the owner's only: it appears as soon as an input
+           differs from the saved value. One rule for every field here (fuel
+           price included): nothing is stored until Save. -->
       <div class="preview-bar" id="preview-bar" hidden>
-        <span id="preview-note">Preview — not saved</span>
+        <span id="preview-note">Not saved yet</span>
         <span class="preview-bar__actions">
           <button class="btn btn--small editor-only" id="save-inputs" type="button">Save</button>
           <button class="link-btn" id="reset-inputs" type="button" data-i18n="reset_values">Back to saved values</button>

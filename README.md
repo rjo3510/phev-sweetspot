@@ -15,22 +15,23 @@ fuel or on electric power** — visualised as the crossing point ("sweetspot") o
 - **Profiles as chips, in one line each** — `Trip: Summer · Winter · With trailer` and
   `Charging: Home · Weekend · Public fast charger`. Every option is visible without opening
   anything, switching is a single click, and the current fuel price stays as it is.
-- **Where the electricity price tips** — a collapsed one-axis view of the same answer: the
+- **Where the electricity price tips** — the picture under the answer, one axis only: the
   electricity price scale, green while charging is cheaper, amber once fuel is, a white-edged
   marker for the price you pay and a yellow mark at the tipping price. It answers the
-  question asked at the charger without reading any axes; the 2D map below stays the main
-  picture. Whether it is left open is remembered.
-- The **chart** is one fixed 2D map: fuel price on x (CHF/l), electricity price on y
-  (CHF/kWh). The diagonal **tipping line** (`break_even_*` in the API) is where both cost the
-  same; below it charging wins, above it fuel wins. A **current-position dot** marks your
-  prices and a **sweetspot marker** sits on the line at the tipping price, so you see at a
-  glance which side you're on and how far away the sweetspot is. It sits under the answer as
-  its evidence — no legend, everything is labelled in the picture itself.
+  question asked at the charger without reading any axes.
+- The **chart** is the deeper view behind it, collapsed by default (open it once and it stays
+  open). One fixed 2D map: fuel price on x (CHF/l), electricity price on y (CHF/kWh). The
+  diagonal **tipping line** (`break_even_*` in the API) is where both cost the same; below it
+  charging wins, above it fuel wins. A **current-position dot** marks your prices and a
+  **sweetspot marker** sits on the line at the tipping price, so you see at a glance which
+  side you're on and how far away the sweetspot is — no legend, everything is labelled in the
+  picture itself.
 - **One editing place per value, one saving rule.** All numbers are edited in
   *Calculation values*; nothing is stored until you press Save. Anyone may change them for a
-  what-if — unsaved values are flagged **"Preview — not saved"** with one click back to the
-  saved version. The owner gets a Save button in the same bar that names exactly what it
-  will write (*"Save for Winter, Home, fuel price"*).
+  what-if, and for a visitor that is the only mode — nothing is written, so nothing is
+  flagged. For the owner, a changed value raises a bar saying **"Not saved yet"**, with one
+  click back to the saved version and a Save button that names exactly what it will write
+  (*"Save for Winter, Home, fuel price"*).
 - **Current fuel price** — a single global value (with quick −/+ buttons) shown at the top.
   Fuel price changes often and is the same at the pump for every scenario, so you set it
   once and it applies everywhere. Below the field, *"Set on 16 Jul 2026 (30 days ago)"*

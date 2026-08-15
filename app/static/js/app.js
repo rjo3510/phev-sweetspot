@@ -52,7 +52,6 @@ const I18N = {
     note_sep: " · ",
     current_selection: "Calculation values",
     save: "Save",
-    preview_note: "Preview — not saved",
     unsaved_note: "Not saved yet",
     save_for: "Save for {targets}",
     save_target_fuel: "fuel price",
@@ -108,7 +107,6 @@ const I18N = {
     note_sep: " · ",
     current_selection: "Berechnungswerte",
     save: "Speichern",
-    preview_note: "Vorschau — nicht gespeichert",
     unsaved_note: "Noch nicht gespeichert",
     save_for: "Für {targets} speichern",
     save_target_fuel: "Benzinpreis",
@@ -187,11 +185,15 @@ async function init() {
   $("save-inputs").addEventListener("click", saveInputs);
   $("reset-inputs").addEventListener("click", resetInputs);
 
-  // The price bar is an alternative view of the same answer — remember whether
-  // it was left open, so the choice survives the (rare) next visit.
-  const pb = $("pricebar-details");
-  pb.open = localStorage.getItem("pricebarOpen") === "1";
-  pb.addEventListener("toggle", () => localStorage.setItem("pricebarOpen", pb.open ? "1" : "0"));
+  // The 2D map is the optional deep view — closed by default, and whoever opens
+  // it keeps it open on the next visit. Chart.js needs a visible canvas, so the
+  // chart is only drawn once the disclosure is open.
+  const cd = $("chart-details");
+  cd.open = localStorage.getItem("chartOpen") === "1";
+  cd.addEventListener("toggle", () => {
+    localStorage.setItem("chartOpen", cd.open ? "1" : "0");
+    if (cd.open && lastResult) renderChart(lastResult);
+  });
 
   $("lang-toggle").querySelectorAll(".toggle__btn").forEach((btn) => {
     btn.addEventListener("click", () => setLang(btn.dataset.lang));
@@ -383,11 +385,12 @@ function isDirty() { return dirtyParts().any; }
 
 function updateDirty() {
   const d = dirtyParts();
-  $("preview-bar").hidden = !d.any;
-  if (!d.any) return;
-  // Guests see what-if wording, the owner sees what exactly Save would store.
-  $("preview-note").textContent = t(isEditor ? "unsaved_note" : "preview_note");
-  if (isEditor) $("save-inputs").textContent = t("save_for", { targets: dirtyTargets(d) });
+  // Guests are always in what-if mode — nothing they type is ever stored, so a
+  // "not saved" banner would only state the obvious. The bar is the owner's.
+  $("preview-bar").hidden = !d.any || !isEditor;
+  if (!d.any || !isEditor) return;
+  $("preview-note").textContent = t("unsaved_note");
+  $("save-inputs").textContent = t("save_for", { targets: dirtyTargets(d) });
 }
 
 // "Winter, Home, fuel price" — the records the Save button would write to.
@@ -517,6 +520,7 @@ function recalcFromInputs() {
 
 // One result, three views of it: the sentence, the one-axis bar, the 2D map.
 function renderAll(res) {
+  lastResult = res;
   renderVerdict(res);
   renderPriceBar(res);
   renderChart(res);
@@ -576,16 +580,17 @@ function assumptionNote(res, withLocation) {
   return parts.join(t("note_sep"));
 }
 
-// --- One-axis price bar (collapsed by default) -------------------------------
-// The 2D map shows how the two prices relate; this bar answers the question that
-// is actually asked at the charger — "at the price I pay per kWh, is charging
-// still cheaper?" — on a single scale: green up to the tipping price, amber
-// beyond it, one marker for where you are. Same numbers, no axes to decode.
+// --- One-axis price bar (the main picture) -----------------------------------
+// It answers the question that is actually asked at the charger — "at the price
+// I pay per kWh, is charging still cheaper?" — on a single scale: green up to
+// the tipping price, amber beyond it, one marker for where you are. Same numbers
+// as the 2D map below, but with no axes to decode, so it comes first.
 function renderPriceBar(res) {
   const el = $("pricebar");
+  const head = `<h2 class="pbar__title">${t("bar_title")}</h2>`;
   const bek = res.break_even_kwh_price;
   if (bek == null || !(bek > 0)) {
-    el.innerHTML = `<div class="pbar"><p class="pbar__empty">${t("bar_no_tip")}</p></div>`;
+    el.innerHTML = `<div class="pbar">${head}<p class="pbar__empty">${t("bar_no_tip")}</p></div>`;
     return;
   }
   const cur = res.location.price_chf_per_kwh;
@@ -599,6 +604,7 @@ function renderPriceBar(res) {
 
   el.innerHTML = `
     <div class="pbar">
+      ${head}
       <div class="pbar__row">
         <span class="pbar__lab pbar__lab--here ${side}" style="${anchorStyle(hereP)}">
           ${t("bar_here")} <b>${CHF(cur)}/kWh</b>
@@ -647,7 +653,9 @@ function anchorStyle(p) {
 // same (fc·fuel_price = pc·kwh_price); below it charging wins, above it fuel does.
 // A dot marks the current prices, so the side you are on is visible at a glance.
 function renderChart(res) {
-  lastResult = res;
+  // Closed disclosure = zero-sized canvas; Chart.js would size itself to nothing.
+  // The toggle handler draws it as soon as it is opened.
+  if (!$("chart-details").open) return;
   const fc = res.scenario.fuel_consumption;
   const pc = res.scenario.power_consumption;
 

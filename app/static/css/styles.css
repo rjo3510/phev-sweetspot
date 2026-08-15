@@ -225,18 +225,20 @@ body:not(.is-editor) .editor-only { display: none !important; }
 .toggle__btn.is-on { background: linear-gradient(135deg, var(--accent), #5d6bff); color: #fff; }
 .toggle__btn:not(.is-on):hover { color: var(--text); }
 
-/* Chart: the evidence under the answer, full width, no legend — every element in
-   the picture is labelled where it sits. */
-.chart-card { margin-bottom: 22px; }
+/* Chart: the optional deep view behind the bar, full width, no legend — every
+   element in the picture is labelled where it sits. */
+.chart-details { margin-bottom: 22px; }
 .chart-wrap { position: relative; height: 380px; }
 
-/* One-axis price bar: the electricity price scale, green while charging wins,
-   amber once fuel does, one marker for the price actually paid. */
+/* One-axis price bar — the main picture: the electricity price scale, green
+   while charging wins, amber once fuel does, one marker for the price paid. */
+#pricebar { display: block; margin-bottom: 22px; }
 .pbar {
   background: linear-gradient(180deg, var(--card), var(--bg-soft));
   border: 1px solid var(--line); border-radius: var(--radius);
   padding: 18px 22px; box-shadow: var(--shadow);
 }
+.pbar__title { margin: 0 0 16px; font-size: 17px; font-weight: 700; }
 /* Label rows: the marks sit at a percentage, so the labels are positioned, not flowed. */
 .pbar__row { position: relative; height: 20px; }
 .pbar__lab { position: absolute; top: 0; white-space: nowrap; font-size: 13px; color: var(--muted); }

@@ -54,19 +54,24 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   `Manage lists` (`<details class="manage">`). Row saves send the stored numbers along
   unchanged (PUT replaces the whole record).
 - **What-if vs. saved:** anyone may edit the inputs, only the owner persists — and nothing is
-  stored until Save, the fuel price included (no auto-save on blur). `dirtyParts()` drives the
-  bar: guests see "Preview — not saved" + reset, the owner additionally gets
-  `Save for <targets>`, which lists the records the click would write (`saveInputs()`).
-- **Price bar (`renderPriceBar()`):** a collapsed one-axis alternative between verdict and
-  chart — electricity-price scale, green up to the tipping kWh price, amber beyond, marks for
-  "you pay" and the tipping price. Plain DOM/CSS (no Chart.js), scale anchored on the tipping
-  price (`max(bek*1.6, cur*1.25, 0.1)`) so it stays put while prices are nudged. Open state
-  lives in `localStorage.pricebarOpen`; on phones the band captions shrink to their icon.
-  `renderAll()` keeps verdict, bar and chart on the same result.
-- **Chart:** the answer comes first, the chart is the evidence below it — one column, full
-  width, **no legend** (every element is labelled where it sits) and no dashed drop-lines to the
-  axes. The sweetspot is a point on the tipping line at the current y; the x-range is anchored
-  on the sweetspot so it stays put while the (global) fuel price is nudged.
+  stored until Save, the fuel price included (no auto-save on blur). The preview bar is
+  **owner-only**: a guest is permanently in what-if mode, so flagging it would state the
+  obvious (`updateDirty()` hides the bar unless `isEditor`). For the owner `dirtyParts()`
+  drives it: "Not saved yet" + reset + `Save for <targets>`, which lists the records the click
+  would write (`saveInputs()`).
+- **Price bar (`renderPriceBar()`):** the **main picture**, always visible right under the
+  verdict — electricity-price scale, green up to the tipping kWh price, amber beyond, marks
+  for "you pay" and the tipping price, headed by `.pbar__title` (i18n `bar_title`). Plain
+  DOM/CSS (no Chart.js), scale anchored on the tipping price (`max(bek*1.6, cur*1.25, 0.1)`)
+  so it stays put while prices are nudged; on phones the band captions shrink to their icon.
+  `renderAll()` keeps verdict, bar and chart on the same result (and stores `lastResult`).
+- **Chart:** the deeper 2D view behind the bar, in a `<details id="chart-details">` that is
+  **closed by default** (state in `localStorage.chartOpen`). Chart.js cannot size a hidden
+  canvas, so `renderChart()` returns early while the disclosure is closed and the toggle
+  handler draws it from `lastResult` on open. Full width, **no legend** (every element is
+  labelled where it sits), no dashed drop-lines to the axes. The sweetspot is a point on the
+  tipping line at the current y; the x-range is anchored on the sweetspot so it stays put
+  while the (global) fuel price is nudged.
 
 ## Verifying UI changes
 No browser test suite. To check a visual/behaviour change, run the app on a spare port and
