@@ -118,9 +118,9 @@ const I18N = {
     sent_tie: "100 km kosten so oder so <b>{ce}</b>.",
     // Geld beim Stromanteil des Szenarios: was tatsächlich bezahlt wird und
     // was ein Jahr davon ausmacht. Ersetzt die reine Jahreszeile.
-    blend_save: "Bei <b>{share} %</b> Strom-km kosten 100 km <b>{blend}</b> — rund <b>{amount}</b> pro Jahr gespart bei {km} km.",
-    blend_more: "Bei <b>{share} %</b> Strom-km kosten 100 km <b>{blend}</b> — rund <b>{amount}</b> pro Jahr mehr als mit Benzin bei {km} km.",
-    electric_share: "Stromanteil", share_label: "{share} % Strom-km",
+    blend_save: "Bei <b>{share} %</b> Strom-Anteil kosten 100 km <b>{blend}</b> — rund <b>{amount}</b> pro Jahr gespart bei {km} km.",
+    blend_more: "Bei <b>{share} %</b> Strom-Anteil kosten 100 km <b>{blend}</b> — rund <b>{amount}</b> pro Jahr mehr als mit Benzin bei {km} km.",
+    electric_share: "Stromanteil", share_label: "{share} % Strom-Anteil",
     share_default: "Default · {name}", share_default_label: "{share} % als Default für {name} speichern",
     thr_elec: "Erst über <b>{bek}</b> — oder unter <b>{bef}</b> — wäre Tanken günstiger.",
     thr_fuel: "Erst unter <b>{bek}</b> — oder über <b>{bef}</b> — würde sich Laden lohnen.",
