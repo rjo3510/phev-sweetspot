@@ -31,6 +31,9 @@ const THOUSANDS = { en: ",", de: "'" };
 const fmtInt = (n) =>
   Math.round(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, THOUSANDS[lang] || ",");
 const CHF0 = (n) => "CHF " + fmtInt(n);         // whole francs, for the yearly figure
+// Share of km driven electric: five fixed stops, chosen with chips.
+const SHARE_STEPS = [0, 25, 50, 75, 100];
+let electricShare = 100;   // the active (possibly unsaved) share — chips, not an input field
 
 // --- i18n --------------------------------------------------------------------
 const I18N = {
@@ -53,7 +56,11 @@ const I18N = {
     sent_elec: "100 km cost <b>{ce}</b> on electricity instead of <b>{cf}</b> on fuel — <b>{save}</b> saved.",
     sent_fuel: "100 km cost <b>{cf}</b> on fuel instead of <b>{ce}</b> on electricity — <b>{save}</b> saved.",
     sent_tie: "100 km cost <b>{ce}</b> either way.",
-    year_save: "That is about <b>{amount}</b> a year at {km} km.",
+    // Money at the scenario's electric share: what is actually paid and what a
+    // year of it comes to. Replaces the plain yearly line.
+    blend_save: "At <b>{share} %</b> electric km, 100 km cost <b>{blend}</b> — about <b>{amount}</b> a year saved at {km} km.",
+    blend_more: "At <b>{share} %</b> electric km, 100 km cost <b>{blend}</b> — about <b>{amount}</b> a year more than on fuel at {km} km.",
+    electric_share: "Electric share", share_label: "{share} % electric km",
     thr_elec: "Only above <b>{bek}</b> — or below <b>{bef}</b> — would filling up be cheaper.",
     thr_fuel: "Only below <b>{bek}</b> — or above <b>{bef}</b> — would charging pay off.",
     note_sep: " · ",
@@ -108,7 +115,11 @@ const I18N = {
     sent_elec: "100 km kosten mit Strom <b>{ce}</b> statt <b>{cf}</b> mit Benzin — <b>{save}</b> gespart.",
     sent_fuel: "100 km kosten mit Benzin <b>{cf}</b> statt <b>{ce}</b> mit Strom — <b>{save}</b> gespart.",
     sent_tie: "100 km kosten so oder so <b>{ce}</b>.",
-    year_save: "Das sind rund <b>{amount}</b> pro Jahr bei {km} km.",
+    // Geld beim Stromanteil des Szenarios: was tatsächlich bezahlt wird und
+    // was ein Jahr davon ausmacht. Ersetzt die reine Jahreszeile.
+    blend_save: "Bei <b>{share} %</b> Strom-km kosten 100 km <b>{blend}</b> — rund <b>{amount}</b> pro Jahr gespart bei {km} km.",
+    blend_more: "Bei <b>{share} %</b> Strom-km kosten 100 km <b>{blend}</b> — rund <b>{amount}</b> pro Jahr mehr als mit Benzin bei {km} km.",
+    electric_share: "Stromanteil", share_label: "{share} % Strom-km",
     thr_elec: "Erst über <b>{bek}</b> — oder unter <b>{bef}</b> — wäre Tanken günstiger.",
     thr_fuel: "Erst unter <b>{bek}</b> — oder über <b>{bef}</b> — würde sich Laden lohnen.",
     note_sep: " · ",
@@ -191,6 +202,7 @@ async function init() {
   ["in-fuel-price", "in-kwh-price"].forEach((id) => {
     $(id).addEventListener("blur", () => normalizePriceInput(id));
   });
+  renderShareChips();
   $("fuel-down").addEventListener("click", () => nudgeFuelPrice(-0.05));
   $("fuel-up").addEventListener("click", () => nudgeFuelPrice(0.05));
 
@@ -408,7 +420,39 @@ function fillChips(el, items, activeId, onPick) {
     b.setAttribute("aria-pressed", it.id === activeId ? "true" : "false");
     b.innerHTML = `<i class="chip__ico" aria-hidden="true"></i><span class="chip__name"></span>`;
     b.querySelector(".chip__name").textContent = dispName(it);
+    // Scenario chips wear their stored electric share, so the trips can be told
+    // apart before one is picked ("Winter · 75 %").
+    if (it.electric_share != null) {
+      const badge = document.createElement("span");
+      badge.className = "chip__badge";
+      badge.textContent = `${it.electric_share} %`;
+      badge.title = t("share_label", { share: it.electric_share });
+      b.appendChild(badge);
+    }
     b.addEventListener("click", () => onPick(it.id));
+    el.appendChild(b);
+  });
+}
+
+// The electric-share picker: five chips, one is on. Same what-if rule as the
+// number fields — anyone may click, only Save (owner) stores it.
+function renderShareChips() {
+  const el = $("in-electric-share");
+  el.innerHTML = "";
+  SHARE_STEPS.forEach((v) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip chip--share" + (v === electricShare ? " is-on" : "");
+    b.dataset.share = v;
+    b.textContent = `${v} %`;
+    b.setAttribute("aria-pressed", v === electricShare ? "true" : "false");
+    b.setAttribute("aria-label", t("share_label", { share: v }));
+    b.addEventListener("click", () => {
+      if (v === electricShare) return;
+      electricShare = v;
+      renderShareChips();
+      recalcFromInputs();
+    });
     el.appendChild(b);
   });
 }
@@ -440,6 +484,8 @@ function syncActiveInputs() {
   if (s) {
     $("in-fuel-consumption").value = fmtCons(s.fuel_consumption);
     $("in-power-consumption").value = fmtCons(s.power_consumption);
+    electricShare = s.electric_share ?? 100;
+    renderShareChips();
   }
   if (l) $("in-kwh-price").value = fmtPrice(l.price_chf_per_kwh);
   renderValueNames();
@@ -460,7 +506,8 @@ function dirtyParts() {
   // field counts as unsaved, floating-point noise does not.
   const off = (a, b, tol) => !isNaN(a) && Math.abs(a - b) >= tol;
   const scenario = off(v.fuel_consumption, s.fuel_consumption, 0.05)
-                || off(v.power_consumption, s.power_consumption, 0.05);
+                || off(v.power_consumption, s.power_consumption, 0.05)
+                || v.electric_share !== (s.electric_share ?? 100);
   const location = off(v.kwh_price, l.price_chf_per_kwh, 0.005);
   const fuel = off(v.fuel_price, fuelPrice, 0.005);
   return { scenario, location, fuel, any: scenario || location || fuel };
@@ -500,6 +547,7 @@ function inputValues() {
     power_consumption: parseFloat($("in-power-consumption").value),
     fuel_price: parseFloat($("in-fuel-price").value),
     kwh_price: parseFloat($("in-kwh-price").value),
+    electric_share: electricShare,
   };
 }
 
@@ -522,6 +570,7 @@ async function saveInputs() {
       await api.put(`/api/scenarios/${s.id}`, {
         name_de: s.name_de, name_en: s.name_en,
         fuel_consumption: v.fuel_consumption, power_consumption: v.power_consumption,
+        electric_share: v.electric_share,
       });
     }
     if (d.location) {
@@ -578,12 +627,16 @@ function recalcFromInputs() {
   const break_even_kwh = v.power_consumption > 0 ? (v.fuel_consumption * v.fuel_price) / v.power_consumption : null;
   const diff = cost_fuel - cost_elec;
   const cheaper = Math.abs(diff) < 1e-9 ? "equal" : diff > 0 ? "electric" : "fuel";
+  const a = v.electric_share / 100;
+  const cost_blend = a * cost_elec + (1 - a) * cost_fuel;   // mirrors calc.cost_blend_per_100km
   const res = {
-    scenario: { ...activeScenario(), fuel_consumption: v.fuel_consumption, power_consumption: v.power_consumption },
+    scenario: { ...activeScenario(), fuel_consumption: v.fuel_consumption, power_consumption: v.power_consumption,
+                electric_share: v.electric_share },
     location: { ...activeLocation(), price_chf_per_kwh: v.kwh_price },
     fuel_price: v.fuel_price,
     cost_fuel, cost_elec, break_even_fuel_price: break_even, break_even_kwh_price: break_even_kwh,
     cheaper, savings_per_100km: Math.abs(diff),
+    electric_share: v.electric_share, cost_blend, blend_delta: cost_fuel - cost_blend,
   };
   renderAll(res);
 }
@@ -617,11 +670,14 @@ function renderVerdict(res) {
     : isElec ? t("sent_elec", { ce, cf, save })
              : t("sent_fuel", { ce, cf, save });
 
-  // The same saving, once a year — what "per 100 km" actually amounts to.
-  // Dropped on a tie and on a near-tie: "about CHF 0 a year" says nothing.
-  const perYear = Math.abs(res.cost_fuel - res.cost_elec) * (ANNUAL_KM / 100);
+  // The money at the trip's electric share, once a year — what "per 100 km"
+  // actually amounts to when not every km is electric. The break-even prices
+  // above do not move with the share; only this line does. Dropped on a tie, at
+  // 0 % and whenever it would round to CHF 0: nothing saved, nothing to say.
+  const perYear = Math.abs(res.blend_delta) * (ANNUAL_KM / 100);
   const yearly = isTie || Math.round(perYear) < 1 ? ""
-    : t("year_save", { amount: CHF0(perYear), km: fmtInt(ANNUAL_KM) });
+    : t(res.blend_delta > 0 ? "blend_save" : "blend_more",
+        { share: res.electric_share, blend: CHF(res.cost_blend), amount: CHF0(perYear), km: fmtInt(ANNUAL_KM) });
 
   // Both tipping prices at once, each in its own unit — the electricity price
   // where it flips, and the fuel price where it flips.
@@ -653,7 +709,7 @@ function renderVerdict(res) {
 function assumptionNote(res, withLocation) {
   const parts = [
     `⛽ ${CHF(res.fuel_price)}/l`,
-    `${esc(dispName(res.scenario))}: ${fmtCons(res.scenario.fuel_consumption)} l/100km · ${fmtCons(res.scenario.power_consumption)} kWh/100km`,
+    `${esc(dispName(res.scenario))}: ${fmtCons(res.scenario.fuel_consumption)} l/100km · ${fmtCons(res.scenario.power_consumption)} kWh/100km · ${res.electric_share} % ⚡`,
   ];
   if (withLocation) parts.push(`⚡ ${esc(dispName(res.location))}: ${CHF(res.location.price_chf_per_kwh)}/kWh`);
   return parts.join(t("note_sep"));
@@ -916,7 +972,8 @@ function rowValues(tr) {
 // (PUT replaces the whole record).
 async function saveScenarioRow(id, tr) {
   const s = scenarios.find((x) => x.id === id);
-  const body = { fuel_consumption: s.fuel_consumption, power_consumption: s.power_consumption, ...rowValues(tr) };
+  const body = { fuel_consumption: s.fuel_consumption, power_consumption: s.power_consumption,
+                 electric_share: s.electric_share, ...rowValues(tr) };
   try { await api.put(`/api/scenarios/${id}`, body); toast(t("toast_scenario_saved")); await reload(); }
   catch (e) { toast(e.message, true); }
 }
@@ -942,7 +999,7 @@ async function addScenario() {
   try {
     const created = await api.post("/api/scenarios", {
       ...oneName("new_scenario"),
-      fuel_consumption: 6.5, power_consumption: 21,
+      fuel_consumption: 6.5, power_consumption: 21, electric_share: 100,
     });
     activeScenarioId = created.id;
     localStorage.setItem("activeScenarioId", activeScenarioId);

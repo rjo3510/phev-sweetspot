@@ -123,6 +123,12 @@
             <span><span data-i18n="power_consumption">Power consumption</span> <em>(kWh/100km)</em></span>
             <input type="number" inputmode="decimal" step="0.1" min="0" id="in-power-consumption" />
           </label>
+          <!-- Share of km driven electric: five fixed steps as chips (not a
+               slider — five stops are a choice, not a range). Filled by JS. -->
+          <div class="field field--inline field--share">
+            <span><span data-i18n="electric_share">Electric share</span> <em>(% km)</em></span>
+            <div class="chips chips--share" id="in-electric-share" role="group"></div>
+          </div>
         </div>
 
         <div class="values__group">

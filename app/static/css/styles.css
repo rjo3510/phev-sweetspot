@@ -264,6 +264,14 @@ body:not(.is-editor) .editor-only { display: none !important; }
   background: linear-gradient(135deg, var(--fuel), var(--fuel-2));
   border-color: transparent; color: var(--on-fuel);
 }
+/* Scenario chips wear their electric share as a small badge ("Winter · 75 %"). */
+.chip__badge { margin-left: 8px; font-weight: 600; font-size: 12px; opacity: .75; white-space: nowrap; }
+.chip__badge::before { content: "· "; }
+/* The electric-share picker: the same chips, compact, in the values block. */
+.chips--share { gap: 6px; flex-wrap: nowrap; }
+.chip--share { padding: 6px 10px; font-size: 13px; }
+.field--share { flex-wrap: wrap; }
+.values .field--share { max-width: none; }
 
 /* Verdict */
 .verdict-card {
@@ -552,6 +560,9 @@ input:disabled, select:disabled { -webkit-text-fill-color: var(--text); opacity:
   .chart-wrap { height: 320px; }
   .profile-row__label { min-width: 0; }
   .chip { font-size: 13px; padding: 6px 12px; }
+  /* Five chips do not fit beside the label — stack it above them. */
+  .field--share { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .chips--share { flex-wrap: wrap; }
   .card { padding: 18px 15px; }
   .pbar { padding: 16px 14px; }
   .pbar__lab { font-size: 12px; }

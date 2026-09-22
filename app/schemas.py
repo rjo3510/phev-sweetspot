@@ -20,6 +20,8 @@ class _BilingualName(BaseModel):
 class ScenarioBase(_BilingualName):
     fuel_consumption: float = Field(..., gt=0, le=1000, description="liters / 100 km")
     power_consumption: float = Field(..., ge=0, le=1000, description="kWh / 100 km")
+    # Default 100 keeps older clients (and older stored rows) at today's behaviour.
+    electric_share: int = Field(100, ge=0, le=100, description="% of km driven electric")
 
 
 class ScenarioCreate(ScenarioBase):
@@ -74,3 +76,6 @@ class CalculationResult(BaseModel):
     break_even_kwh_price: float | None
     cheaper: str
     savings_per_100km: float
+    electric_share: int
+    cost_blend: float            # CHF / 100 km at the scenario's electric share
+    blend_delta: float           # saved vs. all-fuel per 100 km (negative = extra cost)

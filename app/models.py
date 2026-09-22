@@ -21,6 +21,9 @@ class Scenario(Base):
     name_en = Column(String, nullable=False)           # name shown in the English UI
     fuel_consumption = Column(Float, nullable=False)   # liters / 100 km
     power_consumption = Column(Float, nullable=False)  # kWh / 100 km
+    # Share of km driven electric (0..100). A property of the trip, not of the
+    # charger: "commute" may be 100, "holiday drive" 25.
+    electric_share = Column(Integer, nullable=False, server_default="100")
 
 
 class ChargingLocation(Base):

@@ -173,6 +173,20 @@ def _migrate_drop_settings_updated_at() -> None:
         conn.execute(text("ALTER TABLE settings DROP COLUMN fuel_price_updated_at"))
 
 
+def _migrate_electric_share() -> None:
+    """Add `scenarios.electric_share` (% of km driven electric), backfilled to 100.
+
+    100 = every km electric = exactly what the app assumed before the column
+    existed, so a deploy changes nothing visible. Idempotent.
+    """
+    with engine.begin() as conn:
+        cols = [row[1] for row in conn.execute(text("PRAGMA table_info(scenarios)"))]
+        if "electric_share" in cols:
+            return
+        conn.execute(text(
+            "ALTER TABLE scenarios ADD COLUMN electric_share INTEGER NOT NULL DEFAULT 100"))
+
+
 @app.on_event("startup")
 def on_startup() -> None:
     logging.getLogger("uvicorn.error").info("PHEV Charging Calculator — build %s", APP_VERSION[:7])
@@ -180,6 +194,7 @@ def on_startup() -> None:
     _migrate_legacy_fuel_price()
     _migrate_bilingual_names()
     _migrate_drop_settings_updated_at()
+    _migrate_electric_share()
     db = SessionLocal()
     try:
         crud.seed_if_empty(db)
@@ -318,6 +333,7 @@ def calculate(scenario_id: int, location_id: int, db: Session = Depends(get_db))
         power_consumption=scenario.power_consumption,
         fuel_price=fuel_price,
         kwh_price=location.price_chf_per_kwh,
+        electric_share=scenario.electric_share,
     )
     return schemas.CalculationResult(
         scenario=schemas.ScenarioRead.model_validate(scenario),

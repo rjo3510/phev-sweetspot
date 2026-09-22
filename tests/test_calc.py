@@ -57,3 +57,40 @@ def test_zero_fuel_consumption_has_no_break_even():
     assert r.break_even_fuel_price is None
     assert r.cost_fuel == 0
     assert r.cheaper == "fuel"  # fuel cost 0 is cheaper than any positive electric cost
+
+
+def test_electric_share_defaults_to_all_electric():
+    r = calc.compute(fuel_consumption=6.5, power_consumption=21,
+                     fuel_price=1.80, kwh_price=0.31)
+    assert r.electric_share == 100
+    assert r.cost_blend == r.cost_elec
+    assert r.blend_delta == r.savings_per_100km
+
+
+def test_electric_share_scales_saving_not_break_even():
+    """Half the km electric saves half the money; the tipping prices stay put."""
+    full = calc.compute(6.5, 21, 1.80, 0.31)
+    half = calc.compute(6.5, 21, 1.80, 0.31, electric_share=50)
+    assert half.break_even_fuel_price == full.break_even_fuel_price
+    assert half.break_even_kwh_price == full.break_even_kwh_price
+    assert half.cheaper == full.cheaper
+    assert math.isclose(half.cost_blend, (11.70 + 6.51) / 2, abs_tol=1e-6)
+    assert math.isclose(half.blend_delta, full.blend_delta / 2, abs_tol=1e-6)
+
+
+def test_electric_share_zero_is_all_fuel():
+    r = calc.compute(6.5, 21, 1.80, 0.31, electric_share=0)
+    assert r.cost_blend == r.cost_fuel
+    assert r.blend_delta == 0
+
+
+def test_electric_share_negative_delta_when_fuel_cheaper():
+    """Charging at an expensive kWh price costs extra — the delta says so."""
+    r = calc.compute(6.5, 21, 1.80, 0.80, electric_share=75)   # elec 16.80 > fuel 11.70
+    assert r.cheaper == "fuel"
+    assert math.isclose(r.blend_delta, -0.75 * (16.80 - 11.70), abs_tol=1e-6)
+
+
+def test_electric_share_is_clamped():
+    assert calc.compute(6.5, 21, 1.80, 0.31, electric_share=250).electric_share == 100
+    assert calc.compute(6.5, 21, 1.80, 0.31, electric_share=-5).electric_share == 0

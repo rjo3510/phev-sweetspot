@@ -17,6 +17,11 @@ class SweetspotResult:
     break_even_kwh_price: float | None   # CHF/kWh where both cost the same (None if undefined)
     cheaper: str                # "electric", "fuel" or "equal"
     savings_per_100km: float    # CHF saved per 100 km by picking the cheaper option
+    # The share of km actually driven electric (0..100) and what that costs:
+    # the per-km comparison above is unaffected by it, only the money is.
+    electric_share: int         # % of km on electricity
+    cost_blend: float           # CHF per 100 km at that share
+    blend_delta: float          # CHF per 100 km saved vs. all-fuel (negative = extra cost)
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -57,15 +62,30 @@ def break_even_kwh_price(fuel_consumption: float, fuel_price: float,
     return (fuel_consumption * fuel_price) / power_consumption
 
 
+def cost_blend_per_100km(cost_fuel: float, cost_elec: float, electric_share: int) -> float:
+    """Cost per 100 km when `electric_share` % of the km are electric, the rest fuel."""
+    a = electric_share / 100
+    return a * cost_elec + (1 - a) * cost_fuel
+
+
 def compute(fuel_consumption: float, power_consumption: float,
-            fuel_price: float, kwh_price: float) -> SweetspotResult:
-    """Compute the full comparison for the given inputs."""
+            fuel_price: float, kwh_price: float,
+            electric_share: int = 100) -> SweetspotResult:
+    """Compute the full comparison for the given inputs.
+
+    `electric_share` is the share of km driven electric (a PHEV rarely manages
+    100 %). It does not move the break-even prices — a mixed trip saves
+    share × (fuel − electric), which is zero exactly where the pure comparison
+    ties — it only scales the money actually saved.
+    """
     cf = cost_fuel_per_100km(fuel_consumption, fuel_price)
     ce = cost_elec_per_100km(power_consumption, kwh_price)
     be = break_even_fuel_price(power_consumption, kwh_price, fuel_consumption)
     bek = break_even_kwh_price(fuel_consumption, fuel_price, power_consumption)
 
     diff = cf - ce
+    share = max(0, min(100, int(electric_share)))
+    cb = cost_blend_per_100km(cf, ce, share)
     if abs(diff) < 1e-9:
         cheaper = "equal"
     elif diff > 0:
@@ -80,4 +100,7 @@ def compute(fuel_consumption: float, power_consumption: float,
         break_even_kwh_price=round(bek, 4) if bek is not None else None,
         cheaper=cheaper,
         savings_per_100km=round(abs(diff), 4),
+        electric_share=share,
+        cost_blend=round(cb, 4),
+        blend_delta=round(cf - cb, 4),
     )
