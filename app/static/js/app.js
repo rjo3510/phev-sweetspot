@@ -32,7 +32,7 @@ const fmtInt = (n) =>
   Math.round(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, THOUSANDS[lang] || ",");
 const CHF0 = (n) => "CHF " + fmtInt(n);         // whole francs, for the yearly figure
 // Share of km driven electric: five fixed stops, chosen with chips.
-const SHARE_STEPS = [0, 25, 50, 75, 100];
+const SHARE_STEPS = [100, 75, 50, 25, 0];   // shown in this order: all-electric first
 let electricShare = 100;   // the active (possibly unsaved) share — chips, not an input field
 
 // --- i18n --------------------------------------------------------------------
@@ -420,15 +420,6 @@ function fillChips(el, items, activeId, onPick) {
     b.setAttribute("aria-pressed", it.id === activeId ? "true" : "false");
     b.innerHTML = `<i class="chip__ico" aria-hidden="true"></i><span class="chip__name"></span>`;
     b.querySelector(".chip__name").textContent = dispName(it);
-    // Scenario chips wear their stored electric share, so the trips can be told
-    // apart before one is picked ("Winter · 75 %").
-    if (it.electric_share != null) {
-      const badge = document.createElement("span");
-      badge.className = "chip__badge";
-      badge.textContent = `${it.electric_share} %`;
-      badge.title = t("share_label", { share: it.electric_share });
-      b.appendChild(badge);
-    }
     b.addEventListener("click", () => onPick(it.id));
     el.appendChild(b);
   });

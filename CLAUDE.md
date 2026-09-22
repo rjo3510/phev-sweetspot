@@ -91,8 +91,8 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   five stops are a choice, not a range; same what-if/Save rule as the number fields. The chips
   sit as a **third profile row** under *Trip* and *Charging* (label i18n `electric_share`), not
   inside the *Calculation values* block — picked as often as a profile, so it lives with them
-  (moved 22.09.2026). Scenario
-  chips wear the stored share as a badge (`.chip__badge`, "Winter · 75 %").
+  (moved 22.09.2026). Chips run **100 → 0 %** (all-electric first). Scenario chips carry
+  **no share badge** — the share row right below already shows it (badge removed 22.09.2026).
 - **Yearly figure:** the money at the scenario's share, scaled to a year, sits right under the
   sentence (`.verdict__year`, i18n `blend_save` / `blend_more`: "At 75 % electric km, 100 km
   cost CHF x — about CHF y a year saved"). The mileage is **hard-wired at 15'000 km**

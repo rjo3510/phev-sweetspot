@@ -264,9 +264,6 @@ body:not(.is-editor) .editor-only { display: none !important; }
   background: linear-gradient(135deg, var(--fuel), var(--fuel-2));
   border-color: transparent; color: var(--on-fuel);
 }
-/* Scenario chips wear their electric share as a small badge ("Winter · 75 %"). */
-.chip__badge { margin-left: 8px; font-weight: 600; font-size: 12px; opacity: .75; white-space: nowrap; }
-.chip__badge::before { content: "· "; }
 
 /* Verdict */
 .verdict-card {
