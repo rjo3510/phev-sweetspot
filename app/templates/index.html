@@ -190,7 +190,7 @@
       <span data-i18n="footer">Break-even fuel price = (kWh/100km × CHF/kWh) ÷ L/100km</span>
       <span class="foot__copy"> · © 2026 <a href="mailto:info@xolution.ch">info@xolution.ch</a></span>
       {% if version != "dev" %}
-      <span class="build"> · build <a href="https://github.com/rjo3510/phev-sweetspot/commit/{{ version_full }}" target="_blank" rel="noopener">{{ version }}</a></span>
+      <span class="build"> · build <a href="https://github.com/rjo3510/phev-sweetspot/commit/{{ version_full }}" target="_blank" rel="noopener">{{ version }}</a>{% if build_date %} · {{ build_date }}{% endif %}</span>
       {% else %}
       <span class="build"> · {{ version }}</span>
       {% endif %}

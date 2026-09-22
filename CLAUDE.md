@@ -46,8 +46,10 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   light there to work as text and border on the dark ground, so white on it would only reach
   3:1. Button modifiers (`.btn--ghost`) must sit **after** `.btn` in `styles.css`; same
   specificity, so the later rule wins.
-- **Build SHA** shows in the footer (linked to the commit) and is logged at startup;
-  CI passes it as the `GIT_SHA` build-arg → `APP_VERSION`.
+- **Build SHA + build date** show in the footer (SHA linked to the commit, date as
+  `22.09.2026 09:41` Zurich time) and are logged at startup; CI passes them as the `GIT_SHA` /
+  `BUILD_DATE` build-args → `APP_VERSION` / `APP_BUILD_DATE` (`build_date_local()` in
+  `main.py`; `tzdata` is in `requirements.txt` because `python:slim` ships no zoneinfo).
 - **DB migrations** run on startup in `main.py` (`_migrate_*`): additive, idempotent, safe on
   existing data (they backfill, never drop user data).
 - **App name is bilingual:** *PHEV Charging Calculator* (en) / *PHEV Kostenvergleich* (de),

@@ -81,6 +81,27 @@ STATIC_VERSION = _static_version()
 
 # Git commit the image was built from (set by CI; "dev" locally). Shown in the footer.
 APP_VERSION = os.environ.get("APP_VERSION", "dev")
+# When the image was built (CI, ISO 8601 UTC via BUILD_DATE → APP_BUILD_DATE); "" locally.
+APP_BUILD_DATE = os.environ.get("APP_BUILD_DATE", "")
+
+
+def build_date_local(iso_utc: str) -> str:
+    """'2026-09-22T07:41:51Z' (CI, UTC) → '22.09.2026 09:41' on the Zurich clock for
+    the footer; '' when the build carries no date (a local dev build)."""
+    if not iso_utc:
+        return ""
+    from datetime import datetime, timezone
+    from zoneinfo import ZoneInfo
+    try:
+        dt = datetime.fromisoformat(iso_utc.replace("Z", "+00:00"))
+    except ValueError:
+        return ""
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(ZoneInfo("Europe/Zurich")).strftime("%d.%m.%Y %H:%M")
+
+
+BUILD_DATE_LOCAL = build_date_local(APP_BUILD_DATE)
 
 
 # --- Auth: read-only for everyone, writes require the owner password ----------
@@ -189,7 +210,8 @@ def _migrate_electric_share() -> None:
 
 @app.on_event("startup")
 def on_startup() -> None:
-    logging.getLogger("uvicorn.error").info("PHEV Charging Calculator — build %s", APP_VERSION[:7])
+    logging.getLogger("uvicorn.error").info("PHEV Charging Calculator — build %s %s",
+                                            APP_VERSION[:7], BUILD_DATE_LOCAL)
     Base.metadata.create_all(bind=engine)
     _migrate_legacy_fuel_price()
     _migrate_bilingual_names()
@@ -219,7 +241,8 @@ def index(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="index.html",
-        context={"v": STATIC_VERSION, "version": APP_VERSION[:7], "version_full": APP_VERSION},
+        context={"v": STATIC_VERSION, "version": APP_VERSION[:7], "version_full": APP_VERSION,
+                 "build_date": BUILD_DATE_LOCAL},
     )
 
 

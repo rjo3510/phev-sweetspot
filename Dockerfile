@@ -24,7 +24,9 @@ USER appuser
 # Build metadata (set by CI via --build-arg) — surfaced in the UI footer.
 # Placed late so changing it doesn't bust the dependency/app layers' cache.
 ARG GIT_SHA=dev
-ENV APP_VERSION=$GIT_SHA
+ARG BUILD_DATE=
+ENV APP_VERSION=$GIT_SHA \
+    APP_BUILD_DATE=$BUILD_DATE
 
 EXPOSE 8000
 

@@ -49,6 +49,9 @@ jobs:
             type=raw,value=latest
             type=sha,format=long
 
+      - name: Build timestamp
+        run: echo "BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
       - name: Build & push
         uses: docker/build-push-action@v6
         with:
@@ -57,6 +60,7 @@ jobs:
           push: true
           build-args: |
             GIT_SHA=${{ github.sha }}
+            BUILD_DATE=${{ env.BUILD_DATE }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
