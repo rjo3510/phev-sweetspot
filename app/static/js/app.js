@@ -61,6 +61,10 @@ const I18N = {
     blend_save: "At <b>{share} %</b> electric km, 100 km cost <b>{blend}</b> — about <b>{amount}</b> a year saved at {km} km.",
     blend_more: "At <b>{share} %</b> electric km, 100 km cost <b>{blend}</b> — about <b>{amount}</b> a year more than on fuel at {km} km.",
     electric_share: "Electric share", share_label: "{share} % electric km",
+    share_row: "A year at {km} km, by electric share:",
+    share_row_saved: "{share} % electric km: about {amount} a year saved",
+    share_row_more: "{share} % electric km: about {amount} a year more than on fuel",
+    share_row_zero: "{share} % electric km: no difference",
     share_default: "Default · {name}", share_default_label: "Store {share} % as the default for {name}",
     thr_elec: "Only above <b>{bek}</b> — or below <b>{bef}</b> — would filling up be cheaper.",
     thr_fuel: "Only below <b>{bek}</b> — or above <b>{bef}</b> — would charging pay off.",
@@ -121,6 +125,10 @@ const I18N = {
     blend_save: "Bei <b>{share} %</b> Strom-Anteil kosten 100 km <b>{blend}</b> — rund <b>{amount}</b> pro Jahr gespart bei {km} km.",
     blend_more: "Bei <b>{share} %</b> Strom-Anteil kosten 100 km <b>{blend}</b> — rund <b>{amount}</b> pro Jahr mehr als mit Benzin bei {km} km.",
     electric_share: "Stromanteil", share_label: "{share} % Strom-Anteil",
+    share_row: "Pro Jahr bei {km} km, nach Stromanteil:",
+    share_row_saved: "{share} % Strom-Anteil: rund {amount} pro Jahr gespart",
+    share_row_more: "{share} % Strom-Anteil: rund {amount} pro Jahr mehr als mit Benzin",
+    share_row_zero: "{share} % Strom-Anteil: kein Unterschied",
     share_default: "Default · {name}", share_default_label: "{share} % als Default für {name} speichern",
     thr_elec: "Erst über <b>{bek}</b> — oder unter <b>{bef}</b> — wäre Tanken günstiger.",
     thr_fuel: "Erst unter <b>{bek}</b> — oder über <b>{bef}</b> — würde sich Laden lohnen.",
@@ -688,6 +696,7 @@ function renderAll(res) {
   renderVerdict(res);
   renderPriceBar(res);
   renderChart(res);
+  renderShareRow(res);
 }
 
 // The whole answer in one sentence: which is cheaper, by how much, and where it
@@ -741,6 +750,30 @@ function renderVerdict(res) {
         <p class="verdict__note">${note}</p>
       </div>
     </div>`;
+}
+
+// The five chip shares side by side with their yearly saving (or extra cost) at
+// ANNUAL_KM — every stop visible without clicking through the chips. Sits under
+// the chart, inside its disclosure: linear in the share
+// (calc.cost_blend_per_100km), so a chart of it would only draw a straight line
+// between two numbers — a row of the five numbers says the same. Plain DOM, so
+// unlike the canvas it renders fine while the disclosure is closed.
+function renderShareRow(res) {
+  const el = $("share-row");
+  if (res.cheaper === "equal") { el.innerHTML = ""; return; }
+  const perPct = (res.cost_fuel - res.cost_elec) / 100 * (ANNUAL_KM / 100);   // CHF/year per share-%
+  const cells = SHARE_STEPS.map((share) => {
+    const v = perPct * share;
+    const r = Math.round(v);
+    const cls = r > 0 ? "is-saved" : r < 0 ? "is-more" : "is-zero";
+    const amount = r === 0 ? "CHF 0" : (r < 0 ? "−" : "") + CHF0(Math.abs(v));
+    const key = r > 0 ? "share_row_saved" : r < 0 ? "share_row_more" : "share_row_zero";
+    const on = share === res.electric_share ? " is-on" : "";
+    return `<span class="sharerow__cell ${cls}${on}" title="${t(key, { share, amount })}">` +
+      `<span class="sharerow__pct">${share} %</span><span class="sharerow__amt">${amount}</span></span>`;
+  }).join("");
+  el.innerHTML = `<span class="sharerow__label">${t("share_row", { km: fmtInt(ANNUAL_KM) })}</span>` +
+    `<span class="sharerow__cells">${cells}</span>`;
 }
 
 // What the numbers rest on. The bar shows the electricity price itself, so it
