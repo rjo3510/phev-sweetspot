@@ -38,7 +38,7 @@ dev VM ──git push──▶ GitHub ──Actions build──▶ GHCR image
    python -m app.auth          # prints OWNER_PASSWORD_HASH and SWEETSPOT_SECRET
    ```
 
-   Edit `.env`: paste `OWNER_PASSWORD_HASH` + `SWEETSPOT_SECRET`, set `PROXY_NETWORK`
+   Edit `.env`: paste `OWNER_PASSWORD_HASH` + `SWEETSPOT_SECRET`, set `PROXY_NETWORK` + `FORWARDED_ALLOW_IPS`
    (find it with `docker network ls`, e.g. `npm_default`). `COOKIE_SECURE=1` stays on
    behind HTTPS.
 
@@ -107,6 +107,10 @@ cp data/sweetspot.db data/sweetspot-backup.db    # it's just a file in ./data no
 
 - **One worker on purpose** (login rate-limit state is in-process, single SQLite writer).
 - Want NPM's own per-IP rate limiting / Cloudflare in front? Both stack cleanly on top.
+- **Visitor IP in the log:** uvicorn runs with `--proxy-headers`; set `FORWARDED_ALLOW_IPS`
+  in `.env` to the proxy network's subnet (`docker network inspect npm_default -f
+  '{{range .IPAM.Config}}{{.Subnet}}{{end}}'`) so NPM's `X-Forwarded-For` is trusted. Left
+  unset, the log shows the NPM container's IP (only `127.0.0.1` is trusted).
 - **Change the host port:** set `APP_PORT` in `.env` (default `8082`).
 - To restrict the published port to localhost only, edit the `ports:` mapping to
   `"127.0.0.1:8082:8000"`.

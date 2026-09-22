@@ -30,6 +30,10 @@ EXPOSE 8000
 
 # Single worker on purpose: the login rate-limit state is in-process, and SQLite
 # writes are simplest with one writer. Production mode — no --reload.
+# --proxy-headers: the access log (and request.client) show the real client IP from
+# X-Forwarded-For instead of the proxy container's. Only proxies listed in
+# FORWARDED_ALLOW_IPS (env, uvicorn reads it) are trusted — set it to the NPM network's
+# subnet in .env; unset, uvicorn trusts 127.0.0.1 only, i.e. behaves as before.
 CMD ["python", "-m", "uvicorn", "app.main:app", \
-     "--host", "0.0.0.0", "--port", "8000", \
+     "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", \
      "--log-config", "uvicorn_log_config.json"]
