@@ -61,6 +61,7 @@ const I18N = {
     blend_save: "At <b>{share} %</b> electric km, 100 km cost <b>{blend}</b> — about <b>{amount}</b> a year saved at {km} km.",
     blend_more: "At <b>{share} %</b> electric km, 100 km cost <b>{blend}</b> — about <b>{amount}</b> a year more than on fuel at {km} km.",
     electric_share: "Electric share", share_label: "{share} % electric km",
+    share_default: "Default · {name}", share_default_label: "Store {share} % as the default for {name}",
     thr_elec: "Only above <b>{bek}</b> — or below <b>{bef}</b> — would filling up be cheaper.",
     thr_fuel: "Only below <b>{bek}</b> — or above <b>{bef}</b> — would charging pay off.",
     note_sep: " · ",
@@ -120,6 +121,7 @@ const I18N = {
     blend_save: "Bei <b>{share} %</b> Strom-km kosten 100 km <b>{blend}</b> — rund <b>{amount}</b> pro Jahr gespart bei {km} km.",
     blend_more: "Bei <b>{share} %</b> Strom-km kosten 100 km <b>{blend}</b> — rund <b>{amount}</b> pro Jahr mehr als mit Benzin bei {km} km.",
     electric_share: "Stromanteil", share_label: "{share} % Strom-km",
+    share_default: "Default · {name}", share_default_label: "{share} % als Default für {name} speichern",
     thr_elec: "Erst über <b>{bek}</b> — oder unter <b>{bef}</b> — wäre Tanken günstiger.",
     thr_fuel: "Erst unter <b>{bek}</b> — oder über <b>{bef}</b> — würde sich Laden lohnen.",
     note_sep: " · ",
@@ -286,6 +288,8 @@ function setLang(l) {
   applyStaticTranslations();
   applyEditMode();
   renderChips();            // chip names follow the language (with fallback)
+  renderShareChips();
+  renderDefaultShareChips();
   renderScenarioTable();
   renderLocationTable();
   if (lastResult) renderAll(lastResult);
@@ -448,6 +452,48 @@ function renderShareChips() {
   });
 }
 
+// Owner row: the stored default share of the active scenario. One click stores
+// it (PUT, like a rename) and the what-if row follows — the owner wants to see
+// the default they just set.
+function renderDefaultShareChips() {
+  const s = activeScenario();
+  const el = $("default-share-chips");
+  el.innerHTML = "";
+  if (!s) { $("default-share-label").textContent = ""; return; }
+  const cur = s.electric_share ?? 100;
+  $("default-share-label").textContent = t("share_default", { name: dispName(s) });
+  SHARE_STEPS.forEach((v) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip" + (v === cur ? " is-on" : "");
+    b.dataset.share = v;
+    b.textContent = `${v} %`;
+    b.setAttribute("aria-pressed", v === cur ? "true" : "false");
+    b.setAttribute("aria-label", t("share_default_label", { share: v, name: dispName(s) }));
+    b.addEventListener("click", () => setDefaultShare(v));
+    el.appendChild(b);
+  });
+}
+
+async function setDefaultShare(v) {
+  const s = activeScenario();
+  if (!isEditor || !s || v === (s.electric_share ?? 100)) return;
+  try {
+    // PUT replaces the whole record, so the stored numbers travel along unchanged.
+    await api.put(`/api/scenarios/${s.id}`, {
+      name_de: s.name_de, name_en: s.name_en,
+      fuel_consumption: s.fuel_consumption, power_consumption: s.power_consumption,
+      electric_share: v,
+    });
+    s.electric_share = v;
+    electricShare = v;
+    renderShareChips();
+    renderDefaultShareChips();
+    toast(t("toast_saved"));
+    recalcFromInputs();
+  } catch (e) { toast(e.message, true); }
+}
+
 // Switching a profile keeps the current (possibly unsaved/guest) fuel price.
 function pickScenario(id) {
   if (id === activeScenarioId) return;
@@ -477,6 +523,7 @@ function syncActiveInputs() {
     $("in-power-consumption").value = fmtCons(s.power_consumption);
     electricShare = s.electric_share ?? 100;
     renderShareChips();
+    renderDefaultShareChips();
   }
   if (l) $("in-kwh-price").value = fmtPrice(l.price_chf_per_kwh);
   renderValueNames();
@@ -496,9 +543,10 @@ function dirtyParts() {
   // Tolerance = half of the displayed precision: a change that shows up in the
   // field counts as unsaved, floating-point noise does not.
   const off = (a, b, tol) => !isNaN(a) && Math.abs(a - b) >= tol;
+  // The electric share is not in here: its what-if row is free for everyone,
+  // the stored default has its own owner row (setDefaultShare).
   const scenario = off(v.fuel_consumption, s.fuel_consumption, 0.05)
-                || off(v.power_consumption, s.power_consumption, 0.05)
-                || v.electric_share !== (s.electric_share ?? 100);
+                || off(v.power_consumption, s.power_consumption, 0.05);
   const location = off(v.kwh_price, l.price_chf_per_kwh, 0.005);
   const fuel = off(v.fuel_price, fuelPrice, 0.005);
   return { scenario, location, fuel, any: scenario || location || fuel };
@@ -561,7 +609,7 @@ async function saveInputs() {
       await api.put(`/api/scenarios/${s.id}`, {
         name_de: s.name_de, name_en: s.name_en,
         fuel_consumption: v.fuel_consumption, power_consumption: v.power_consumption,
-        electric_share: v.electric_share,
+        electric_share: s.electric_share ?? 100,   // stored default travels along unchanged
       });
     }
     if (d.location) {

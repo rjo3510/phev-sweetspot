@@ -88,11 +88,15 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   colours ignore it. It only scales the money: `calc.compute()` adds `cost_blend` (CHF/100 km at
   that share) and `blend_delta` (saved vs. all-fuel, negative = extra cost). Picked with **five
   chips, not a slider** (`renderShareChips()`, `#in-electric-share`, state `electricShare`) —
-  five stops are a choice, not a range; same what-if/Save rule as the number fields. The chips
-  sit as a **third profile row** under *Trip* and *Charging* (label i18n `electric_share`), not
-  inside the *Calculation values* block — picked as often as a profile, so it lives with them
+  five stops are a choice, not a range. The chips sit as a **third profile row** under *Trip*
+  and *Charging* (label i18n `electric_share`), not inside the *Calculation values* block
   (moved 22.09.2026). Chips run **100 → 0 %** (all-electric first). Scenario chips carry
-  **no share badge** — the share row right below already shows it (badge removed 22.09.2026).
+  **no share badge** (removed 22.09.2026). **Two rows, two jobs:** the *Electric share* row is
+  pure what-if for everyone — it is **not** part of `dirtyParts()` / Save and snaps back to the
+  stored value on a scenario switch. Below it an **owner-only row** (`.editor-only`,
+  `#default-share-chips`, label `share_default` = "Default · Winter") shows the scenario's
+  stored share; a click writes it at once via PUT (`setDefaultShare()`, like a rename), and the
+  what-if row follows. `saveInputs()` sends the stored share along unchanged.
 - **Yearly figure:** the money at the scenario's share, scaled to a year, sits right under the
   sentence (`.verdict__year`, i18n `blend_save` / `blend_more`: "At 75 % electric km, 100 km
   cost CHF x — about CHF y a year saved"). The mileage is **hard-wired at 15'000 km**

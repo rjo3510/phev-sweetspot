@@ -81,6 +81,13 @@
         <span class="profile-row__label" data-i18n="electric_share">Electric share</span>
         <div class="chips" id="in-electric-share" role="group" aria-label="Electric share"></div>
       </div>
+      <!-- Owner only: the stored default share of the active scenario. A click
+           writes it at once (like a rename in Manage lists) — the row above stays
+           what-if for everyone and snaps back to this value on a scenario switch. -->
+      <div class="profile-row editor-only">
+        <span class="profile-row__label" id="default-share-label"></span>
+        <div class="chips" id="default-share-chips" role="group"></div>
+      </div>
     </section>
 
     <!-- Verdict: the answer, above the chart -->
