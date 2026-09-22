@@ -8,7 +8,7 @@ import time
 
 from fastapi import Cookie, Depends, FastAPI, HTTPException, Response
 from fastapi.requests import Request
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import text
@@ -250,6 +250,12 @@ def index(request: Request):
 def favicon():
     return FileResponse(os.path.join(BASE_DIR, "static", "favicon.svg"),
                         media_type="image/svg+xml")
+
+
+# Crawlers ask for this on every visit; the page is meant to be indexed, the API is not.
+@app.get("/robots.txt", include_in_schema=False)
+def robots():
+    return PlainTextResponse("User-agent: *\nDisallow: /api/\n")
 
 
 # --- Auth --------------------------------------------------------------------
