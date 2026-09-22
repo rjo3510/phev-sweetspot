@@ -442,7 +442,7 @@ function renderShareChips() {
   SHARE_STEPS.forEach((v) => {
     const b = document.createElement("button");
     b.type = "button";
-    b.className = "chip chip--share" + (v === electricShare ? " is-on" : "");
+    b.className = "chip" + (v === electricShare ? " is-on" : "");
     b.dataset.share = v;
     b.textContent = `${v} %`;
     b.setAttribute("aria-pressed", v === electricShare ? "true" : "false");

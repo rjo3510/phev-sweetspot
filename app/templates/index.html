@@ -74,6 +74,13 @@
         <span class="profile-row__label" data-i18n="profile_charge">Charging</span>
         <div class="chips" id="location-chips" role="group" aria-label="Charging"></div>
       </div>
+      <!-- Share of km driven electric: five fixed steps as chips (not a
+           slider — five stops are a choice, not a range). Its own row, not part
+           of Trip — it is picked as often as a profile. Filled by JS. -->
+      <div class="profile-row">
+        <span class="profile-row__label" data-i18n="electric_share">Electric share</span>
+        <div class="chips" id="in-electric-share" role="group" aria-label="Electric share"></div>
+      </div>
     </section>
 
     <!-- Verdict: the answer, above the chart -->
@@ -123,12 +130,6 @@
             <span><span data-i18n="power_consumption">Power consumption</span> <em>(kWh/100km)</em></span>
             <input type="number" inputmode="decimal" step="0.1" min="0" id="in-power-consumption" />
           </label>
-          <!-- Share of km driven electric: five fixed steps as chips (not a
-               slider — five stops are a choice, not a range). Filled by JS. -->
-          <div class="field field--inline field--share">
-            <span><span data-i18n="electric_share">Electric share</span> <em>(% km)</em></span>
-            <div class="chips chips--share" id="in-electric-share" role="group"></div>
-          </div>
         </div>
 
         <div class="values__group">
