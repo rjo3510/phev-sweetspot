@@ -11,3 +11,6 @@ data/
 # Self-hosted offline assets — keep these in the repo (downloaded once, no CDN).
 !app/static/vendor/
 !app/static/fonts/
+
+# local concept notes (not public)
+KONZEPT_*.md
