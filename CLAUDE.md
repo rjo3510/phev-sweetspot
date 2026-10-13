@@ -142,6 +142,8 @@ sudo snap install chromium                            # on demand
 
 ## Deploy (full guide: DEPLOY.md)
 CI builds the image; the server **pulls** it — nothing is built on the host.
+- Claude: finished work → commit + `git push origin main` without asking (English
+  message in repo style `Fix: …`), then mention the CI run. Owner pulls on the server.
 ```
 git push            # → GitHub Actions builds & pushes ghcr.io/rjo3510/phev-sweetspot
 # then on the server (your SSH host, dir ~/phev-sweetspot):
