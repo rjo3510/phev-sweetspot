@@ -258,6 +258,13 @@ def robots():
     return PlainTextResponse("User-agent: *\nDisallow: /api/\n")
 
 
+# Google Search Console ownership check; Google re-checks it, so it has to stay.
+@app.get("/googlee2309131d057cb71.html", include_in_schema=False)
+def google_verification():
+    return FileResponse(os.path.join(BASE_DIR, "static", "googlee2309131d057cb71.html"),
+                        media_type="text/html")
+
+
 # --- Auth --------------------------------------------------------------------
 @app.get("/api/me", response_model=schemas.AuthState)
 def me(edit_session: str | None = Cookie(default=None)):
