@@ -31,7 +31,7 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
 - **German copy is neutral/passive** — no "du"/"Sie".
 - **Currency stays `CHF`** (Swiss app; values/units are CHF-specific).
 - **Cache-busting:** static assets are loaded as `…?v=<hash>` (StaticFiles sends no
-  Cache-Control); the hash is computed in `main.py` from `styles.css` + `app.js` + `theme.js`.
+  Cache-Control); the hash is computed in `main.py` from `styles.css` + `app.js` + `theme.js` + the two `vendor/` scripts.
 - **Two themes, one palette:** dark and light are the same UI in two token sets — `:root`
   holds the dark palette, `:root[data-theme="light"]` overrides it, and **no colour literal
   lives anywhere else in `styles.css`**. The chart bakes its colours in at draw time, so it

@@ -68,7 +68,8 @@ def _static_version() -> str:
     """Short hash of the editable assets, appended as ?v= to bust browser caches
     after a deploy (StaticFiles sends no Cache-Control, so Safari caches CSS/JS)."""
     h = hashlib.md5()
-    for rel in ("css/styles.css", "js/app.js", "js/theme.js"):
+    for rel in ("css/styles.css", "js/app.js", "js/theme.js",
+                "vendor/chart.umd.min.js", "vendor/chartjs-plugin-annotation.min.js"):
         try:
             with open(os.path.join(BASE_DIR, "static", rel), "rb") as f:
                 h.update(f.read())
