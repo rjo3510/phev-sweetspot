@@ -5,6 +5,7 @@ import hashlib
 import logging
 import os
 import time
+from contextlib import asynccontextmanager
 
 from fastapi import Cookie, Depends, FastAPI, HTTPException, Response
 from fastapi.requests import Request
@@ -24,8 +25,17 @@ COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "").lower() in ("1", "true", "ye
 # write-endpoint schema is not interesting to the public. Set ENABLE_DOCS=1 for dev.
 ENABLE_DOCS = os.environ.get("ENABLE_DOCS", "").lower() in ("1", "true", "yes")
 
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Startup work (log line, migrations, seed) before the first request; nothing at shutdown.
+    on_startup() is defined further down, next to the migrations it runs."""
+    on_startup()
+    yield
+
+
 app = FastAPI(
     title="PHEV Charging Calculator",
+    lifespan=lifespan,
     docs_url="/docs" if ENABLE_DOCS else None,
     redoc_url="/redoc" if ENABLE_DOCS else None,
     openapi_url="/openapi.json" if ENABLE_DOCS else None,
@@ -209,7 +219,6 @@ def _migrate_electric_share() -> None:
             "ALTER TABLE scenarios ADD COLUMN electric_share INTEGER NOT NULL DEFAULT 100"))
 
 
-@app.on_event("startup")
 def on_startup() -> None:
     logging.getLogger("uvicorn.error").info("PHEV Charging Calculator — build %s %s",
                                             APP_VERSION[:7], BUILD_DATE_LOCAL)
