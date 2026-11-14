@@ -8,7 +8,7 @@ import time
 
 from fastapi import Cookie, Depends, FastAPI, HTTPException, Response
 from fastapi.requests import Request
-from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import text
@@ -263,6 +263,24 @@ def robots():
 def google_verification():
     return FileResponse(os.path.join(BASE_DIR, "static", "googlee2309131d057cb71.html"),
                         media_type="text/html")
+
+
+# Liveness for an external monitor (UptimeRobot) and the Docker HEALTHCHECK, as in driveio.
+# No login (a monitor cannot sign in); the body names no secret. 503 when the SQLite file
+# cannot be queried, so app down, proxy down and a broken DB all page the same way.
+# HEAD explicitly: @app.get answers HEAD with 405, and UptimeRobot's free plan probes
+# with HEAD only.
+@app.api_route("/health", methods=["GET", "HEAD"], include_in_schema=False)
+def health():
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        db_ok = True
+    except Exception:  # noqa: BLE001 — any DB failure means "degraded"
+        logging.getLogger("uvicorn.error").exception("health: database check failed")
+        db_ok = False
+    body = {"status": "ok" if db_ok else "degraded", "build": APP_VERSION[:7], "db": db_ok}
+    return JSONResponse(body, status_code=200 if db_ok else 503)
 
 
 # --- Auth --------------------------------------------------------------------

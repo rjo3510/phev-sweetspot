@@ -75,6 +75,12 @@ dev VM ──git push──▶ GitHub ──Actions build──▶ GHCR image
 
 The DB survives in `./data` across every update.
 
+Check that the new build runs:
+
+```bash
+curl -s https://phev.xolution.ch/health   # 200 + "build":"<sha>" = the new build runs
+```
+
 ### Roll back
 
 Each build is also tagged with its commit SHA. To pin a previous version, set `IMAGE_TAG`
@@ -111,6 +117,13 @@ cp data/sweetspot.db data/sweetspot-backup.db    # it's just a file in ./data no
   in `.env` to the proxy network's subnet (`docker network inspect npm_default -f
   '{{range .IPAM.Config}}{{.Subnet}}{{end}}'`) so NPM's `X-Forwarded-For` is trusted. Left
   unset, the log shows the NPM container's IP (only `127.0.0.1` is trusted).
+- **Monitoring:** `GET /health` (and `HEAD` - UptimeRobot's free plan probes with HEAD
+  only) needs no login and answers `200 {"status":"ok","build":"<sha>","db":true}`, or
+  `503 {"status":"degraded",...}` when the SQLite DB cannot be queried. The image has a
+  `HEALTHCHECK` on the same URL (`docker ps` shows unhealthy; the restart policy does NOT
+  act on it). The external monitor is an **UptimeRobot** HTTP(s) monitor (free plan:
+  5-min checks) on `https://phev.xolution.ch/health`, set up like driveio's - it alerts on
+  any non-2xx, so app down, proxy down and a broken DB all page the same way.
 - **Change the host port:** set `APP_PORT` in `.env` (default `8082`).
 - To restrict the published port to localhost only, edit the `ports:` mapping to
   `"127.0.0.1:8082:8000"`.

@@ -30,6 +30,12 @@ ENV APP_VERSION=$GIT_SHA \
 
 EXPOSE 8000
 
+# Same URL the external monitor (UptimeRobot) probes; 503 when the SQLite DB cannot be
+# queried, so `docker ps` shows the container unhealthy. NOTE: the restart policy does
+# not act on unhealthy (display only) - the external monitor does the alerting.
+HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=8)"
+
 # Single worker on purpose: the login rate-limit state is in-process, and SQLite
 # writes are simplest with one writer. Production mode — no --reload.
 # --proxy-headers: the access log (and request.client) show the real client IP from

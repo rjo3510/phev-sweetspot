@@ -50,6 +50,9 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   `22.09.2026 09:41` Zurich time) and are logged at startup; CI passes them as the `GIT_SHA` /
   `BUILD_DATE` build-args → `APP_VERSION` / `APP_BUILD_DATE` (`build_date_local()` in
   `main.py`; `tzdata` is in `requirements.txt` because `python:slim` ships no zoneinfo).
+- **Health:** `GET`/`HEAD /health` (no login; `SELECT 1` on the DB, 503 if it fails) for
+  UptimeRobot + the Docker `HEALTHCHECK`, as in driveio. Keep `HEAD` — UptimeRobot's free
+  plan probes with HEAD only and `@app.get` would answer 405.
 - **DB migrations** run on startup in `main.py` (`_migrate_*`): additive, idempotent, safe on
   existing data (they backfill, never drop user data).
 - **App name is bilingual:** *PHEV Charging Calculator* (en) / *PHEV Kostenvergleich* (de),
