@@ -21,7 +21,9 @@ logs in to edit. Bilingual **EN/DE**.
 .venv/bin/python -m pytest -q          # unit tests for the cost math in app/calc.py
 ```
 Deps: `requirements.txt` is runtime-only (what ships in the image); `requirements-dev.txt`
-adds the test deps — install that locally. CI runs `pytest` before building.
+adds the test deps — install that locally. CI runs `pytest` before building. **No pins**
+(Rolf): image `python:3-slim`, CI on Python 3.x without layer cache = newest packages every
+build; a pin only with a proven regression, named in requirements.txt.
 The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_DB`.
 
 ## Conventions (please keep)
