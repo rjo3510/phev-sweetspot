@@ -132,7 +132,7 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
 - **Yearly figure:** the money at the scenario's share, scaled to a year, sits right under the
   sentence (`.verdict__year`, i18n `blend_save` / `blend_more`: "At 75 % electric km, 100 km
   cost CHF x — about CHF y a year saved compared with fuel only"; the saving always names
-  its baseline, and DE says *elektrisch gefahrene km*, never just *Strom-Anteil* — the share is of km).
+  its baseline, and DE says *der km im EV-Modus* (Rolf: short; *Benzin* stays, no *HV-Modus*), never just *Strom-Anteil* — the share is of km).
   The power-consumption field carries the hint *at the socket, incl. charging losses*
   (`power_consumption_note`) — the kWh are paid at the socket, not at the trip computer (15.11.2026. The mileage is **hard-wired at 15'000 km**
   (`ANNUAL_KM` in `app.js`) — the whole point is to make "per 100 km" tangible *without* another
