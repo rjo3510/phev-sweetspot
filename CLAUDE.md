@@ -103,8 +103,12 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
 - **No price date:** the fuel price carries no timestamp and no freshness warning — the app
   states what is stored, nothing about its age. Removed on 15.08.2026 including the DB column
   (`_migrate_drop_settings_updated_at` in `main.py`); don't reintroduce it.
-- **Verdict:** one sentence (cheaper option · costs · saving · both break-even prices) plus an
-  assumptions footnote — see `renderVerdict()`.
+- **Verdict:** one sentence (cheaper option · costs · saving · both break-even prices) — see
+  `renderVerdict()`. Kept short on purpose (15.11.2026): the assumptions footnote appears
+  **once**, under the price bar (`assumptionNote()`, incl. the charging location), not in the
+  card; at 100 % share the yearly line drops the mixed cost it would only repeat (`year_save` /
+  `year_more`). On phones the icon sits in the title line and every profile row stacks its
+  caption above the chips.
 - **Electric share (`electric_share`, 0/25/50/75/100 %):** the share of *km* driven electric
   (WLTP "utility factor"), stored **per scenario** (a property of the trip: commute 100 %, holiday
   drive 25 %; default 100 = the old behaviour, migration `_migrate_electric_share`). It does

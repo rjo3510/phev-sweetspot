@@ -10,8 +10,9 @@ fuel or on electric power** — visualised as the crossing point ("sweetspot") o
 
 - The **verdict is one sentence**: which is cheaper, what 100 km cost either way, how much
   that saves — and both break-even prices at once (*"only above CHF 0.56/kWh — or below
-  CHF 1.00/l — would filling up be cheaper"*). The assumptions behind the numbers follow as
-  a small footnote, so nothing has to be decoded.
+  CHF 1.00/l — would filling up be cheaper"*), followed by what that adds up to in a year at
+  15'000 km. The assumptions behind the numbers are stated once, as the footnote of the price
+  bar right below.
 - **Profiles as chips, in one line each** — `Trip: Summer · Winter · With trailer` and
   `Charging: Home · Weekend · Public fast charger`. Every option is visible without opening
   anything, switching is a single click, and the current fuel price stays as it is.
@@ -28,14 +29,15 @@ fuel or on electric power** — visualised as the crossing point ("sweetspot") o
   picture itself.
 - **One editing place per value, one saving rule.** All numbers are edited in
   *Calculation values*; nothing is stored until you press Save. Anyone may change them for a
-  what-if, and for a visitor that is the only mode — nothing is written, so nothing is
-  flagged. For the owner, a changed value raises a bar saying **"Not saved yet"**, with one
+  what-if. A visitor's own values never reach the server, but they are **kept in that
+  visitor's browser** and survive a reload; a bar says so and offers one click back to the
+  default values. A value the comparison cannot use (empty, negative, a consumption of 0) is
+  marked and named instead of calculated. For the owner, a changed value raises a bar saying **"Not saved yet"**, with one
   click back to the saved version and a Save button that names exactly what it will write
   (*"Save for Winter, Home, fuel price"*).
 - **Current fuel price** — a single global value (with quick −/+ buttons) shown at the top.
   Fuel price changes often and is the same at the pump for every scenario, so you set it
-  once and it applies everywhere. Below the field, *"Set on 16 Jul 2026 (30 days ago)"*
-  says how fresh the stored price is — after two weeks the line turns amber.
+  once and it applies everywhere.
 - **Scenarios** (Winter, Summer, With trailer, …) — named presets, each holding a consumption
   profile (l/100km and kWh/100km). Names are bilingual (German + English) and shown in the
   active UI language.
@@ -45,7 +47,12 @@ fuel or on electric power** — visualised as the crossing point ("sweetspot") o
   scenarios and locations. Names only; the numbers live in *Calculation values*. New entries
   need a name in the current language, the other one can follow later.
 - **English / German** — switch the whole UI language with the EN/DE toggle (top right).
-  Your choice is remembered.
+  Your choice is remembered; without one the browser's language decides, and a link can set
+  it (`/?lang=de`).
+- **CHF or EUR** — the CHF/EUR toggle changes the currency *label* only; nothing is
+  converted, the maths is the same in any currency (`/?cur=eur` in a link).
+- **Link previews** — title, description and a preview image are rendered on the server, so
+  a link pasted into a forum or messenger shows what the page is about.
 - Everything is stored in a local **SQLite** database and survives restarts. Databases
   created by older versions are migrated automatically on startup.
 - **Works offline** — Chart.js, the annotation plugin and the Inter font are self-hosted

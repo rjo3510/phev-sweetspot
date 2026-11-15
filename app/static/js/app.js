@@ -75,8 +75,11 @@ const I18N = {
     sent_tie: "100 km cost <b>{ce}</b> either way.",
     // Money at the scenario's electric share: what is actually paid and what a
     // year of it comes to. Replaces the plain yearly line.
-    blend_save: "At <b>{share} %</b> electric km, 100 km cost <b>{blend}</b> — about <b>{amount}</b> a year saved at {km} km.",
-    blend_more: "At <b>{share} %</b> electric km, 100 km cost <b>{blend}</b> — about <b>{amount}</b> a year more than on fuel at {km} km.",
+    blend_save: "At <b>{share} %</b> electric km, 100 km cost <b>{blend}</b> — about <b>{amount}</b> a year saved at {km}&nbsp;km.",
+    blend_more: "At <b>{share} %</b> electric km, 100 km cost <b>{blend}</b> — about <b>{amount}</b> a year more than on fuel at {km}&nbsp;km.",
+    // At 100 % the mixed cost equals the sentence above — only the year is new.
+    year_save: "About <b>{amount}</b> a year saved at {km}&nbsp;km.",
+    year_more: "About <b>{amount}</b> a year more than on fuel at {km}&nbsp;km.",
     electric_share: "Electric share", share_label: "{share} % electric km",
     share_row: "A year at {km} km, by electric share:",
     share_row_saved: "{share} % electric km: about {amount} a year saved",
@@ -144,8 +147,10 @@ const I18N = {
     sent_tie: "100 km kosten so oder so <b>{ce}</b>.",
     // Geld beim Stromanteil des Szenarios: was tatsächlich bezahlt wird und
     // was ein Jahr davon ausmacht. Ersetzt die reine Jahreszeile.
-    blend_save: "Bei <b>{share} %</b> Strom-Anteil kosten 100 km <b>{blend}</b> — rund <b>{amount}</b> pro Jahr gespart bei {km} km.",
-    blend_more: "Bei <b>{share} %</b> Strom-Anteil kosten 100 km <b>{blend}</b> — rund <b>{amount}</b> pro Jahr mehr als mit Benzin bei {km} km.",
+    blend_save: "Bei <b>{share} %</b> Strom-Anteil kosten 100 km <b>{blend}</b> — rund <b>{amount}</b> pro Jahr gespart bei {km}&nbsp;km.",
+    blend_more: "Bei <b>{share} %</b> Strom-Anteil kosten 100 km <b>{blend}</b> — rund <b>{amount}</b> pro Jahr mehr als mit Benzin bei {km}&nbsp;km.",
+    year_save: "Rund <b>{amount}</b> pro Jahr gespart bei {km}&nbsp;km.",
+    year_more: "Rund <b>{amount}</b> pro Jahr mehr als mit Benzin bei {km}&nbsp;km.",
     electric_share: "Stromanteil", share_label: "{share} % Strom-Anteil",
     share_row: "Pro Jahr bei {km} km, nach Stromanteil:",
     share_row_saved: "{share} % Strom-Anteil: rund {amount} pro Jahr gespart",
@@ -886,8 +891,11 @@ function renderVerdict(res) {
   // above do not move with the share; only this line does. Dropped on a tie, at
   // 0 % and whenever it would round to CHF 0: nothing saved, nothing to say.
   const perYear = yearlyAt(res, res.electric_share);
+  // At 100 % the mixed cost per 100 km is the electric cost the sentence just
+  // named, so the line shrinks to the yearly amount; below 100 % it is news.
+  const full = res.electric_share === 100;
   const yearly = isTie || Math.round(Math.abs(perYear)) < 1 ? ""
-    : t(perYear > 0 ? "blend_save" : "blend_more",
+    : t(perYear > 0 ? (full ? "year_save" : "blend_save") : (full ? "year_more" : "blend_more"),
         { share: res.electric_share, blend: money(res.cost_blend), amount: money0(Math.abs(perYear)), km: fmtInt(ANNUAL_KM) });
 
   // Both tipping prices at once, each in its own unit — the electricity price
@@ -899,9 +907,6 @@ function renderVerdict(res) {
     threshold = isElec ? t("thr_elec", { bek, bef }) : t("thr_fuel", { bek, bef });
   }
 
-  // The assumptions behind the numbers, as a small footnote.
-  const note = assumptionNote(res, true);
-
   card.innerHTML = `
     <div class="verdict__row">
       <div class="verdict__icon">${icon}</div>
@@ -910,7 +915,6 @@ function renderVerdict(res) {
         <p class="verdict__sentence">${sentence}</p>
         ${yearly ? `<p class="verdict__year">${yearly}</p>` : ""}
         ${threshold ? `<p class="verdict__threshold">${threshold}</p>` : ""}
-        <p class="verdict__note">${note}</p>
       </div>
     </div>`;
 }
@@ -938,8 +942,8 @@ function renderShareRow(res) {
     `<span class="sharerow__cells">${cells}</span>`;
 }
 
-// What the numbers rest on. The bar shows the electricity price itself, so it
-// only needs the fuel side of the assumptions.
+// What the numbers rest on — stated once, as the footnote of the price bar right
+// under the verdict (the verdict card itself carries no second copy).
 function assumptionNote(res, withLocation) {
   const parts = [
     `⛽ ${money(res.fuel_price)}/l`,
@@ -997,7 +1001,7 @@ function renderPriceBar(res) {
         </span>
       </div>
       <div class="pbar__scale"><span>0.00</span><span>${max.toFixed(2)} ${currency}/kWh</span></div>
-      <p class="pbar__note">${assumptionNote(res, false)}</p>
+      <p class="pbar__note">${assumptionNote(res, true)}</p>
     </div>`;
 }
 
