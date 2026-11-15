@@ -246,14 +246,43 @@ def on_startup() -> None:
 
 
 # --- Page --------------------------------------------------------------------
+# What a link preview (forum, messenger) and a search result show. Crawlers run no
+# JS, so title/description/preview image are rendered here; app.js takes over after.
+PAGE_META = {
+    "en": {"title": "PHEV Charging Calculator",
+           "desc": "Is charging your plug-in hybrid cheaper than filling up? Enter fuel and "
+                   "electricity prices and see the break-even price at a glance."},
+    "de": {"title": "PHEV Kostenvergleich",
+           "desc": "Lohnt sich Laden beim Plug-in-Hybrid? Benzin- und Strompreis eingeben — "
+                   "der Kipp-Preis zeigt auf einen Blick, was günstiger ist."},
+}
+
+
+def page_lang(request: Request) -> str:
+    """Language of the server-rendered head: ?lang=de|en (a shared link) first, else
+    the first Accept-Language entry, else English. Mirrors pickLang() in app.js."""
+    q = (request.query_params.get("lang") or "").lower()
+    if q in PAGE_META:
+        return q
+    first = request.headers.get("accept-language", "").split(",")[0].strip().lower()
+    return "de" if first.startswith("de") else "en"
+
+
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
-    return templates.TemplateResponse(
+    lang = page_lang(request)
+    base_url = str(request.base_url)          # scheme + host as the proxy forwarded them
+    explicit = (request.query_params.get("lang") or "").lower() == lang
+    response = templates.TemplateResponse(
         request=request,
         name="index.html",
         context={"v": STATIC_VERSION, "version": APP_VERSION[:7], "version_full": APP_VERSION,
-                 "build_date": BUILD_DATE_LOCAL},
+                 "build_date": BUILD_DATE_LOCAL, "lang": lang, "meta": PAGE_META[lang],
+                 "base_url": base_url,
+                 "page_url": base_url + (f"?lang={lang}" if explicit else "")},
     )
+    response.headers["Vary"] = "Accept-Language"   # the head differs per language
+    return response
 
 
 @app.get("/favicon.ico", include_in_schema=False)

@@ -12,6 +12,8 @@ logs in to edit. Bilingual **EN/DE**.
   + Chart.js. Chart.js, its annotation plugin and the Inter font are **self-hosted**
   (`app/static/vendor/`, `app/static/fonts/`) — the app works fully offline.
 - **i18n:** `en` + `de` dictionaries in `app.js` (`I18N`), applied via `t(key)` / `data-i18n`.
+  Language: `?lang=de|en` (a shared link) → stored choice → the browser's language → `en`
+  (`pickLang()`); using the switch drops the URL parameter again.
 
 ## Run & test locally
 ```bash
@@ -31,7 +33,23 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
 - **Names are bilingual:** scenarios & charging locations have `name_de` + `name_en`; show the
   active language, fall back to the other if one is empty (`dispName()` in `app.js`).
 - **German copy is neutral/passive** — no "du"/"Sie".
-- **Currency stays `CHF`** (Swiss app; values/units are CHF-specific).
+- **Currency is a display label, `CHF` (default) or `EUR`** (switch in the top bar, `?cur=eur`,
+  `localStorage.currency`; added 15.11.2026 for readers outside Switzerland). **Nothing is
+  converted** — the maths is currency-neutral, the stored numbers stay what the owner typed.
+  All money goes through `money()` / `money0()`, units in the markup through `data-unit`, and
+  i18n strings use `{cur}`; never write a literal `CHF` into UI copy. API/DB names
+  (`price_chf_per_kwh`) keep their name — keys are code.
+- **Link previews:** `<title>`, `meta description` and the Open-Graph tags are rendered on the
+  server (`PAGE_META` / `page_lang()` in `main.py`: `?lang=` → `Accept-Language` → en), because
+  crawlers run no JS. Preview images `app/static/og-de.png` / `og-en.png` (1200×630) are
+  screenshots of hero + verdict + price bar on a fresh seed DB — regenerate them when that
+  look changes.
+- **Invalid input is named, not calculated:** an empty/negative field or a consumption ≤ 0
+  shows a hint instead of a result and marks the field (`aria-invalid`; `invalidFields()` /
+  `renderInvalid()`). A kWh price of 0 is valid (free charging).
+- **One yearly figure:** `yearlyAt(res, share)` is the only place the per-year amount is
+  computed — verdict sentence and the row under the chart both call it (they once disagreed
+  by a rounding franc).
 - **Cache-busting:** static assets are loaded as `…?v=<hash>` (StaticFiles sends no
   Cache-Control); the hash is computed in `main.py` from `styles.css` + `app.js` + `theme.js` + the two `vendor/` scripts.
 - **Two themes, one palette:** dark and light are the same UI in two token sets — `:root`
@@ -115,12 +133,17 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   block. The lists below are name-only management (add / rename / delete) behind a collapsed
   `Manage lists` (`<details class="manage">`). Row saves send the stored numbers along
   unchanged (PUT replaces the whole record).
-- **What-if vs. saved:** anyone may edit the inputs, only the owner persists — and nothing is
-  stored until Save, the fuel price included (no auto-save on blur). The preview bar is
-  **owner-only**: a guest is permanently in what-if mode, so flagging it would state the
-  obvious (`updateDirty()` hides the bar unless `isEditor`). For the owner `dirtyParts()`
-  drives it: "Not saved yet" + reset + `Save for <targets>`, which lists the records the click
-  would write (`saveInputs()`).
+- **What-if vs. saved:** anyone may edit the inputs, only the owner persists on the server —
+  and nothing is stored there until Save, the fuel price included (no auto-save on blur). For
+  the owner `dirtyParts()` drives the preview bar: "Not saved yet" + reset +
+  `Save for <targets>`, which lists the records the click would write (`saveInputs()`).
+- **Guest values stay in the guest's browser:** a visitor's own numbers (fuel price,
+  consumptions per scenario, kWh price per location — not the electric share) survive a reload
+  via `localStorage.guestValues`, never the server (`storeGuestValues()`, `guestScenario()`,
+  `locPrice()`). The preview bar then reads "Your own values — kept in this browser only" with
+  a link back to the defaults; Save stays owner-only. Owner sessions ignore and clear the
+  guest copy (`clearGuest()` on login / at boot), so auth is resolved **before** the first
+  `reload()`.
 - **Price bar (`renderPriceBar()`):** the **main picture**, always visible right under the
   verdict — electricity-price scale, green up to the break-even kWh price, amber beyond, marks
   for "you pay" and the break-even price, headed by `.pbar__title` (i18n `bar_title`). Plain
@@ -131,7 +154,9 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   **closed by default** (state in `localStorage.chartOpen`). Chart.js cannot size a hidden
   canvas, so `renderChart()` returns early while the disclosure is closed and the toggle
   handler draws it from `lastResult` on open. Full width, **no legend** (every element is
-  labelled where it sits), no dashed drop-lines to the axes. The sweetspot is a point on the
+  labelled where it sits), no dashed drop-lines to the axes. Point labels keep off the
+  break-even line: below the point when it lies right of the line, two short rows above when
+  left of it, stepping aside when point and line nearly touch (`gapPx` in `renderChart()`). The sweetspot is a point on the
   break-even line at the current y; the x-range is anchored on the sweetspot so it stays put
   while the (global) fuel price is nudged.
 

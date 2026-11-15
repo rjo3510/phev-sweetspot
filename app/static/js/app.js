@@ -20,7 +20,16 @@ async function handle(r) {
 async function safeJson(r) { try { return await r.json(); } catch { return null; } }
 
 const $ = (id) => document.getElementById(id);
-const CHF = (n) => "CHF " + Number(n).toFixed(2);
+// Display currency: CHF or EUR. A label only — nothing is converted, the maths is
+// the same in any currency. Picked with the switch (or ?cur=eur), kept per browser.
+const urlParams = new URLSearchParams(location.search);
+let currency = pickCurrency();
+function pickCurrency() {
+  const q = (urlParams.get("cur") || "").toUpperCase();
+  if (q === "EUR" || q === "CHF") return q;
+  return localStorage.getItem("currency") === "EUR" ? "EUR" : "CHF";
+}
+const money = (n) => currency + " " + Number(n).toFixed(2);
 const fmtCons = (n) => Number(n).toFixed(1);    // consumption: L/100km, kWh/100km → 1 decimal
 const fmtPrice = (n) => Number(n).toFixed(2);   // CHF/kWh → 2 decimals
 
@@ -30,7 +39,15 @@ const ANNUAL_KM = 15000;
 const THOUSANDS = { en: ",", de: "'" };
 const fmtInt = (n) =>
   Math.round(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, THOUSANDS[lang] || ",");
-const CHF0 = (n) => "CHF " + fmtInt(n);         // whole francs, for the yearly figure
+const money0 = (n) => currency + " " + fmtInt(n);   // whole francs, for the yearly figure
+// A year's saving at `share` % electric km, in francs (negative = extra cost).
+// The ONE place this is computed — the verdict sentence and the row under the
+// chart both call it, so they can never disagree by a rounding franc. Built on
+// the per-100-km difference as it is displayed (rounded to cents' precision).
+function yearlyAt(res, share) {
+  const per100 = Number((res.cost_fuel - res.cost_elec).toFixed(4));
+  return Number((per100 * (share / 100) * (ANNUAL_KM / 100)).toFixed(6));
+}
 // Share of km driven electric: five fixed stops, chosen with chips.
 const SHARE_STEPS = [100, 75, 50, 25, 0];   // shown in this order: all-electric first
 let electricShare = 100;   // the active (possibly unsaved) share — chips, not an input field
@@ -80,10 +97,15 @@ const I18N = {
     manage_lists: "Manage lists",
     scenarios: "Scenarios", charging_locations: "Charging locations",
     add: "+ Add", delete: "Delete",
-    footer: "Break-even electricity price = (l/100km × CHF/l) ÷ kWh/100km",
+    footer: "Break-even electricity price = (l/100km × {cur}/l) ÷ kWh/100km",
+    currency: "Currency",
+    // Guests: own numbers are kept in this browser only, never on the server.
+    guest_note: "Your own values — kept in this browser only",
+    guest_reset: "Back to the default values",
+    verdict_invalid: "Enter all four values to compare — both consumptions must be greater than 0.",
     verdict_loading: "Calculating…",
     verdict_start: "Add a scenario and a charging location to start.",
-    axis_per_liter: "Fuel price (CHF/l)", axis_per_kwh: "Electricity price (CHF/kWh)",
+    axis_per_liter: "Fuel price ({cur}/l)", axis_per_kwh: "Electricity price ({cur}/kWh)",
     word_sweetspot: "Sweetspot",
     toast_saved: "Saved",
     toast_scenario_saved: "Scenario saved", toast_location_saved: "Location saved",
@@ -144,10 +166,14 @@ const I18N = {
     manage_lists: "Listen verwalten",
     scenarios: "Szenarien", charging_locations: "Standorte",
     add: "+ Hinzufügen", delete: "Löschen",
-    footer: "Kipp-Strompreis = (l/100km × CHF/l) ÷ kWh/100km",
+    footer: "Kipp-Strompreis = (l/100km × {cur}/l) ÷ kWh/100km",
+    currency: "Währung",
+    guest_note: "Eigene Werte — nur in diesem Browser gespeichert",
+    guest_reset: "Zurück zu den Standardwerten",
+    verdict_invalid: "Für den Vergleich werden alle vier Werte benötigt — beide Verbräuche grösser als 0.",
     verdict_loading: "Berechne…",
     verdict_start: "Füge ein Szenario und einen Standort hinzu, um zu starten.",
-    axis_per_liter: "Benzinpreis (CHF/l)", axis_per_kwh: "Strompreis (CHF/kWh)",
+    axis_per_liter: "Benzinpreis ({cur}/l)", axis_per_kwh: "Strompreis ({cur}/kWh)",
     word_sweetspot: "Sweetspot",
     toast_saved: "Gespeichert",
     toast_scenario_saved: "Szenario gespeichert", toast_location_saved: "Standort gespeichert",
@@ -170,12 +196,14 @@ const I18N = {
 function t(key, vars) {
   let s = (I18N[lang] && I18N[lang][key]) ?? I18N.en[key] ?? key;
   if (vars) for (const k in vars) s = s.split(`{${k}}`).join(vars[k]);
-  return s;
+  return s.split("{cur}").join(currency);
 }
 
 function applyStaticTranslations() {
   document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll("[data-i18n-html]").forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml); });
+  // Units in the markup ("CHF/l") follow the display currency.
+  document.querySelectorAll("[data-unit]").forEach((el) => { el.textContent = currency + el.dataset.unit; });
   document.documentElement.lang = lang;
   document.title = t("app_title");   // browser tab / bookmark follows the language too
 }
@@ -185,7 +213,16 @@ let scenarios = [];
 let locations = [];
 let activeScenarioId = Number(localStorage.getItem("activeScenarioId")) || null;
 let activeLocationId = Number(localStorage.getItem("activeLocationId")) || null;
-let lang = localStorage.getItem("lang") === "de" ? "de" : "en";
+let lang = pickLang();
+// ?lang=de (a shared link) beats the stored choice; without either the browser's
+// own language decides, so a German-speaking visitor is not greeted in English.
+function pickLang() {
+  const q = (urlParams.get("lang") || "").toLowerCase();
+  if (q === "de" || q === "en") return q;
+  const stored = localStorage.getItem("lang");
+  if (stored === "de" || stored === "en") return stored;
+  return (navigator.language || "").toLowerCase().startsWith("de") ? "de" : "en";
+}
 // The inline script in index.html already picked the theme before first paint
 // (stored choice, else the system setting) — read it back, never re-decide here.
 let theme = document.documentElement.dataset.theme === "light" ? "light" : "dark";
@@ -198,7 +235,10 @@ let lastResult = null;  // keep the latest computed result so toggling re-render
 async function init() {
   applyLangToggleUI();
   applyThemeToggleUI();
+  applyCurToggleUI();
   applyStaticTranslations();
+  // Auth before the data: whether stored guest values apply depends on it.
+  await refreshAuth();
   await reload();
 
   // Live preview while typing in the active inputs (does not persist until Save).
@@ -241,6 +281,9 @@ async function init() {
   $("theme-toggle").querySelectorAll(".toggle__btn").forEach((btn) => {
     btn.addEventListener("click", () => setTheme(btn.dataset.theme));
   });
+  $("cur-toggle").querySelectorAll(".toggle__btn").forEach((btn) => {
+    btn.addEventListener("click", () => setCurrency(btn.dataset.cur));
+  });
   // Until the switch is used, the system decides — and keeps deciding while the
   // page is open (a Mac flipping to dark at sunset flips the app with it).
   const mq = window.matchMedia("(prefers-color-scheme: light)");
@@ -254,7 +297,6 @@ async function init() {
   $("login-backdrop").addEventListener("click", closeLogin);
   $("login-submit").addEventListener("click", doLogin);
   $("login-password").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
-  await refreshAuth();
 }
 
 // --- Theme -------------------------------------------------------------------
@@ -291,8 +333,41 @@ function cssVar(name) {
 function setLang(l) {
   lang = l === "de" ? "de" : "en";
   localStorage.setItem("lang", lang);
+  dropUrlParam("lang");
+  rerenderTexts();
+}
+
+// The display currency is a label, so switching it only redraws the texts.
+function setCurrency(c) {
+  currency = c === "EUR" ? "EUR" : "CHF";
+  localStorage.setItem("currency", currency);
+  dropUrlParam("cur");
+  rerenderTexts();
+}
+
+// A choice made with a switch beats the link's ?lang= / ?cur= from then on —
+// otherwise the next reload would silently undo the click.
+function dropUrlParam(name) {
+  if (!urlParams.has(name)) return;
+  urlParams.delete(name);
+  const q = urlParams.toString();
+  history.replaceState(null, "", location.pathname + (q ? "?" + q : ""));
+}
+
+function applyCurToggleUI() {
+  $("cur-toggle").setAttribute("aria-label", t("currency"));
+  $("cur-toggle").querySelectorAll(".toggle__btn").forEach((btn) => {
+    const on = btn.dataset.cur === currency;
+    btn.classList.toggle("is-on", on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+}
+
+// Everything that carries words or a currency, redrawn after a switch.
+function rerenderTexts() {
   applyLangToggleUI();
   applyThemeToggleUI();     // the switch's tooltips are translated too
+  applyCurToggleUI();
   applyStaticTranslations();
   applyEditMode();
   renderChips();            // chip names follow the language (with fallback)
@@ -301,12 +376,14 @@ function setLang(l) {
   renderScenarioTable();
   renderLocationTable();
   if (lastResult) renderAll(lastResult);
+  else if (activeScenarioId && activeLocationId) recalcFromInputs();   // keeps an "invalid input" hint
   else recalc();
 }
 
 // --- Auth --------------------------------------------------------------------
 async function refreshAuth() {
   try { isEditor = (await api.get("/api/me")).editor; } catch { isEditor = false; }
+  if (isEditor) clearGuest();   // the owner works on the stored values, not on browser-local ones
   applyEditMode();
   // Tables were first rendered before auth was known — refresh so edit controls match.
   renderScenarioTable();
@@ -314,7 +391,10 @@ async function refreshAuth() {
 }
 function applyEditMode() {
   document.body.classList.toggle("is-editor", isEditor);
-  $("auth-btn").textContent = (isEditor ? "🔓 " : "🔒 ") + t(isEditor ? "auth_logout" : "auth_edit");
+  const authWord = t(isEditor ? "auth_logout" : "auth_edit");
+  $("auth-btn").innerHTML = `<span aria-hidden="true">${isEditor ? "🔓" : "🔒"}</span><span class="auth-btn__txt"> ${authWord}</span>`;
+  $("auth-btn").setAttribute("aria-label", authWord);
+  $("auth-btn").title = authWord;
   updateDirty();   // the unsaved bar reads differently for owner and guest
 }
 function openLogin() {
@@ -330,6 +410,7 @@ async function doLogin() {
   try {
     await api.post("/api/login", { password });
     isEditor = true;
+    clearGuest();   // what is in the fields stays (and can be saved); the browser copy goes
     closeLogin();
     applyEditMode();
     renderScenarioTable();
@@ -350,6 +431,7 @@ async function doLogout() {
 function applyLangToggleUI() {
   $("lang-toggle").querySelectorAll(".toggle__btn").forEach((btn) => {
     btn.classList.toggle("is-on", btn.dataset.lang === lang);
+    btn.setAttribute("aria-pressed", btn.dataset.lang === lang ? "true" : "false");
   });
 }
 
@@ -361,14 +443,63 @@ async function reload() {
     api.get("/api/settings"),
   ]);
   fuelPrice = settings.fuel_price;
-  $("in-fuel-price").value = Number(fuelPrice).toFixed(2);
+  $("in-fuel-price").value = Number(guestFuelPrice() ?? fuelPrice).toFixed(2);
   if (!scenarios.some((s) => s.id === activeScenarioId)) activeScenarioId = scenarios[0]?.id ?? null;
   if (!locations.some((l) => l.id === activeLocationId)) activeLocationId = locations[0]?.id ?? null;
   renderChips();
   renderScenarioTable();
   renderLocationTable();
   syncActiveInputs();
-  recalc();
+  // A guest's own values are in the fields now — compute from those, not from
+  // the server's stored record.
+  if (isDirty()) recalcFromInputs(); else recalc();
+}
+
+// --- Guest values ------------------------------------------------------------
+// A visitor's own numbers survive a reload — in THIS browser only (localStorage),
+// never on the server: { fuel, s: { <scenario id>: { fc, pc } }, l: { <location id>: price } }.
+// Only values that differ from the stored ones are kept. Owner sessions ignore
+// and clear it; for the owner the one truth is the server.
+const GUEST_KEY = "guestValues";
+function loadGuest() {
+  try {
+    const g = JSON.parse(localStorage.getItem(GUEST_KEY) || "{}") || {};
+    return { fuel: g.fuel ?? null, s: g.s || {}, l: g.l || {} };
+  } catch { return { fuel: null, s: {}, l: {} }; }
+}
+function saveGuest(g) {
+  const empty = g.fuel == null && !Object.keys(g.s).length && !Object.keys(g.l).length;
+  try {
+    if (empty) localStorage.removeItem(GUEST_KEY);
+    else localStorage.setItem(GUEST_KEY, JSON.stringify(g));
+  } catch { /* storage blocked — the values simply live until the reload */ }
+}
+function clearGuest() { try { localStorage.removeItem(GUEST_KEY); } catch { /* ignore */ } }
+function hasGuestValues() { return !isEditor && localStorage.getItem(GUEST_KEY) != null; }
+const okNum = (x, min) => typeof x === "number" && isFinite(x) && x >= min;
+function guestFuelPrice() {
+  const f = isEditor ? null : loadGuest().fuel;
+  return okNum(f, 0) ? f : null;
+}
+function guestScenario(s) {
+  const g = isEditor || !s ? null : loadGuest().s[s.id];
+  return g && okNum(g.fc, 0.01) && okNum(g.pc, 0.01) ? g : null;
+}
+// The kWh price that counts for a location: the guest's own if there is one.
+function locPrice(l) {
+  const p = isEditor ? null : loadGuest().l[l.id];
+  return okNum(p, 0) ? p : l.price_chf_per_kwh;
+}
+// Remember what the guest typed (valid values only), drop what equals the stored value.
+function storeGuestValues(v) {
+  const s = activeScenario(), l = activeLocation();
+  if (isEditor || !s || !l) return;
+  const d = dirtyParts();
+  const g = loadGuest();
+  if (d.scenario) g.s[s.id] = { fc: v.fuel_consumption, pc: v.power_consumption }; else delete g.s[s.id];
+  if (d.location) g.l[l.id] = v.kwh_price; else delete g.l[l.id];
+  g.fuel = d.fuel ? v.fuel_price : null;
+  saveGuest(g);
 }
 
 // --- Profile chips + active inputs -------------------------------------------
@@ -397,11 +528,11 @@ function paintLocationChips(res) {
     b.removeAttribute("aria-label");
     if (!loc || bek == null || !(bek > 0)) return;
     // The active chip follows the (possibly unsaved) input, the others the stored price.
-    const price = loc.id === activeLocationId ? res.location.price_chf_per_kwh : loc.price_chf_per_kwh;
+    const price = loc.id === activeLocationId ? res.location.price_chf_per_kwh : locPrice(loc);
     const elec = price <= bek;
     b.classList.add(elec ? "chip--elec" : "chip--fuel");
     ico.textContent = elec ? "⚡" : "⛽";   // never colour alone
-    const words = `${CHF(price)}/kWh · ${t(elec ? "region_elec" : "region_fuel")}`;
+    const words = `${money(price)}/kWh · ${t(elec ? "region_elec" : "region_fuel")}`;
     b.title = words;
     b.setAttribute("aria-label", `${dispName(loc)} — ${words}`);
   });
@@ -527,13 +658,14 @@ function syncActiveInputs() {
   const s = activeScenario();
   const l = activeLocation();
   if (s) {
-    $("in-fuel-consumption").value = fmtCons(s.fuel_consumption);
-    $("in-power-consumption").value = fmtCons(s.power_consumption);
+    const gs = guestScenario(s);
+    $("in-fuel-consumption").value = fmtCons(gs ? gs.fc : s.fuel_consumption);
+    $("in-power-consumption").value = fmtCons(gs ? gs.pc : s.power_consumption);
     electricShare = s.electric_share ?? 100;
     renderShareChips();
     renderDefaultShareChips();
   }
-  if (l) $("in-kwh-price").value = fmtPrice(l.price_chf_per_kwh);
+  if (l) $("in-kwh-price").value = fmtPrice(locPrice(l));
   renderValueNames();
   updateDirty();
 }
@@ -564,12 +696,14 @@ function isDirty() { return dirtyParts().any; }
 
 function updateDirty() {
   const d = dirtyParts();
-  // Guests are always in what-if mode — nothing they type is ever stored, so a
-  // "not saved" banner would only state the obvious. The bar is the owner's.
-  $("preview-bar").hidden = !d.any || !isEditor;
-  if (!d.any || !isEditor) return;
-  $("preview-note").textContent = t("unsaved_note");
-  $("save-inputs").textContent = t("save_for", { targets: dirtyTargets(d) });
+  // Owner: the fields differ from the stored record → "not saved yet" + Save.
+  // Guest: nothing reaches the server, but own values are kept in this browser —
+  // say so and offer the way back to the defaults (Save stays owner-only).
+  const show = isEditor ? d.any : (d.any || hasGuestValues());
+  $("preview-bar").hidden = !show;
+  $("preview-note").textContent = t(isEditor ? "unsaved_note" : "guest_note");
+  $("reset-inputs").textContent = t(isEditor ? "reset_values" : "guest_reset");
+  if (isEditor && d.any) $("save-inputs").textContent = t("save_for", { targets: dirtyTargets(d) });
 }
 
 // "Winter, Home, fuel price" — the records the Save button would write to.
@@ -583,6 +717,7 @@ function dirtyTargets(d) {
 
 // Drop the unsaved what-if and show the stored version again.
 function resetInputs() {
+  clearGuest();
   $("in-fuel-price").value = Number(fuelPrice).toFixed(2);
   syncActiveInputs();
   recalc();
@@ -659,6 +794,7 @@ async function recalc() {
   }
   try {
     const res = await api.get(`/api/calculate?scenario_id=${activeScenarioId}&location_id=${activeLocationId}`);
+    INPUT_IDS.forEach((id) => $(id).removeAttribute("aria-invalid"));
     renderAll(res);
   } catch (e) { toast(e.message, true); }
 }
@@ -666,8 +802,15 @@ async function recalc() {
 // Recompute locally from the (possibly unsaved) input fields, for instant feedback.
 function recalcFromInputs() {
   const v = inputValues();
+  // Empty, negative or a zero consumption: no comparison is possible — say so
+  // and mark the field, rather than leave a stale or absurd result standing.
+  const bad = invalidFields(v);
+  INPUT_IDS.forEach((id) => {
+    if (bad.includes(id)) $(id).setAttribute("aria-invalid", "true"); else $(id).removeAttribute("aria-invalid");
+  });
+  if (bad.length) { updateDirty(); renderInvalid(); return; }
+  storeGuestValues(v);
   updateDirty();
-  if ([v.fuel_consumption, v.power_consumption, v.fuel_price, v.kwh_price].some((x) => isNaN(x))) return;
   const cost_fuel = v.fuel_consumption * v.fuel_price;
   const cost_elec = v.power_consumption * v.kwh_price;
   const break_even = v.fuel_consumption > 0 ? (v.power_consumption * v.kwh_price) / v.fuel_consumption : null;
@@ -686,6 +829,26 @@ function recalcFromInputs() {
     electric_share: v.electric_share, cost_blend, blend_delta: cost_fuel - cost_blend,
   };
   renderAll(res);
+}
+
+const INPUT_IDS = ["in-fuel-price", "in-fuel-consumption", "in-power-consumption", "in-kwh-price"];
+function invalidFields(v) {
+  const bad = [];
+  if (!(v.fuel_price >= 0)) bad.push("in-fuel-price");              // NaN fails every comparison
+  if (!(v.fuel_consumption > 0)) bad.push("in-fuel-consumption");
+  if (!(v.power_consumption > 0)) bad.push("in-power-consumption");
+  if (!(v.kwh_price >= 0)) bad.push("in-kwh-price");                // 0 is fine: free charging exists
+  return bad;
+}
+function renderInvalid() {
+  lastResult = null;
+  paintLocationChips(null);
+  const card = $("verdict");
+  card.classList.remove("is-electric", "is-fuel");
+  card.innerHTML = `<div class="verdict__loading" role="status">${t("verdict_invalid")}</div>`;
+  $("pricebar").innerHTML = "";
+  $("share-row").innerHTML = "";
+  if (chart) { chart.destroy(); chart = null; }
 }
 
 // One result, three views of it: the sentence, the one-axis bar, the 2D map —
@@ -712,8 +875,8 @@ function renderVerdict(res) {
   else if (isElec) { card.classList.add("is-electric"); icon = "⚡"; title = t("verdict_elec"); }
   else { card.classList.add("is-fuel"); icon = "⛽"; title = t("verdict_fuel"); }
 
-  const ce = CHF(res.cost_elec), cf = CHF(res.cost_fuel);
-  const save = CHF(Math.abs(res.cost_fuel - res.cost_elec));
+  const ce = money(res.cost_elec), cf = money(res.cost_fuel);
+  const save = money(Math.abs(res.cost_fuel - res.cost_elec));
   const sentence = isTie ? t("sent_tie", { ce })
     : isElec ? t("sent_elec", { ce, cf, save })
              : t("sent_fuel", { ce, cf, save });
@@ -722,17 +885,17 @@ function renderVerdict(res) {
   // actually amounts to when not every km is electric. The break-even prices
   // above do not move with the share; only this line does. Dropped on a tie, at
   // 0 % and whenever it would round to CHF 0: nothing saved, nothing to say.
-  const perYear = Math.abs(res.blend_delta) * (ANNUAL_KM / 100);
-  const yearly = isTie || Math.round(perYear) < 1 ? ""
-    : t(res.blend_delta > 0 ? "blend_save" : "blend_more",
-        { share: res.electric_share, blend: CHF(res.cost_blend), amount: CHF0(perYear), km: fmtInt(ANNUAL_KM) });
+  const perYear = yearlyAt(res, res.electric_share);
+  const yearly = isTie || Math.round(Math.abs(perYear)) < 1 ? ""
+    : t(perYear > 0 ? "blend_save" : "blend_more",
+        { share: res.electric_share, blend: money(res.cost_blend), amount: money0(Math.abs(perYear)), km: fmtInt(ANNUAL_KM) });
 
   // Both tipping prices at once, each in its own unit — the electricity price
   // where it flips, and the fuel price where it flips.
   let threshold = "";
   if (!isTie && res.break_even_kwh_price != null && res.break_even_fuel_price != null) {
-    const bek = `${CHF(res.break_even_kwh_price)}/kWh`;
-    const bef = `${CHF(res.break_even_fuel_price)}/l`;
+    const bek = `${money(res.break_even_kwh_price)}/kWh`;
+    const bef = `${money(res.break_even_fuel_price)}/l`;
     threshold = isElec ? t("thr_elec", { bek, bef }) : t("thr_fuel", { bek, bef });
   }
 
@@ -761,12 +924,11 @@ function renderVerdict(res) {
 function renderShareRow(res) {
   const el = $("share-row");
   if (res.cheaper === "equal") { el.innerHTML = ""; return; }
-  const perPct = (res.cost_fuel - res.cost_elec) / 100 * (ANNUAL_KM / 100);   // CHF/year per share-%
   const cells = SHARE_STEPS.map((share) => {
-    const v = perPct * share;
-    const r = Math.round(v);
+    const v = yearlyAt(res, share);          // same figure as the verdict sentence
+    const r = Math.round(Math.abs(v)) * Math.sign(v);
     const cls = r > 0 ? "is-saved" : r < 0 ? "is-more" : "is-zero";
-    const amount = r === 0 ? "CHF 0" : (r < 0 ? "−" : "") + CHF0(Math.abs(v));
+    const amount = r === 0 ? `${currency} 0` : (r < 0 ? "−" : "") + money0(Math.abs(v));
     const key = r > 0 ? "share_row_saved" : r < 0 ? "share_row_more" : "share_row_zero";
     const on = share === res.electric_share ? " is-on" : "";
     return `<span class="sharerow__cell ${cls}${on}" title="${t(key, { share, amount })}">` +
@@ -780,10 +942,10 @@ function renderShareRow(res) {
 // only needs the fuel side of the assumptions.
 function assumptionNote(res, withLocation) {
   const parts = [
-    `⛽ ${CHF(res.fuel_price)}/l`,
+    `⛽ ${money(res.fuel_price)}/l`,
     `${esc(dispName(res.scenario))}: ${fmtCons(res.scenario.fuel_consumption)} l/100km · ${fmtCons(res.scenario.power_consumption)} kWh/100km · ${res.electric_share} % ⚡`,
   ];
-  if (withLocation) parts.push(`⚡ ${esc(dispName(res.location))}: ${CHF(res.location.price_chf_per_kwh)}/kWh`);
+  if (withLocation) parts.push(`⚡ ${esc(dispName(res.location))}: ${money(res.location.price_chf_per_kwh)}/kWh`);
   return parts.join(t("note_sep"));
 }
 
@@ -814,7 +976,7 @@ function renderPriceBar(res) {
       ${head}
       <div class="pbar__row">
         <span class="pbar__lab pbar__lab--here ${side}" style="${anchorStyle(hereP)}">
-          ${t("bar_here")} <b>${CHF(cur)}/kWh</b>
+          ${t("bar_here")} <b>${money(cur)}/kWh</b>
         </span>
       </div>
       <div class="pbar__track">
@@ -831,10 +993,10 @@ function renderPriceBar(res) {
       </div>
       <div class="pbar__row">
         <span class="pbar__lab pbar__lab--tip" style="${anchorStyle(tipP)}">
-          ${t("bar_tip")} <b>${CHF(bek)}/kWh</b>
+          ${t("bar_tip")} <b>${money(bek)}/kWh</b>
         </span>
       </div>
-      <div class="pbar__scale"><span>0.00</span><span>${max.toFixed(2)} CHF/kWh</span></div>
+      <div class="pbar__scale"><span>0.00</span><span>${max.toFixed(2)} ${currency}/kWh</span></div>
       <p class="pbar__note">${assumptionNote(res, false)}</p>
     </div>`;
 }
@@ -867,7 +1029,7 @@ function renderChart(res) {
   const pc = res.scenario.power_consumption;
 
   const cfg = {
-    xUnit: "CHF/l", yUnit: "CHF/kWh", xTitle: t("axis_per_liter"), yTitle: t("axis_per_kwh"),
+    xUnit: `${currency}/l`, yUnit: `${currency}/kWh`, xTitle: t("axis_per_liter"), yTitle: t("axis_per_kwh"),
     xVal: res.fuel_price, yVal: res.location.price_chf_per_kwh,
     slope: pc > 0 ? fc / pc : 0,   // tipping y for a given x
   };
@@ -914,6 +1076,26 @@ function renderChart(res) {
     ],
   };
 
+  // Labels keep off the break-even line. The line rises to the right, so the
+  // free space is below a point that lies right of it (electric cheaper) and
+  // above one that lies left of it. The sweetspot label takes the other side of
+  // the dotted connector, diagonally away from the line — the two never meet.
+  const hereBelow = res.cheaper === "electric" && cfg.yVal > yMax * 0.1;
+  // How close the point sits to the line, in (estimated) pixels: when the two
+  // nearly touch, a centred label would run into the line, so it steps aside.
+  const plotW = Math.max(120, $("chart").clientWidth - 60);
+  const gapPx = hasSweet ? Math.abs(cfg.xVal - beRule) / xMax * plotW : Infinity;
+  const hereTxt = [`${cfg.xVal.toFixed(2)} ${cfg.xUnit}`, `${cfg.yVal.toFixed(2)} ${cfg.yUnit}`];
+  let hereContent, hereX, hereY;
+  if (hereBelow) {            // right of the line: one row underneath, pushed right if the line is near
+    hereContent = hereTxt.join(" · ");
+    hereX = cfg.xVal > xMax * 0.7 ? -62 : gapPx < 50 ? 78 : 0;
+    hereY = 18;
+  } else {                    // left of the line: two short rows above, pushed left if the line is near
+    hereContent = hereTxt;
+    hereX = gapPx < 50 ? -46 : 0;
+    hereY = -26;
+  }
   const pointColor = res.cheaper === "equal" ? C.accent
     : res.cheaper === "electric" ? C.elec : C.fuel;
   // No dashed drop-lines to the axes: the point carries its two prices as a label,
@@ -922,11 +1104,8 @@ function renderChart(res) {
     here: { type: "point", xValue: cfg.xVal, yValue: cfg.yVal,
       backgroundColor: pointColor, borderColor: C.pointRing, borderWidth: 2, radius: 7 },
     hereLabel: { type: "label", xValue: cfg.xVal, yValue: cfg.yVal,
-      content: `${cfg.xVal.toFixed(2)} ${cfg.xUnit} · ${cfg.yVal.toFixed(2)} ${cfg.yUnit}`,
-      color: C.text, font: { size: 11, weight: "600" }, yAdjust: -18,
-      // pull the label left when the point is near the right edge so it doesn't clip
-      // (narrow phone charts clip earlier, hence the generous threshold)
-      xAdjust: cfg.xVal > xMax * 0.55 ? -70 : 0,
+      content: hereContent,
+      color: C.text, font: { size: 11, weight: "600" }, yAdjust: hereY, xAdjust: hereX,
       backgroundColor: "rgba(0,0,0,0)" },
     elecRegion: { type: "label",
       xValue: xMax * 0.72, yValue: yMax * 0.12,
@@ -948,7 +1127,8 @@ function renderChart(res) {
       backgroundColor: C.sweet, borderColor: C.bg, borderWidth: 2, radius: 6 };
     annotations.sweetLabel = { type: "label", xValue: beRule, yValue: cfg.yVal,
       content: [t("word_sweetspot"), `${beRule.toFixed(2)} ${cfg.xUnit}`],
-      color: C.sweet, font: { size: 11, weight: "700" }, yAdjust: 26,
+      color: C.sweet, font: { size: 11, weight: "700" },
+      xAdjust: hereBelow ? -40 : 48, yAdjust: hereBelow ? -24 : 28,
       backgroundColor: "rgba(0,0,0,0)" };
   }
 

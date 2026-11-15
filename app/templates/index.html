@@ -1,9 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ lang }}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>PHEV Charging Calculator</title>
+  <title>{{ meta.title }}</title>
+  <!-- Link previews (forum, messenger) and search results read these — crawlers
+       run no JS, so the language is chosen on the server (?lang=, Accept-Language). -->
+  <meta name="description" content="{{ meta.desc }}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="{{ meta.title }}" />
+  <meta property="og:title" content="{{ meta.title }}" />
+  <meta property="og:description" content="{{ meta.desc }}" />
+  <meta property="og:url" content="{{ page_url }}" />
+  <meta property="og:image" content="{{ base_url }}static/og-{{ lang }}.png?v={{ v }}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="{{ 'de_CH' if lang == 'de' else 'en_GB' }}" />
+  <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
   <link rel="stylesheet" href="/static/css/styles.css?v={{ v }}" />
   <!-- Sets data-theme before the first paint (no flash of the wrong palette).
@@ -19,9 +32,14 @@
           <button class="toggle__btn" data-theme="dark" type="button" aria-pressed="false">🌙</button>
           <button class="toggle__btn" data-theme="light" type="button" aria-pressed="false">☀️</button>
         </div>
-        <div class="toggle lang-toggle" id="lang-toggle" role="tablist" aria-label="Language">
-          <button class="toggle__btn is-on" data-lang="en" role="tab">EN</button>
-          <button class="toggle__btn" data-lang="de" role="tab">DE</button>
+        <!-- Display currency: a label only, nothing is converted. -->
+        <div class="toggle cur-toggle" id="cur-toggle" role="group" aria-label="Currency">
+          <button class="toggle__btn" data-cur="CHF" type="button" aria-pressed="false">CHF</button>
+          <button class="toggle__btn" data-cur="EUR" type="button" aria-pressed="false">EUR</button>
+        </div>
+        <div class="toggle lang-toggle" id="lang-toggle" role="group" aria-label="Language">
+          <button class="toggle__btn" data-lang="en" type="button" aria-pressed="false">EN</button>
+          <button class="toggle__btn" data-lang="de" type="button" aria-pressed="false">DE</button>
         </div>
       </div>
     </div>
@@ -50,16 +68,16 @@
       <div class="fuelbar__label">
         <span class="fuelbar__icon">⛽</span>
         <div>
-          <strong data-i18n="fuel_price_title">Current fuel price</strong>
+          <strong id="fuel-price-label" data-i18n="fuel_price_title">Current fuel price</strong>
           <small data-i18n="fuel_price_note">Changes often — set it once, it applies to every scenario.</small>
         </div>
       </div>
       <div class="fuelbar__set">
         <div class="fuelbar__input">
-          <button class="step" id="fuel-down" title="−0.05">−</button>
-          <input type="number" inputmode="decimal" step="0.01" min="0" id="in-fuel-price" />
-          <span class="unit">CHF/l</span>
-          <button class="step" id="fuel-up" title="+0.05">+</button>
+          <button class="step" id="fuel-down" type="button" title="−0.05" aria-label="−0.05">−</button>
+          <input type="number" inputmode="decimal" step="0.01" min="0" id="in-fuel-price" aria-labelledby="fuel-price-label" />
+          <span class="unit" data-unit="/l">CHF/l</span>
+          <button class="step" id="fuel-up" type="button" title="+0.05" aria-label="+0.05">+</button>
         </div>
       </div>
     </section>
@@ -115,15 +133,15 @@
     <section class="card values-card">
       <div class="card__head"><h2 data-i18n="current_selection">Current selection</h2></div>
 
-      <!-- Anyone may try out numbers; only the owner's changes are stored. This
-           bar is therefore the owner's only: it appears as soon as an input
-           differs from the saved value. One rule for every field here (fuel
-           price included): nothing is stored until Save. -->
+      <!-- Anyone may try out numbers; only the owner's changes reach the server
+           (nothing is stored until Save, fuel price included). For the owner the
+           bar flags unsaved inputs; for a guest it says that the own values are
+           kept in this browser and offers the way back to the defaults. -->
       <div class="preview-bar" id="preview-bar" hidden>
         <span id="preview-note">Not saved yet</span>
         <span class="preview-bar__actions">
           <button class="btn btn--small editor-only" id="save-inputs" type="button">Save</button>
-          <button class="link-btn" id="reset-inputs" type="button" data-i18n="reset_values">Back to saved values</button>
+          <button class="link-btn" id="reset-inputs" type="button">Back to saved values</button>
         </span>
       </div>
 
@@ -143,7 +161,7 @@
         <div class="values__group">
           <h3 class="values__name" id="values-location-name"></h3>
           <label class="field field--inline">
-            <span><span data-i18n="electricity_price">Electricity price</span> <em>(CHF/kWh)</em></span>
+            <span><span data-i18n="electricity_price">Electricity price</span> <em>(<span data-unit="/kWh">CHF/kWh</span>)</em></span>
             <input type="number" inputmode="decimal" step="0.01" min="0" id="in-kwh-price" />
           </label>
         </div>

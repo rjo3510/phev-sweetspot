@@ -159,6 +159,7 @@ body {
   padding: 6px 12px; border-radius: 12px; transition: border-color .15s, color .15s;
 }
 .auth-btn:hover { color: var(--text); border-color: var(--accent); }
+.cur-toggle .toggle__btn { padding: 5px 10px; font-size: 12px; letter-spacing: .5px; }
 body.is-editor .auth-btn { color: var(--elec); border-color: var(--elec-edge); }
 /* Hide all editor-only controls until the owner is logged in. */
 body:not(.is-editor) .editor-only { display: none !important; }
@@ -441,6 +442,8 @@ select:focus, input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
+/* A value the comparison cannot use (empty, negative, zero consumption). */
+input[aria-invalid="true"] { border-color: var(--danger); }
 /* Strip native control chrome so Safari/iOS render the same flat box as Chrome
    (otherwise inputs get a native inner shadow / odd border). Selects keep their
    native arrow on purpose, so they are left untouched. */
@@ -562,6 +565,9 @@ input:disabled, select:disabled { -webkit-text-fill-color: var(--text); opacity:
 @media (max-width: 560px) {
   .app { padding: 16px max(13px, env(safe-area-inset-right)) 48px max(13px, env(safe-area-inset-left)); }
   .hero h1 { font-size: 26px; }
+  /* Four controls in the top bar: the lock keeps its icon, the word goes
+     (aria-label and title still carry it). */
+  .auth-btn__txt { display: none; }
   .chart-wrap { height: 320px; }
   .profile-row__label { min-width: 0; }
   .chip { font-size: 13px; padding: 6px 12px; }
