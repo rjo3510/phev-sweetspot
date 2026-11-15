@@ -84,7 +84,8 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   the language. The repo, image and DB keep the name `phev-sweetspot`.
 - **Vocabulary:** **EN says *break-even* throughout** (break-even line / break-even price —
   the term English-speaking PHEV drivers know), **DE says *Break-even-* too** (Break-even-Preis,
-  Break-even-Linie, Break-even-Punkt in the subtitle; *Kipp-* was dropped on 15.11.2026, Rolf); *Sweetspot* stays in both. The profile
+  Break-even-Linie, Break-even-Punkt in the subtitle; *Kipp-* was dropped on 15.11.2026, Rolf); the chart point is labelled *Break-even* as well (15.11.2026) — *Sweetspot* is no longer UI copy, only the
+  repo/image/DB name and code (`word_sweetspot`, `--sweet`). The profile
   rows are *Trip / Fahrt* and *Charging / Laden*. The API and `calc.py` keep the
   `break_even_*` names, and so do the i18n keys (`tipping_line`, `bar_tip`) — keys are code,
   not copy. One fixed chart orientation (x = fuel price) — there is no axis toggle any more.

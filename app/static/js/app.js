@@ -113,7 +113,7 @@ const I18N = {
     verdict_loading: "Calculating…",
     verdict_start: "Add a scenario and a charging location to start.",
     axis_per_liter: "Fuel price ({cur}/l)", axis_per_kwh: "Electricity price ({cur}/kWh)",
-    word_sweetspot: "Sweetspot",
+    word_sweetspot: "Break-even",
     toast_saved: "Saved",
     toast_scenario_saved: "Scenario saved", toast_location_saved: "Location saved",
     toast_scenario_added: "Scenario added", toast_location_added: "Location added",
@@ -183,7 +183,7 @@ const I18N = {
     verdict_loading: "Berechne…",
     verdict_start: "Füge ein Szenario und einen Standort hinzu, um zu starten.",
     axis_per_liter: "Benzinpreis ({cur}/l)", axis_per_kwh: "Strompreis ({cur}/kWh)",
-    word_sweetspot: "Sweetspot",
+    word_sweetspot: "Break-even",
     toast_saved: "Gespeichert",
     toast_scenario_saved: "Szenario gespeichert", toast_location_saved: "Standort gespeichert",
     toast_scenario_added: "Szenario hinzugefügt", toast_location_added: "Standort hinzugefügt",
@@ -932,6 +932,8 @@ function renderVerdict(res) {
 function renderShareRow(res) {
   const el = $("share-row");
   if (res.cheaper === "equal") { el.innerHTML = ""; return; }
+  // A click re-renders the row — keep the keyboard focus on the cell that was used.
+  const focused = el.contains(document.activeElement) ? document.activeElement.dataset.share : null;
   const cells = SHARE_STEPS.map((share) => {
     const v = yearlyAt(res, share);          // same figure as the verdict sentence
     const r = Math.round(Math.abs(v)) * Math.sign(v);
@@ -939,11 +941,23 @@ function renderShareRow(res) {
     const amount = r === 0 ? `${curSign()} 0` : (r < 0 ? "−" : "") + money0(Math.abs(v));
     const key = r > 0 ? "share_row_saved" : r < 0 ? "share_row_more" : "share_row_zero";
     const on = share === res.electric_share ? " is-on" : "";
-    return `<span class="sharerow__cell ${cls}${on}" title="${t(key, { share, amount })}">` +
-      `<span class="sharerow__pct">${share} %</span><span class="sharerow__amt">${amount}</span></span>`;
+    const label = t(key, { share, amount });
+    return `<button type="button" class="sharerow__cell ${cls}${on}" data-share="${share}" ` +
+      `aria-pressed="${on ? "true" : "false"}" aria-label="${label}" title="${label}">` +
+      `<span class="sharerow__pct">${share} %</span><span class="sharerow__amt">${amount}</span></button>`;
   }).join("");
   el.innerHTML = `<span class="sharerow__label">${t("share_row", { km: fmtInt(ANNUAL_KM) })}</span>` +
     `<span class="sharerow__cells">${cells}</span>`;
+  // The cells are the share picker a second time: a click sets the what-if share,
+  // exactly like the chips in the profile row.
+  el.querySelectorAll(".sharerow__cell").forEach((b) => b.addEventListener("click", () => {
+    const v = Number(b.dataset.share);
+    if (v === electricShare) return;
+    electricShare = v;
+    renderShareChips();
+    recalcFromInputs();
+  }));
+  if (focused != null) el.querySelector(`.sharerow__cell[data-share="${focused}"]`)?.focus();
 }
 
 // What the numbers rest on — stated once, as the footnote of the price bar right
