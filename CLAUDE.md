@@ -45,7 +45,8 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   server (`PAGE_META` / `page_lang()` in `main.py`: `?lang=` → `Accept-Language` → en), because
   crawlers run no JS. Preview images `app/static/og-de.png` / `og-en.png` (1200×630) are
   screenshots of hero + verdict + price bar on a fresh seed DB — regenerate them when that
-  look changes.
+  look or its wording changes (Playwright, 1200×630, dark, `?lang=`; hide `.topbar`, `.fuelbar`,
+  `.profiles` and everything after the price bar).
 - **Invalid input is named, not calculated:** an empty/negative field or a consumption ≤ 0
   shows a hint instead of a result and marks the field (`aria-invalid`; `invalidFields()` /
   `renderInvalid()`). A kWh price of 0 is valid (free charging).
@@ -82,8 +83,8 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   i18n key `app_title` — it drives the `<h1>` and `document.title`, so the browser tab follows
   the language. The repo, image and DB keep the name `phev-sweetspot`.
 - **Vocabulary:** **EN says *break-even* throughout** (break-even line / break-even price —
-  the term English-speaking PHEV drivers know), **DE says *Kipp-*** (Kipp-Linie, Kipp-Preis,
-  Kipp-Punkt as the umbrella term in the subtitle); *Sweetspot* stays in both. The profile
+  the term English-speaking PHEV drivers know), **DE says *Break-even-* too** (Break-even-Preis,
+  Break-even-Linie, Break-even-Punkt in the subtitle; *Kipp-* was dropped on 15.11.2026, Rolf); *Sweetspot* stays in both. The profile
   rows are *Trip / Fahrt* and *Charging / Laden*. The API and `calc.py` keep the
   `break_even_*` names, and so do the i18n keys (`tipping_line`, `bar_tip`) — keys are code,
   not copy. One fixed chart orientation (x = fuel price) — there is no axis toggle any more.

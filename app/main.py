@@ -254,7 +254,7 @@ PAGE_META = {
                    "electricity prices and see the break-even price at a glance."},
     "de": {"title": "PHEV Kostenvergleich",
            "desc": "Lohnt sich Laden beim Plug-in-Hybrid? Benzin- und Strompreis eingeben — "
-                   "der Kipp-Preis zeigt auf einen Blick, was günstiger ist."},
+                   "der Break-even-Preis zeigt auf einen Blick, was günstiger ist."},
 }
 
 
