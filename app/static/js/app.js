@@ -73,9 +73,9 @@ const I18N = {
     verdict_elec: '<span class="accent-elec">Charging</span> pays off',
     verdict_fuel: '<span class="accent-fuel">Filling up</span> pays off',
     verdict_tie: "It's a tie",
-    sent_elec: "100 km cost <b>{ce}</b> on electricity instead of <b>{cf}</b> on fuel — <b>{save}</b> saved.",
-    sent_fuel: "100 km cost <b>{cf}</b> on fuel instead of <b>{ce}</b> on electricity — <b>{save}</b> saved.",
-    sent_tie: "100 km cost <b>{ce}</b> either way.",
+    sent_elec: "All-electric: <b>{ce}</b>/100&nbsp;km instead of <b>{cf}</b> on fuel — <b>{save}</b> cheaper.",
+    sent_fuel: "On fuel: <b>{cf}</b>/100&nbsp;km instead of <b>{ce}</b> all-electric — <b>{save}</b> cheaper.",
+    sent_tie: "<b>{ce}</b>/100&nbsp;km — all-electric and on fuel alike.",
     // Money at the scenario's electric share: what is actually paid and what a
     // year of it comes to. Replaces the plain yearly line.
     blend_save: "At <b>{share} %</b> electric km, 100 km cost <b>{blend}</b> — about <b>{amount}</b> a year saved compared with fuel only, at {km}&nbsp;km.",
@@ -145,9 +145,9 @@ const I18N = {
     verdict_elec: '<span class="accent-elec">Laden</span> lohnt sich',
     verdict_fuel: '<span class="accent-fuel">Tanken</span> lohnt sich',
     verdict_tie: "Unentschieden",
-    sent_elec: "100 km kosten mit Strom <b>{ce}</b> statt <b>{cf}</b> mit Benzin — <b>{save}</b> gespart.",
-    sent_fuel: "100 km kosten mit Benzin <b>{cf}</b> statt <b>{ce}</b> mit Strom — <b>{save}</b> gespart.",
-    sent_tie: "100 km kosten so oder so <b>{ce}</b>.",
+    sent_elec: "Rein elektrisch: <b>{ce}</b>/100&nbsp;km statt <b>{cf}</b> mit Benzin — <b>{save}</b> günstiger.",
+    sent_fuel: "Mit Benzin: <b>{cf}</b>/100&nbsp;km statt <b>{ce}</b> rein elektrisch — <b>{save}</b> günstiger.",
+    sent_tie: "<b>{ce}</b>/100&nbsp;km — rein elektrisch wie mit Benzin.",
     // Geld beim Stromanteil des Szenarios: was tatsächlich bezahlt wird und
     // was ein Jahr davon ausmacht. Ersetzt die reine Jahreszeile.
     blend_save: "Bei <b>{share} %</b> der km im EV-Modus kosten 100 km <b>{blend}</b> — rund <b>{amount}</b> pro Jahr gespart gegenüber Benzin bei {km}&nbsp;km.",
