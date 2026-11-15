@@ -98,7 +98,7 @@ APP_BUILD_DATE = os.environ.get("APP_BUILD_DATE", "")
 
 def build_date_local(iso_utc: str) -> str:
     """'2026-09-22T07:41:51Z' (CI, UTC) → '22.09.2026 09:41' on the Zurich clock for
-    the footer; '' when the build carries no date (a local dev build)."""
+    the startup log line (the footer shows the SHA only); '' when the build carries no date (a local dev build)."""
     if not iso_utc:
         return ""
     from datetime import datetime, timezone
@@ -277,7 +277,7 @@ def index(request: Request):
         request=request,
         name="index.html",
         context={"v": STATIC_VERSION, "version": APP_VERSION[:7], "version_full": APP_VERSION,
-                 "build_date": BUILD_DATE_LOCAL, "lang": lang, "meta": PAGE_META[lang],
+                 "lang": lang, "meta": PAGE_META[lang],
                  "base_url": base_url,
                  "page_url": base_url + (f"?lang={lang}" if explicit else "")},
     )

@@ -68,8 +68,9 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
   light there to work as text and border on the dark ground, so white on it would only reach
   3:1. Button modifiers (`.btn--ghost`) must sit **after** `.btn` in `styles.css`; same
   specificity, so the later rule wins.
-- **Build SHA + build date** show in the footer (SHA linked to the commit, date as
-  `22.09.2026 09:41` Zurich time) and are logged at startup; CI passes them as the `GIT_SHA` /
+- **Build SHA** shows in the footer (linked to the commit). The **build date**
+  (`22.09.2026 09:41` Zurich time) is in the startup log line only — taken out of the footer
+  on 15.11.2026 (Rolf: the log is enough). Both are logged at startup; CI passes them as the `GIT_SHA` /
   `BUILD_DATE` build-args → `APP_VERSION` / `APP_BUILD_DATE` (`build_date_local()` in
   `main.py`; `tzdata` is in `requirements.txt` because `python:slim` ships no zoneinfo).
 - **Health:** `GET`/`HEAD /health` (no login; `SELECT 1` on the DB, 503 if it fails) for
