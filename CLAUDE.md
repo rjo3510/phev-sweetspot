@@ -33,7 +33,9 @@ The local DB is `sweetspot.db` (gitignored); override its path with `SWEETSPOT_D
 - **Names are bilingual:** scenarios & charging locations have `name_de` + `name_en`; show the
   active language, fall back to the other if one is empty (`dispName()` in `app.js`).
 - **German copy is neutral/passive** — no "du"/"Sie".
-- **Currency is a display label, `CHF` (default) or `EUR`** (switch in the top bar, `?cur=eur`,
+- **Currency is a display label, `CHF` (default) or `EUR`, shown as `CHF` / `€`** — sign
+  first, decimal point, for both (`€ 6.51`, `€/kWh`; `CUR_SIGN` / `curSign()` in `app.js`; the code
+  and the URL keep `EUR` / `eur`) (switch in the top bar, `?cur=eur`,
   `localStorage.currency`; added 15.11.2026 for readers outside Switzerland). **Nothing is
   converted** — the maths is currency-neutral, the stored numbers stay what the owner typed.
   All money goes through `money()` / `money0()`, units in the markup through `data-unit`, and

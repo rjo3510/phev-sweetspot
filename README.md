@@ -49,7 +49,7 @@ fuel or on electric power** — visualised as the crossing point ("sweetspot") o
 - **English / German** — switch the whole UI language with the EN/DE toggle (top right).
   Your choice is remembered; without one the browser's language decides, and a link can set
   it (`/?lang=de`).
-- **CHF or EUR** — the CHF/EUR toggle changes the currency *label* only; nothing is
+- **CHF or €** — the CHF/€ toggle changes the currency *label* only; nothing is
   converted, the maths is the same in any currency (`/?cur=eur` in a link).
 - **Link previews** — title, description and a preview image are rendered on the server, so
   a link pasted into a forum or messenger shows what the page is about.

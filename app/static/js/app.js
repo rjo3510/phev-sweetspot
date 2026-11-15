@@ -29,7 +29,11 @@ function pickCurrency() {
   if (q === "EUR" || q === "CHF") return q;
   return localStorage.getItem("currency") === "EUR" ? "EUR" : "CHF";
 }
-const money = (n) => currency + " " + Number(n).toFixed(2);
+// What is shown for it: the euro as its sign (shorter, and what its readers
+// expect), the franc as "CHF". Same build for both — sign first, decimal point.
+const CUR_SIGN = { CHF: "CHF", EUR: "€" };
+const curSign = () => CUR_SIGN[currency];
+const money = (n) => curSign() + " " + Number(n).toFixed(2);
 const fmtCons = (n) => Number(n).toFixed(1);    // consumption: L/100km, kWh/100km → 1 decimal
 const fmtPrice = (n) => Number(n).toFixed(2);   // CHF/kWh → 2 decimals
 
@@ -39,7 +43,7 @@ const ANNUAL_KM = 15000;
 const THOUSANDS = { en: ",", de: "'" };
 const fmtInt = (n) =>
   Math.round(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, THOUSANDS[lang] || ",");
-const money0 = (n) => currency + " " + fmtInt(n);   // whole francs, for the yearly figure
+const money0 = (n) => curSign() + " " + fmtInt(n);   // whole francs, for the yearly figure
 // A year's saving at `share` % electric km, in francs (negative = extra cost).
 // The ONE place this is computed — the verdict sentence and the row under the
 // chart both call it, so they can never disagree by a rounding franc. Built on
@@ -201,14 +205,14 @@ const I18N = {
 function t(key, vars) {
   let s = (I18N[lang] && I18N[lang][key]) ?? I18N.en[key] ?? key;
   if (vars) for (const k in vars) s = s.split(`{${k}}`).join(vars[k]);
-  return s.split("{cur}").join(currency);
+  return s.split("{cur}").join(curSign());
 }
 
 function applyStaticTranslations() {
   document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll("[data-i18n-html]").forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml); });
   // Units in the markup ("CHF/l") follow the display currency.
-  document.querySelectorAll("[data-unit]").forEach((el) => { el.textContent = currency + el.dataset.unit; });
+  document.querySelectorAll("[data-unit]").forEach((el) => { el.textContent = curSign() + el.dataset.unit; });
   document.documentElement.lang = lang;
   document.title = t("app_title");   // browser tab / bookmark follows the language too
 }
@@ -932,7 +936,7 @@ function renderShareRow(res) {
     const v = yearlyAt(res, share);          // same figure as the verdict sentence
     const r = Math.round(Math.abs(v)) * Math.sign(v);
     const cls = r > 0 ? "is-saved" : r < 0 ? "is-more" : "is-zero";
-    const amount = r === 0 ? `${currency} 0` : (r < 0 ? "−" : "") + money0(Math.abs(v));
+    const amount = r === 0 ? `${curSign()} 0` : (r < 0 ? "−" : "") + money0(Math.abs(v));
     const key = r > 0 ? "share_row_saved" : r < 0 ? "share_row_more" : "share_row_zero";
     const on = share === res.electric_share ? " is-on" : "";
     return `<span class="sharerow__cell ${cls}${on}" title="${t(key, { share, amount })}">` +
@@ -1000,7 +1004,7 @@ function renderPriceBar(res) {
           ${t("bar_tip")} <b>${money(bek)}/kWh</b>
         </span>
       </div>
-      <div class="pbar__scale"><span>0.00</span><span>${max.toFixed(2)} ${currency}/kWh</span></div>
+      <div class="pbar__scale"><span>0.00</span><span>${max.toFixed(2)} ${curSign()}/kWh</span></div>
       <p class="pbar__note">${assumptionNote(res, true)}</p>
     </div>`;
 }
@@ -1033,7 +1037,7 @@ function renderChart(res) {
   const pc = res.scenario.power_consumption;
 
   const cfg = {
-    xUnit: `${currency}/l`, yUnit: `${currency}/kWh`, xTitle: t("axis_per_liter"), yTitle: t("axis_per_kwh"),
+    xUnit: `${curSign()}/l`, yUnit: `${curSign()}/kWh`, xTitle: t("axis_per_liter"), yTitle: t("axis_per_kwh"),
     xVal: res.fuel_price, yVal: res.location.price_chf_per_kwh,
     slope: pc > 0 ? fc / pc : 0,   // tipping y for a given x
   };
